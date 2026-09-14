@@ -141,7 +141,7 @@
 
     <div class="member-search">
       <div class="row">
-        <input type="text" id="memberSearchInput" placeholder="輸入手機號碼查詢歷史紀錄">
+        <input type="text" id="memberSearchInput" placeholder="輸入手機、家長姓名或寶貝名字查詢">
         <button id="memberSearchBtn">查詢</button>
       </div>
       <div class="divider">或依房間登打今日紀錄</div>
@@ -1012,15 +1012,47 @@
   // ---------- member search ----------
   let currentMemberPhone = null;
 
+  async function findMemberByAnything(query){
+    query = query.trim();
+    if (!query) return null;
+    const directSnap = await getDoc(doc(db, 'members', query));
+    if (directSnap.exists()) return { phone: query, member: directSnap.data() };
+
+    const allSnap = await getDocs(collection(db, 'members'));
+    let found = null;
+    allSnap.forEach(d => {
+      if (found) return;
+      const m = d.data();
+      if (m.name && m.name.includes(query)) found = { phone: d.id, member: m };
+      else if ((m.history || []).some(h => h.petName && h.petName.includes(query))) found = { phone: d.id, member: m };
+    });
+    if (found) return found;
+
+    // also check pet names on currently active rooms, in case this pet hasn't checked out yet
+    const roomsSnap = await getDocs(collection(db, 'rooms'));
+    let roomMatchPhone = null;
+    roomsSnap.forEach(d => {
+      if (roomMatchPhone) return;
+      const r = d.data();
+      if (r.name && r.name.includes(query) && r.phone) roomMatchPhone = r.phone;
+    });
+    if (roomMatchPhone){
+      const snap = await getDoc(doc(db, 'members', roomMatchPhone));
+      if (snap.exists()) return { phone: roomMatchPhone, member: snap.data() };
+    }
+    return null;
+  }
+
   document.getElementById('memberSearchBtn').addEventListener('click', async () => {
-    const phone = document.getElementById('memberSearchInput').value.trim();
-    if (!phone) return;
-    const snap = await getDoc(doc(db, 'members', phone));
-    if (!snap.exists()){
-      alert('查無此手機號碼的會員資料');
+    const query = document.getElementById('memberSearchInput').value.trim();
+    if (!query) return;
+    const found = await findMemberByAnything(query);
+    if (!found){
+      alert('查無符合的會員(可輸入手機號碼、家長姓名或寶貝名字查詢)');
       return;
     }
-    const member = snap.data();
+    const phone = found.phone;
+    const member = found.member;
     currentMemberPhone = phone;
     document.getElementById('mhName').textContent = phone;
     document.getElementById('mhNameInput').value = member.name || '';
