@@ -164,6 +164,19 @@
       <input type="datetime-local" id="ciCheckinTime">
     </div>
     <div class="field">
+      <label>寶貝大頭照</label>
+      <div id="ciAvatarNote" style="font-size:12.5px;color:var(--ink-soft);margin-bottom:8px;"></div>
+      <img id="ciAvatarPreview" style="display:none;width:88px;height:88px;border-radius:16px;object-fit:cover;margin-bottom:8px;">
+      <label class="photo-btn-like" style="display:inline-block;border:1px dashed var(--line);background:var(--card);border-radius:12px;padding:10px 16px;font-size:13px;color:var(--ink-soft);cursor:pointer;">
+        上傳 / 更換照片
+        <input type="file" accept="image/*" id="ciAvatarInput" style="display:none;">
+      </label>
+    </div>
+    <div class="field">
+      <label>監視器分享連結(選填,從米家 App 分享後貼上)</label>
+      <input type="text" id="ciCameraUrl" placeholder="https://...">
+    </div>
+    <div class="field">
       <label>本次攜帶物品</label>
       <div class="chip-row" data-multigroup="ciItems">
         <div class="chip" data-val="飼料">飼料</div>
@@ -202,10 +215,13 @@
   <!-- SCREEN 2: record entry -->
   <div class="screen" id="screenRecord">
     <div class="back-row" id="backBtn">← 返回房間列表</div>
-    <div class="record-head">
-      <div class="loc" id="recordLoc">貓貓區 · 3 號房</div>
-      <h1 id="recordName">抹茶</h1>
-      <div class="loc" id="recordMember" style="margin-top:4px;text-decoration:underline;cursor:pointer;">家長 0912-345-678</div>
+    <div class="record-head" style="display:flex;gap:14px;align-items:center;">
+      <img id="recordAvatar" style="display:none;width:64px;height:64px;border-radius:16px;object-fit:cover;flex-shrink:0;">
+      <div>
+        <div class="loc" id="recordLoc">貓貓區 · 3 號房</div>
+        <h1 id="recordName">抹茶</h1>
+        <div class="loc" id="recordMember" style="margin-top:4px;text-decoration:underline;cursor:pointer;">家長 0912-345-678</div>
+      </div>
     </div>
 
     <div class="summary-card ok" id="itemsCard"></div>
@@ -237,6 +253,13 @@
       <label style="margin-top:12px;">其他說明</label>
       <input type="text" id="recNotesOther">
       <div class="submit-row"><button class="submit-btn" id="notesSaveBtn">儲存注意事項</button></div>
+    </div>
+
+    <div class="summary-card ok" id="cameraCard"></div>
+    <div class="field" id="cameraEditPanel" style="display:none;">
+      <label>監視器分享連結</label>
+      <input type="text" id="recCameraUrl" placeholder="https://...">
+      <div class="submit-row"><button class="submit-btn" id="cameraSaveBtn">儲存連結</button></div>
     </div>
 
     <div class="field">
@@ -363,6 +386,14 @@
       <label>紀錄時間</label>
       <input type="datetime-local" id="entryTime">
     </div>
+    <div class="field">
+      <label>照片(選填)</label>
+      <img id="entryPhotoPreview" style="display:none;width:100%;max-height:200px;object-fit:cover;border-radius:12px;margin-bottom:8px;">
+      <label style="display:inline-block;border:1px dashed var(--line);background:var(--card);border-radius:12px;padding:10px 16px;font-size:13px;color:var(--ink-soft);cursor:pointer;">
+        新增照片
+        <input type="file" accept="image/*" id="entryPhotoInput" style="display:none;">
+      </label>
+    </div>
     <div class="submit-row">
       <button class="submit-btn" id="submitBtn">送出這筆紀錄</button>
     </div>
@@ -382,6 +413,24 @@
       <div class="loc">家長資料</div>
       <h1 id="mhName">查詢結果</h1>
     </div>
+
+    <div class="field">
+      <label>家長姓名</label>
+      <div style="display:flex;gap:8px;">
+        <input type="text" id="mhNameInput" placeholder="尚未填寫">
+        <button id="mhNameSaveBtn" style="background:var(--pine);color:#F4F1E9;border:none;border-radius:12px;padding:0 16px;font-size:13.5px;cursor:pointer;">儲存</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>變更手機號碼</label>
+      <div style="display:flex;gap:8px;">
+        <input type="text" id="mhNewPhoneInput" placeholder="輸入新的手機號碼">
+        <button id="mhPhoneChangeBtn" style="background:var(--ochre);color:#3A2A0F;border:none;border-radius:12px;padding:0 16px;font-size:13.5px;cursor:pointer;white-space:nowrap;">搬移資料</button>
+      </div>
+      <div style="font-size:11.5px;color:var(--ink-soft);margin-top:6px;">會把姓名、歷史紀錄搬到新號碼底下,並自動更新目前入住中的房間對應,原號碼會被刪除。</div>
+    </div>
+
     <div id="mhStays"></div>
   </div>
 
@@ -392,12 +441,15 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
   import {
-    getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc,
+    getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc,
     addDoc, query, orderBy, serverTimestamp, arrayUnion, writeBatch
   } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
   import {
     getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut
   } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+  import {
+    getStorage, ref, uploadBytes, getDownloadURL, deleteObject
+  } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-storage.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDF0t4WRcgRVGOApUdLn8Oj8VbHy6vMZp8",
@@ -411,6 +463,7 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
   const auth = getAuth(app);
+  const storage = getStorage(app);
   const googleProvider = new GoogleAuthProvider();
 
   const catLabels = {food:'飲食飲水', toilet:'排泄', mood:'精神情緒', activity:'活動放風', other:'其他'};
@@ -418,6 +471,7 @@
   let currentRoomId = null;
   let allRooms = {};
   let currentStaffName = '';
+  let entryPhotoFile = null;
 
   function roomId(area, no){ return area + '-' + no; }
 
@@ -481,6 +535,9 @@
     return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
   }
 
+  let ciExistingAvatarUrl = null;
+  let ciNewAvatarFile = null;
+
   // ---------- check-in ----------
   function openCheckin(id){
     currentRoomId = id;
@@ -489,11 +546,41 @@
     document.getElementById('ciPetName').value = '';
     document.getElementById('ciMemberNo').value = '';
     document.getElementById('ciCheckinTime').value = toDatetimeLocalValue(new Date());
+    document.getElementById('ciCameraUrl').value = '';
     document.getElementById('ciItemsOther').value = '';
     document.getElementById('ciNotesOther').value = '';
     document.querySelectorAll('#screenCheckin .chip').forEach(c => c.classList.remove('active'));
+    ciExistingAvatarUrl = null;
+    ciNewAvatarFile = null;
+    document.getElementById('ciAvatarPreview').style.display = 'none';
+    document.getElementById('ciAvatarNote').textContent = '';
     showScreen('screenCheckin');
   }
+
+  document.getElementById('ciMemberNo').addEventListener('blur', async () => {
+    const phone = document.getElementById('ciMemberNo').value.trim();
+    if (!phone || ciNewAvatarFile) return;
+    const snap = await getDoc(doc(db, 'members', phone));
+    if (snap.exists() && snap.data().avatarUrl){
+      ciExistingAvatarUrl = snap.data().avatarUrl;
+      document.getElementById('ciAvatarPreview').src = ciExistingAvatarUrl;
+      document.getElementById('ciAvatarPreview').style.display = 'block';
+      document.getElementById('ciAvatarNote').textContent = '偵測到這支手機之前上傳過的照片,預設會沿用;如需更換請直接上傳新照片。';
+    }
+  });
+
+  document.getElementById('ciAvatarInput').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    ciNewAvatarFile = file;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      document.getElementById('ciAvatarPreview').src = ev.target.result;
+      document.getElementById('ciAvatarPreview').style.display = 'block';
+      document.getElementById('ciAvatarNote').textContent = '將使用這張新照片。';
+    };
+    reader.readAsDataURL(file);
+  });
 
   document.getElementById('ciBackBtn').addEventListener('click', () => showScreen('screenRooms'));
 
@@ -509,6 +596,19 @@
     const stayId = 'stay-' + Date.now();
     const checkinTimeVal = document.getElementById('ciCheckinTime').value;
     const checkinDisplay = checkinTimeVal ? checkinTimeVal.replace('T', ' ') : new Date().toLocaleString('zh-TW');
+    const cameraUrl = document.getElementById('ciCameraUrl').value.trim();
+
+    let avatarUrl = ciExistingAvatarUrl;
+    if (ciNewAvatarFile){
+      try {
+        const avatarRef = ref(storage, 'avatars/' + phone + '-' + Date.now() + '.jpg');
+        await uploadBytes(avatarRef, ciNewAvatarFile);
+        avatarUrl = await getDownloadURL(avatarRef);
+      } catch (err) {
+        alert('照片上傳失敗(可能是 Storage 尚未設定完成)。可以先不上傳照片直接建立入住,之後 Storage 設定好再補上。');
+        return;
+      }
+    }
 
     await setDoc(doc(db, 'rooms', currentRoomId), {
       area: allRooms[currentRoomId].area,
@@ -518,10 +618,15 @@
       stayId: stayId,
       items: (itemsList.length || itemsOther) ? {list: itemsList, other: itemsOther} : null,
       notes: (notesList.length || notesOther) ? {list: notesList, other: notesOther} : null,
-      checkinDate: checkinDisplay
+      checkinDate: checkinDisplay,
+      avatarUrl: avatarUrl || null,
+      cameraUrl: cameraUrl || null
     });
 
-    await setDoc(doc(db, 'members', phone), { name: '' , updatedAt: serverTimestamp() }, { merge: true });
+    await setDoc(doc(db, 'members', phone), {
+      name: '', updatedAt: serverTimestamp(),
+      ...(avatarUrl ? { avatarUrl } : {})
+    }, { merge: true });
 
     await loadRooms();
     openRecord(currentRoomId);
@@ -534,11 +639,18 @@
     document.getElementById('recordLoc').textContent = (room.area === 'cat' ? '貓貓區' : '狗狗區') + ' · ' + room.no + ' 號房';
     document.getElementById('recordName').textContent = room.name;
     document.getElementById('recordMember').textContent = '家長 ' + room.phone;
+    const avatarEl = document.getElementById('recordAvatar');
+    if (room.avatarUrl){ avatarEl.src = room.avatarUrl; avatarEl.style.display = 'block'; }
+    else { avatarEl.style.display = 'none'; }
     document.getElementById('itemsEditPanel').style.display = 'none';
     document.getElementById('notesEditPanel').style.display = 'none';
+    document.getElementById('cameraEditPanel').style.display = 'none';
     document.getElementById('entryTime').value = toDatetimeLocalValue(new Date());
+    entryPhotoFile = null;
+    document.getElementById('entryPhotoPreview').style.display = 'none';
     renderItemsCard(room);
     renderNotesCard(room);
+    renderCameraCard(room);
     showScreen('screenRecord');
     await renderLog();
   }
@@ -580,6 +692,25 @@
       document.getElementById('recNotesOther').value = room.notes ? room.notes.other : '';
     });
   }
+
+  function renderCameraCard(room){
+    const el = document.getElementById('cameraCard');
+    el.className = 'summary-card ok';
+    el.innerHTML = (room.cameraUrl ? '監視器連結已設定' : '尚未設定監視器分享連結') +
+      ' <span id="cameraEditLink" style="text-decoration:underline;cursor:pointer;">' + (room.cameraUrl ? '編輯' : '新增') + '</span>';
+    document.getElementById('cameraEditLink').addEventListener('click', () => {
+      document.getElementById('cameraEditPanel').style.display = 'block';
+      document.getElementById('recCameraUrl').value = room.cameraUrl || '';
+    });
+  }
+
+  document.getElementById('cameraSaveBtn').addEventListener('click', async () => {
+    const url = document.getElementById('recCameraUrl').value.trim();
+    await updateDoc(doc(db, 'rooms', currentRoomId), { cameraUrl: url || null });
+    allRooms[currentRoomId].cameraUrl = url || null;
+    document.getElementById('cameraEditPanel').style.display = 'none';
+    renderCameraCard(allRooms[currentRoomId]);
+  });
 
   document.getElementById('itemsSaveBtn').addEventListener('click', async () => {
     const list = Array.from(document.querySelectorAll('.chip-row[data-multigroup="recItems"] .chip.active')).map(c => c.dataset.val);
@@ -637,8 +768,19 @@
   });
 
   document.getElementById('checkoutBtn').addEventListener('click', async () => {
-    if (!confirm('確定要辦理退房嗎?')) return;
+    if (!confirm('確定要辦理退房嗎?退房後這次住宿的照片會自動刪除以節省空間,文字紀錄會保留。')) return;
     const room = allRooms[currentRoomId];
+
+    // clean up this stay's photos to save Storage space, keep the text records
+    const entriesSnap = await getDocs(collection(db, 'rooms', currentRoomId, 'entries'));
+    for (const d of entriesSnap.docs){
+      const data = d.data();
+      if (data.stayId === room.stayId && data.photoPath){
+        try { await deleteObject(ref(storage, data.photoPath)); } catch (err) { /* file may already be gone, ignore */ }
+        await updateDoc(d.ref, { photoUrl: null, photoPath: null });
+      }
+    }
+
     await updateDoc(doc(db, 'members', room.phone), {
       history: arrayUnion({
         petName: room.name, area: room.area, no: room.no,
@@ -648,7 +790,8 @@
       })
     });
     await setDoc(doc(db, 'rooms', currentRoomId), {
-      area: room.area, no: room.no, name: null, phone: null, stayId: null, items: null, notes: null
+      area: room.area, no: room.no, name: null, phone: null, stayId: null, items: null, notes: null,
+      avatarUrl: null, cameraUrl: null
     });
     await loadRooms();
     showScreen('screenRooms');
@@ -745,9 +888,22 @@
       <div class="log-entry ${e.warn ? 'warn' : ''}">
         <div class="meta"><span>${e.timeStr} · ${e.cat}${e.staff ? '｜' + e.staff : ''}</span></div>
         <p>${e.content}</p>
+        ${e.photoUrl ? '<img src="'+e.photoUrl+'" style="width:100%;max-height:220px;object-fit:cover;border-radius:10px;margin-top:8px;">' : ''}
       </div>
     `).join('');
   }
+
+  document.getElementById('entryPhotoInput').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    entryPhotoFile = file;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      document.getElementById('entryPhotoPreview').src = ev.target.result;
+      document.getElementById('entryPhotoPreview').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  });
 
   document.getElementById('submitBtn').addEventListener('click', async () => {
     const activeTab = document.querySelector('.cat-tab.active').dataset.cat;
@@ -776,7 +932,22 @@
       if (peeVal){ peeCount = Number(peeVal); content = content + '、排尿 ' + peeVal + ' 次'; }
     }
     if (note) content = content ? content + '。' + note : note;
-    if (!content){ alert('請至少選擇一項狀況或填寫備註'); return; }
+    if (!content && !entryPhotoFile){ alert('請至少選擇一項狀況、填寫備註或新增照片'); return; }
+    if (!content) content = '（僅上傳照片）';
+
+    let photoUrl = null;
+    let photoPath = null;
+    if (entryPhotoFile){
+      try {
+        photoPath = 'entries/' + currentRoomId + '/' + Date.now() + '.jpg';
+        const photoRef = ref(storage, photoPath);
+        await uploadBytes(photoRef, entryPhotoFile);
+        photoUrl = await getDownloadURL(photoRef);
+      } catch (err) {
+        alert('照片上傳失敗(可能是 Storage 尚未設定完成)。可以先移除照片、只送出文字紀錄,之後 Storage 設定好再補拍。');
+        return;
+      }
+    }
 
     const timeVal = document.getElementById('entryTime').value;
     const chosenTime = timeVal ? new Date(timeVal) : new Date();
@@ -786,6 +957,7 @@
       content,
       warn: hasWarn,
       grams, poopCount, peeCount,
+      photoUrl, photoPath,
       staff: currentStaffName || '未填寫',
       timeStr: chosenTime.getHours().toString().padStart(2,'0') + ':' + chosenTime.getMinutes().toString().padStart(2,'0'),
       dateStr: dateStrOf(chosenTime),
@@ -794,12 +966,16 @@
 
     document.getElementById('noteText').value = '';
     document.getElementById('entryTime').value = toDatetimeLocalValue(new Date());
+    entryPhotoFile = null;
+    document.getElementById('entryPhotoPreview').style.display = 'none';
     panel.querySelectorAll('.chip.active').forEach(c => c.classList.remove('active'));
     panel.querySelectorAll('input[type=number]').forEach(i => i.value = '');
     await renderLog();
   });
 
   // ---------- member search ----------
+  let currentMemberPhone = null;
+
   document.getElementById('memberSearchBtn').addEventListener('click', async () => {
     const phone = document.getElementById('memberSearchInput').value.trim();
     if (!phone) return;
@@ -809,21 +985,91 @@
       return;
     }
     const member = snap.data();
+    currentMemberPhone = phone;
     document.getElementById('mhName').textContent = phone;
+    document.getElementById('mhNameInput').value = member.name || '';
+    document.getElementById('mhNewPhoneInput').value = '';
     const history = member.history || [];
     const stayHtml = history.length === 0
       ? '<div class="status-msg">目前沒有已退房的歷史紀錄</div>'
-      : history.map(h => `
-          <div class="log-entry">
+      : history.map((h, i) => `
+          <div class="log-entry" data-hidx="${i}" style="cursor:pointer;">
             <div class="meta"><span>${h.petName}・${h.area === 'cat' ? '貓貓區' : '狗狗區'} ${h.no} 號房</span></div>
-            <p>退房時間:${h.checkedOutAt}</p>
+            <p>退房時間:${h.checkedOutAt}(點擊查看完整紀錄)</p>
           </div>
+          <div id="hdetail-${i}" style="display:none;"></div>
         `).join('');
     document.getElementById('mhStays').innerHTML = stayHtml;
+    document.querySelectorAll('#mhStays [data-hidx]').forEach(el => {
+      el.addEventListener('click', async () => {
+        const idx = el.dataset.hidx;
+        const detailEl = document.getElementById('hdetail-' + idx);
+        if (detailEl.style.display === 'block'){ detailEl.style.display = 'none'; return; }
+        const h = history[idx];
+        if (!h.roomId || !h.stayId){
+          detailEl.innerHTML = '<div class="status-msg">這筆較舊的紀錄沒有留下每日細節。</div>';
+          detailEl.style.display = 'block';
+          return;
+        }
+        detailEl.innerHTML = '<div class="status-msg">讀取中...</div>';
+        detailEl.style.display = 'block';
+        const entriesSnap = await getDocs(collection(db, 'rooms', h.roomId, 'entries'));
+        const entries = [];
+        entriesSnap.forEach(d => { const data = d.data(); if (data.stayId === h.stayId) entries.push(data); });
+        entries.sort((a,b) => (a.createdAtMs || 0) - (b.createdAtMs || 0));
+        if (entries.length === 0){
+          detailEl.innerHTML = '<div class="status-msg">這次住宿沒有留下紀錄</div>';
+          return;
+        }
+        detailEl.innerHTML = entries.map(e => `
+          <div class="log-entry ${e.warn ? 'warn' : ''}">
+            <div class="meta"><span>${e.dateStr} ${e.timeStr} · ${e.cat}${e.staff ? '｜' + e.staff : ''}</span></div>
+            <p>${e.content}</p>
+            ${e.photoUrl ? '<img src="'+e.photoUrl+'" style="width:100%;border-radius:10px;margin-top:8px;">' : ''}
+          </div>
+        `).join('');
+      });
+    });
     showScreen('screenMemberHistory');
   });
 
   document.getElementById('mhBackBtn').addEventListener('click', () => showScreen('screenRooms'));
+
+  document.getElementById('mhNameSaveBtn').addEventListener('click', async () => {
+    if (!currentMemberPhone) return;
+    const name = document.getElementById('mhNameInput').value.trim();
+    await updateDoc(doc(db, 'members', currentMemberPhone), { name });
+    alert('已儲存姓名。');
+  });
+
+  document.getElementById('mhPhoneChangeBtn').addEventListener('click', async () => {
+    if (!currentMemberPhone) return;
+    const newPhone = document.getElementById('mhNewPhoneInput').value.trim();
+    if (!newPhone){ alert('請輸入新的手機號碼'); return; }
+    if (newPhone === currentMemberPhone){ alert('新號碼跟原號碼一樣,不需要搬移'); return; }
+    if (!confirm('確定要把「' + currentMemberPhone + '」的資料搬移到「' + newPhone + '」嗎?這個動作無法復原。')) return;
+
+    const oldSnap = await getDoc(doc(db, 'members', currentMemberPhone));
+    if (!oldSnap.exists()){ alert('找不到原本的資料,請重新查詢一次'); return; }
+    const memberData = oldSnap.data();
+
+    await setDoc(doc(db, 'members', newPhone), memberData);
+    await deleteDoc(doc(db, 'members', currentMemberPhone));
+
+    // update any currently active room pointing at the old phone
+    const roomsSnap = await getDocs(collection(db, 'rooms'));
+    for (const d of roomsSnap.docs){
+      if (d.data().phone === currentMemberPhone){
+        await updateDoc(d.ref, { phone: newPhone });
+      }
+    }
+
+    alert('已搬移完成,現在改用新號碼「' + newPhone + '」查詢。');
+    currentMemberPhone = newPhone;
+    document.getElementById('memberSearchInput').value = newPhone;
+    document.getElementById('memberSearchBtn').click();
+    await loadRooms();
+  });
 
   // ---------- auth ----------
   document.getElementById('googleLoginBtn').addEventListener('click', async () => {
