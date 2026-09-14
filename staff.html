@@ -92,12 +92,21 @@
 <body>
 <div class="phone">
 
-  <div class="staff-bar">
-    <span>登打人員</span>
-    <input type="text" id="staffName" placeholder="輸入你的名字" value="">
+  <div class="staff-bar" id="staffBar" style="display:none;">
+    <span id="staffLabel">登打人員</span>
+    <span id="logoutBtn" style="text-decoration:underline;cursor:pointer;">登出</span>
   </div>
 
-  <div id="loadingMsg" class="status-msg">連線資料庫中...</div>
+  <div class="screen active" id="screenAuthLogin">
+    <div style="padding:80px 30px 0;text-align:center;">
+      <div style="font-family:'Fraunces',serif;font-style:italic;font-size:26px;margin-bottom:10px;">(inn)heart</div>
+      <p style="font-size:13px;color:var(--ink-soft);margin-bottom:26px;">工作人員後台,請用公司核准的 Google 帳號登入。</p>
+      <button class="submit-btn" id="googleLoginBtn">使用 Google 登入</button>
+      <div id="authNote" style="font-size:12.5px;color:var(--danger);margin-top:16px;"></div>
+    </div>
+  </div>
+
+  <div id="loadingMsg" class="status-msg" style="display:none;">連線資料庫中...</div>
 
   <!-- SCREEN 1: room select -->
   <div class="screen" id="screenRooms">
@@ -367,6 +376,9 @@
     getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc,
     addDoc, query, orderBy, serverTimestamp, arrayUnion, writeBatch
   } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+  import {
+    getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut
+  } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDF0t4WRcgRVGOApUdLn8Oj8VbHy6vMZp8",
@@ -379,11 +391,14 @@
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
+  const auth = getAuth(app);
+  const googleProvider = new GoogleAuthProvider();
 
   const catLabels = {food:'飲食飲水', toilet:'排泄', mood:'精神情緒', activity:'活動放風', other:'其他'};
   let currentArea = 'cat';
   let currentRoomId = null;
   let allRooms = {};
+  let currentStaffName = '';
 
   function roomId(area, no){ return area + '-' + no; }
 
@@ -716,7 +731,7 @@
       content,
       warn: hasWarn,
       grams, poopCount, peeCount,
-      staff: document.getElementById('staffName').value.trim() || '未填寫',
+      staff: currentStaffName || '未填寫',
       timeStr: chosenTime.getHours().toString().padStart(2,'0') + ':' + chosenTime.getMinutes().toString().padStart(2,'0'),
       dateStr: dateStrOf(chosenTime),
       createdAtMs: chosenTime.getTime()
@@ -755,8 +770,24 @@
 
   document.getElementById('mhBackBtn').addEventListener('click', () => showScreen('screenRooms'));
 
-  // ---------- boot ----------
-  (async function init(){
+  // ---------- auth ----------
+  document.getElementById('googleLoginBtn').addEventListener('click', async () => {
+    document.getElementById('authNote').textContent = '';
+    try {
+      await signInWithPopup(auth, googleProvider);
+      // onAuthStateChanged below handles the rest
+    } catch (err) {
+      document.getElementById('authNote').textContent = '登入失敗:' + err.message;
+    }
+  });
+
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
+    await signOut(auth);
+  });
+
+  async function startApp(){
+    document.getElementById('loadingMsg').style.display = 'block';
+    document.getElementById('loadingMsg').textContent = '連線資料庫中...';
     try {
       await ensureRoomsSeeded();
       await loadRooms();
@@ -766,7 +797,29 @@
     } catch (err) {
       document.getElementById('loadingMsg').textContent = '連線失敗:' + err.message;
     }
-  })();
+  }
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user){
+      currentStaffName = '';
+      document.getElementById('staffBar').style.display = 'none';
+      document.getElementById('loadingMsg').style.display = 'none';
+      showScreen('screenAuthLogin');
+      return;
+    }
+
+    const allowSnap = await getDoc(doc(db, 'allowedStaff', user.email));
+    if (!allowSnap.exists()){
+      document.getElementById('authNote').textContent = '這個帳號(' + user.email + ')還沒有被授權使用,請洽店長加入名單。';
+      await signOut(auth);
+      return;
+    }
+
+    currentStaffName = allowSnap.data().name || user.email;
+    document.getElementById('staffLabel').textContent = '登打人員:' + currentStaffName;
+    document.getElementById('staffBar').style.display = 'flex';
+    await startApp();
+  });
 </script>
 </body>
 </html>
