@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -104,7 +105,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-  import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+  import { getFirestore, collection, doc, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDF0t4WRcgRVGOApUdLn8Oj8VbHy6vMZp8",
@@ -118,7 +119,7 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  let myRooms = [];
+  let myStays = [];
   let currentIdx = 0;
 
   document.getElementById('loginBtn').addEventListener('click', async () => {
@@ -128,14 +129,25 @@
     note.textContent = '查詢中...';
 
     const snap = await getDocs(collection(db, 'rooms'));
-    myRooms = [];
+    myStays = [];
     snap.forEach(d => {
       const data = d.data();
-      if (data.phone === phone) myRooms.push({ id: d.id, ...data });
+      if (data.phone === phone) myStays.push({ id: d.id, ...data, isActive: true });
     });
 
-    if (myRooms.length === 0){
-      note.textContent = '目前查不到這支手機號碼正在入住的寶貝,請確認號碼是否正確,或洽詢櫃檯。';
+    const memberSnap = await getDoc(doc(db, 'members', phone));
+    if (memberSnap.exists()){
+      const history = memberSnap.data().history || [];
+      history.slice().reverse().forEach(h => {
+        myStays.push({
+          id: h.roomId, area: h.area, no: h.no, name: h.petName,
+          stayId: h.stayId, notes: null, isActive: false, checkedOutAt: h.checkedOutAt
+        });
+      });
+    }
+
+    if (myStays.length === 0){
+      note.textContent = '目前查不到這支手機號碼的任何入住紀錄,請確認號碼是否正確,或洽詢櫃檯。';
       return;
     }
 
@@ -149,10 +161,11 @@
 
   function renderPetTabs(){
     const wrap = document.getElementById('petTabs');
-    if (myRooms.length <= 1){ wrap.innerHTML = ''; return; }
-    wrap.innerHTML = myRooms.map((r, i) =>
-      `<div class="pet-tab ${i === currentIdx ? 'active' : ''}" data-idx="${i}">${r.name}</div>`
-    ).join('');
+    if (myStays.length <= 1){ wrap.innerHTML = ''; return; }
+    wrap.innerHTML = myStays.map((r, i) => {
+      const label = r.isActive ? r.name : r.name + '・已退房';
+      return `<div class="pet-tab ${i === currentIdx ? 'active' : ''}" data-idx="${i}">${label}</div>`;
+    }).join('');
     wrap.querySelectorAll('.pet-tab').forEach(tab => {
       tab.addEventListener('click', async () => {
         currentIdx = parseInt(tab.dataset.idx);
@@ -176,9 +189,10 @@
   let currentSelectedDate = null;
 
   async function renderPet(){
-    const room = myRooms[currentIdx];
+    const room = myStays[currentIdx];
     document.getElementById('mainName').textContent = room.name;
-    document.getElementById('mainLoc').textContent = (room.area === 'cat' ? '貓貓區' : '狗狗區') + ' · ' + room.no + ' 號房';
+    document.getElementById('mainLoc').textContent = (room.area === 'cat' ? '貓貓區' : '狗狗區') + ' · ' + room.no + ' 號房' +
+      (room.isActive ? '' : '(已退房・' + room.checkedOutAt + ')');
 
     const notesArea = document.getElementById('notesArea');
     if (room.notes){
@@ -186,6 +200,13 @@
       notesArea.innerHTML = `<div class="notes-card warn">特殊注意事項:${text}</div>`;
     } else {
       notesArea.innerHTML = '';
+    }
+
+    if (!room.id || !room.stayId){
+      document.getElementById('summaryStrip').innerHTML = '';
+      document.getElementById('dayTabs').innerHTML = '';
+      document.getElementById('timeline').innerHTML = '<div class="status-msg">這筆較舊的紀錄沒有留下每日細節,僅保留入住摘要。</div>';
+      return;
     }
 
     const entriesSnap = await getDocs(collection(db, 'rooms', room.id, 'entries'));
@@ -199,9 +220,10 @@
       currentEntriesByDate[ds].push(e);
     });
     const today = dateStrOf(new Date());
-    if (!currentEntriesByDate[today]) currentEntriesByDate[today] = [];
+    if (room.isActive && !currentEntriesByDate[today]) currentEntriesByDate[today] = [];
     const dates = Object.keys(currentEntriesByDate).sort().reverse();
-    currentSelectedDate = today;
+    currentSelectedDate = room.isActive ? today : (dates[0] || today);
+    if (!currentEntriesByDate[currentSelectedDate]) currentEntriesByDate[currentSelectedDate] = [];
 
     const dayTabs = document.getElementById('dayTabs');
     dayTabs.innerHTML = dates.map(ds =>
