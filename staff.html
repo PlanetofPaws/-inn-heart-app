@@ -5,29 +5,29 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>寶貝紀錄後台(資料庫版) · (inn)heart</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#EFEAE1; --card:#FFFDF9; --ink:#2A2622; --ink-soft:#6B6259;
-    --pine:#3F5D4E; --pine-soft:#E7EDE9; --ochre:#C68A3E; --ochre-soft:#F5E9D6;
-    --line:#DDD5C7; --danger:#9C4A3C; --danger-soft:#F3E1DC;
+    --bg:#3B3B3D; --card:#4A4A4C; --ink:#FFFFFF; --ink-soft:#C7C7C9;
+    --pine:#4CAF7D; --pine-soft:rgba(76,175,125,0.22); --ochre:#B39DDB; --ochre-soft:rgba(179,157,219,0.22);
+    --line:#5C5C5E; --danger:#E57373; --danger-soft:rgba(229,115,115,0.2); --deep:#1E1E1F;
   }
   *{box-sizing:border-box;}
-  body{margin:0;background:var(--bg);font-family:'Work Sans',sans-serif;color:var(--ink);display:flex;justify-content:center;-webkit-font-smoothing:antialiased;}
+  body{margin:0;background:var(--bg);font-family:'Noto Sans TC','PingFang TC','Heiti TC','Microsoft JhengHei',sans-serif;font-weight:500;color:var(--ink);display:flex;justify-content:center;-webkit-font-smoothing:antialiased;}
   .phone{width:100%;max-width:420px;min-height:100vh;padding:0 0 50px;}
   .screen{display:none;}
   .screen.active{display:block;}
 
   .staff-bar{display:flex;justify-content:space-between;align-items:center;padding:14px 22px;background:var(--card);border-bottom:1px solid var(--line);font-size:12.5px;color:var(--ink-soft);gap:8px;}
-  .staff-bar input{flex:1;border:none;background:transparent;font-family:'Work Sans',sans-serif;font-size:12.5px;color:var(--ink);font-weight:600;text-align:right;}
+  .staff-bar input{flex:1;border:none;background:transparent;font-family:'Noto Sans TC',sans-serif;font-size:12.5px;color:var(--ink);font-weight:600;text-align:right;}
 
   .topbar{padding:18px 22px 4px;}
   .topbar .sub{font-size:12px;color:var(--ink-soft);}
-  .topbar h1{font-family:'Fraunces',serif;font-style:italic;font-weight:500;font-size:26px;margin:2px 0 0;}
+  .topbar h1{font-weight:900;font-size:24px;margin:2px 0 0;}
   .member-search{padding:16px 22px 0;}
   .member-search .row{display:flex;gap:8px;}
-  .member-search input{flex:1;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:10px 13px;font-size:14px;font-family:'Work Sans',sans-serif;color:var(--ink);}
-  .member-search button{background:var(--ink);color:#F4F1E9;border:none;border-radius:12px;padding:0 16px;font-size:13.5px;font-weight:600;cursor:pointer;}
+  .member-search input{flex:1;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:10px 13px;font-size:14px;font-family:'Noto Sans TC',sans-serif;color:var(--ink);}
+  .member-search button{background:var(--deep);color:#F4F1E9;border:none;border-radius:12px;padding:0 16px;font-size:13.5px;font-weight:600;cursor:pointer;}
   .divider{display:flex;align-items:center;gap:10px;margin:18px 0 4px;color:var(--ink-soft);font-size:12px;}
   .divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--line);}
 
@@ -43,7 +43,7 @@
   .back-row{padding:16px 22px 0;font-size:13px;color:var(--ink-soft);cursor:pointer;}
   .record-head{padding:6px 22px 0;}
   .record-head .loc{font-size:12px;color:var(--ink-soft);}
-  .record-head h1{font-family:'Fraunces',serif;font-style:italic;font-weight:500;font-size:28px;margin:2px 0 0;}
+  .record-head h1{font-weight:900;font-size:26px;margin:2px 0 0;}
 
   .summary-card{margin:14px 22px 0;padding:13px 16px;border-radius:14px;font-size:13.5px;line-height:1.5;}
   .summary-card.ok{background:var(--pine-soft);color:var(--pine);}
@@ -53,7 +53,7 @@
   .field label{display:block;font-size:13px;color:var(--ink-soft);margin-bottom:8px;}
   textarea,input[type=text],input[type=number]{
     width:100%;border:1px solid var(--line);background:var(--card);border-radius:12px;
-    padding:10px 13px;font-family:'Work Sans',sans-serif;font-size:14.5px;color:var(--ink);
+    padding:10px 13px;font-family:'Noto Sans TC',sans-serif;font-size:14.5px;color:var(--ink);
   }
   .chip-row{display:flex;flex-wrap:wrap;gap:8px;}
   .chip{padding:8px 14px;border-radius:20px;border:1px solid var(--line);background:var(--card);font-size:13.5px;color:var(--ink-soft);cursor:pointer;user-select:none;}
@@ -61,14 +61,15 @@
   .chip.active.warn{background:var(--danger);border-color:var(--danger);}
   .cat-tabs{display:flex;gap:8px;padding:18px 22px 0;overflow-x:auto;}
   .cat-tab{flex-shrink:0;padding:9px 15px;border-radius:20px;border:1px solid var(--line);background:var(--card);font-size:13.5px;color:var(--ink-soft);cursor:pointer;}
-  .cat-tab.active{background:var(--ochre);border-color:var(--ochre);color:#3A2A0F;}
+  .cat-tab.active{background:var(--ochre);border-color:var(--ochre);color:#2A2A2C;}
   .cat-panel{display:none;}
   .cat-panel.show{display:block;}
   .sub-group{padding:14px 22px 0;}
   .sub-group .glabel{font-size:12.5px;color:var(--ink-soft);margin-bottom:6px;display:block;}
   .two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 22px 0;}
 
-  .submit-btn{width:100%;background:var(--pine);color:#F4F1E9;border:none;border-radius:14px;padding:15px;font-family:'Work Sans',sans-serif;font-weight:600;font-size:15px;cursor:pointer;}
+  .submit-btn{width:100%;background:var(--pine);color:#F4F1E9;border:none;border-radius:14px;padding:15px;font-family:'Noto Sans TC',sans-serif;font-weight:600;font-size:15px;cursor:pointer;}
+  .small-btn{display:inline-block;color:#2A2A2C;border:none;border-radius:12px;padding:10px 16px;font-family:'Noto Sans TC',sans-serif;font-weight:600;font-size:13.5px;cursor:pointer;}
   .submit-row{padding:18px 22px 0;}
 
   .today-section{margin-top:30px;padding:0 22px;}
@@ -82,10 +83,10 @@
 
   .day-tabs{display:flex;gap:8px;padding:0 22px 14px;overflow-x:auto;}
   .day-tab{flex-shrink:0;padding:8px 14px;border-radius:20px;border:1px solid var(--line);background:var(--card);font-size:13px;color:var(--ink-soft);cursor:pointer;}
-  .day-tab.active{background:var(--ink);border-color:var(--ink);color:#F4F1E9;}
+  .day-tab.active{background:var(--deep);border-color:var(--deep);color:#F4F1E9;}
   .summary-strip{display:flex;gap:10px;padding:0 22px 16px;}
   .summary-item{flex:1;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 8px;text-align:center;}
-  .summary-item .num{font-family:'Fraunces',serif;font-size:18px;color:var(--pine);}
+  .summary-item .num{font-weight:900;font-size:18px;color:var(--pine);}
   .summary-item .lbl{font-size:11px;color:var(--ink-soft);margin-top:2px;}
 
   #printArea{display:none;}
@@ -93,7 +94,7 @@
     body > *:not(#printArea){display:none !important;}
     #printArea{
       display:block !important;
-      color:#111; font-family:'Work Sans', sans-serif; padding:0;
+      color:#111; font-family:'Noto Sans TC',sans-serif; padding:0;
     }
     #printArea h1{font-size:20px;margin:0 0 4px;}
     #printArea .meta{font-size:13px;color:#444;margin-bottom:14px;}
@@ -113,7 +114,7 @@
 
   <div class="screen active" id="screenAuthLogin">
     <div style="padding:80px 30px 0;text-align:center;">
-      <div style="font-family:'Fraunces',serif;font-style:italic;font-size:26px;margin-bottom:10px;">(inn)heart</div>
+      <div style="font-weight:900;font-size:24px;margin-bottom:10px;">(inn)heart</div>
       <p style="font-size:13px;color:var(--ink-soft);margin-bottom:26px;">工作人員後台,請用公司核准的 Google 帳號登入。</p>
       <button class="submit-btn" id="googleLoginBtn">使用 Google 登入</button>
       <div id="authNote" style="font-size:12.5px;color:var(--danger);margin-top:16px;"></div>
@@ -263,7 +264,7 @@
     </div>
 
     <div class="field">
-      <button class="submit-btn" id="printBtn" style="background:var(--ochre);">匯出並列印紀錄</button>
+      <button id="printBtn" class="small-btn" style="background:var(--ochre);">匯出並列印紀錄</button>
     </div>
     <div class="field">
       <button class="submit-btn" id="checkoutBtn" style="background:var(--danger);">辦理退房</button>
@@ -426,7 +427,7 @@
       <label>變更手機號碼</label>
       <div style="display:flex;gap:8px;">
         <input type="text" id="mhNewPhoneInput" placeholder="輸入新的手機號碼">
-        <button id="mhPhoneChangeBtn" style="background:var(--ochre);color:#3A2A0F;border:none;border-radius:12px;padding:0 16px;font-size:13.5px;cursor:pointer;white-space:nowrap;">搬移資料</button>
+        <button id="mhPhoneChangeBtn" style="background:var(--ochre);color:#2A2A2C;border:none;border-radius:12px;padding:0 16px;font-size:13.5px;cursor:pointer;white-space:nowrap;">搬移資料</button>
       </div>
       <div style="font-size:11.5px;color:var(--ink-soft);margin-top:6px;">會把姓名、歷史紀錄搬到新號碼底下,並自動更新目前入住中的房間對應,原號碼會被刪除。</div>
     </div>
@@ -733,16 +734,11 @@
   });
 
   // checkout
-  document.getElementById('printBtn').addEventListener('click', () => {
-    const room = allRooms[currentRoomId];
-    const dates = Object.keys(currentEntriesByDate).sort();
-
-    let itemsText = room.items ? [...room.items.list, ...(room.items.other ? ['其他:' + room.items.other] : [])].join('、') : '無';
-    let notesText = room.notes ? [...room.notes.list, ...(room.notes.other ? ['其他:' + room.notes.other] : [])].join('、') : '無';
-
+  function printStay(meta, itemsText, notesText, entriesByDateObj){
+    const dates = Object.keys(entriesByDateObj).sort();
     let daysHtml = '';
     dates.forEach(ds => {
-      const dayEntries = (currentEntriesByDate[ds] || []).slice().sort((a,b) => (a.createdAtMs || 0) - (b.createdAtMs || 0));
+      const dayEntries = (entriesByDateObj[ds] || []).slice().sort((a,b) => (a.createdAtMs || 0) - (b.createdAtMs || 0));
       if (dayEntries.length === 0) return;
       daysHtml += `<h2>${ds}</h2>`;
       dayEntries.forEach(e => {
@@ -753,11 +749,7 @@
 
     document.getElementById('printArea').innerHTML = `
       <h1>(inn)heart 寶貝照護紀錄</h1>
-      <div class="meta">
-        寶貝名字:${room.name}　|　房間:${room.area === 'cat' ? '貓貓區' : '狗狗區'} ${room.no} 號房<br>
-        家長手機:${room.phone}　|　入住時間:${room.checkinDate || ''}<br>
-        列印時間:${new Date().toLocaleString('zh-TW')}
-      </div>
+      <div class="meta">${meta}<br>列印時間:${new Date().toLocaleString('zh-TW')}</div>
       <h2 style="border:none;margin-top:0;">攜帶物品</h2>
       <p>${itemsText}</p>
       <h2 style="border:none;">特殊注意事項</h2>
@@ -765,6 +757,14 @@
       ${daysHtml}
     `;
     window.print();
+  }
+
+  document.getElementById('printBtn').addEventListener('click', () => {
+    const room = allRooms[currentRoomId];
+    const itemsText = room.items ? [...room.items.list, ...(room.items.other ? ['其他:' + room.items.other] : [])].join('、') : '無';
+    const notesText = room.notes ? [...room.notes.list, ...(room.notes.other ? ['其他:' + room.notes.other] : [])].join('、') : '無';
+    const meta = `寶貝名字:${room.name}　|　房間:${room.area === 'cat' ? '貓貓區' : '狗狗區'} ${room.no} 號房<br>家長手機:${room.phone}　|　入住時間:${room.checkinDate || ''}`;
+    printStay(meta, itemsText, notesText, currentEntriesByDate);
   });
 
   document.getElementById('checkoutBtn').addEventListener('click', async () => {
@@ -1027,7 +1027,19 @@
             <p>${e.content}</p>
             ${e.photoUrl ? '<img src="'+e.photoUrl+'" style="width:100%;border-radius:10px;margin-top:8px;">' : ''}
           </div>
-        `).join('');
+        `).join('') + `<button class="small-btn" style="background:var(--ochre);margin-top:6px;" data-print-hidx="${idx}">匯出並列印這次紀錄</button>`;
+
+        detailEl.querySelector('[data-print-hidx]').addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          const byDate = {};
+          entries.forEach(en => {
+            const ds = en.dateStr || dateStrOf(new Date(en.createdAtMs || Date.now()));
+            if (!byDate[ds]) byDate[ds] = [];
+            byDate[ds].push(en);
+          });
+          const meta = `寶貝名字:${h.petName}　|　房間:${h.area === 'cat' ? '貓貓區' : '狗狗區'} ${h.no} 號房<br>入住時間:${h.checkinDate || ''}　|　退房時間:${h.checkedOutAt}`;
+          printStay(meta, '(此為歷史紀錄,攜帶物品未保留)', '(此為歷史紀錄,注意事項未保留)', byDate);
+        });
       });
     });
     showScreen('screenMemberHistory');
