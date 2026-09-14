@@ -87,6 +87,20 @@
   .summary-item{flex:1;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 8px;text-align:center;}
   .summary-item .num{font-family:'Fraunces',serif;font-size:18px;color:var(--pine);}
   .summary-item .lbl{font-size:11px;color:var(--ink-soft);margin-top:2px;}
+
+  #printArea{display:none;}
+  @media print{
+    body > *:not(#printArea){display:none !important;}
+    #printArea{
+      display:block !important;
+      color:#111; font-family:'Work Sans', sans-serif; padding:0;
+    }
+    #printArea h1{font-size:20px;margin:0 0 4px;}
+    #printArea .meta{font-size:13px;color:#444;margin-bottom:14px;}
+    #printArea h2{font-size:15px;margin:18px 0 6px;border-bottom:1px solid #999;padding-bottom:4px;}
+    #printArea .pentry{margin-bottom:8px;font-size:13px;line-height:1.5;}
+    #printArea .pentry .ptime{font-weight:600;}
+  }
 </style>
 </head>
 <body>
@@ -225,6 +239,9 @@
       <div class="submit-row"><button class="submit-btn" id="notesSaveBtn">儲存注意事項</button></div>
     </div>
 
+    <div class="field">
+      <button class="submit-btn" id="printBtn" style="background:var(--ochre);">匯出並列印紀錄</button>
+    </div>
     <div class="field">
       <button class="submit-btn" id="checkoutBtn" style="background:var(--danger);">辦理退房</button>
     </div>
@@ -369,6 +386,8 @@
   </div>
 
 </div>
+
+<div id="printArea"></div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
@@ -583,12 +602,48 @@
   });
 
   // checkout
+  document.getElementById('printBtn').addEventListener('click', () => {
+    const room = allRooms[currentRoomId];
+    const dates = Object.keys(currentEntriesByDate).sort();
+
+    let itemsText = room.items ? [...room.items.list, ...(room.items.other ? ['其他:' + room.items.other] : [])].join('、') : '無';
+    let notesText = room.notes ? [...room.notes.list, ...(room.notes.other ? ['其他:' + room.notes.other] : [])].join('、') : '無';
+
+    let daysHtml = '';
+    dates.forEach(ds => {
+      const dayEntries = (currentEntriesByDate[ds] || []).slice().sort((a,b) => (a.createdAtMs || 0) - (b.createdAtMs || 0));
+      if (dayEntries.length === 0) return;
+      daysHtml += `<h2>${ds}</h2>`;
+      dayEntries.forEach(e => {
+        daysHtml += `<div class="pentry"><span class="ptime">${e.timeStr} · ${e.cat}</span>${e.staff ? '(' + e.staff + ')' : ''} — ${e.content}</div>`;
+      });
+    });
+    if (!daysHtml) daysHtml = '<p>目前尚無紀錄</p>';
+
+    document.getElementById('printArea').innerHTML = `
+      <h1>(inn)heart 寶貝照護紀錄</h1>
+      <div class="meta">
+        寶貝名字:${room.name}　|　房間:${room.area === 'cat' ? '貓貓區' : '狗狗區'} ${room.no} 號房<br>
+        家長手機:${room.phone}　|　入住時間:${room.checkinDate || ''}<br>
+        列印時間:${new Date().toLocaleString('zh-TW')}
+      </div>
+      <h2 style="border:none;margin-top:0;">攜帶物品</h2>
+      <p>${itemsText}</p>
+      <h2 style="border:none;">特殊注意事項</h2>
+      <p>${notesText}</p>
+      ${daysHtml}
+    `;
+    window.print();
+  });
+
   document.getElementById('checkoutBtn').addEventListener('click', async () => {
     if (!confirm('確定要辦理退房嗎?')) return;
     const room = allRooms[currentRoomId];
     await updateDoc(doc(db, 'members', room.phone), {
       history: arrayUnion({
-        petName: room.name, area: room.area, room: room.no,
+        petName: room.name, area: room.area, no: room.no,
+        roomId: currentRoomId, stayId: room.stayId,
+        checkinDate: room.checkinDate || '',
         checkedOutAt: new Date().toLocaleString('zh-TW')
       })
     });
@@ -760,7 +815,7 @@
       ? '<div class="status-msg">目前沒有已退房的歷史紀錄</div>'
       : history.map(h => `
           <div class="log-entry">
-            <div class="meta"><span>${h.petName}・${h.area === 'cat' ? '貓貓區' : '狗狗區'} ${h.room} 號房</span></div>
+            <div class="meta"><span>${h.petName}・${h.area === 'cat' ? '貓貓區' : '狗狗區'} ${h.no} 號房</span></div>
             <p>退房時間:${h.checkedOutAt}</p>
           </div>
         `).join('');
