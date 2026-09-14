@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>寶貝紀錄後台(資料庫版) · (inn)heart</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#EFEAE1; --card:#FFFDF9; --ink:#2A2622; --ink-soft:#6B6259;
+    --pine:#3F5D4E; --pine-soft:#E7EDE9; --ochre:#C68A3E; --ochre-soft:#F5E9D6;
+    --line:#DDD5C7; --danger:#9C4A3C; --danger-soft:#F3E1DC;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);font-family:'Work Sans',sans-serif;color:var(--ink);display:flex;justify-content:center;-webkit-font-smoothing:antialiased;}
+  .phone{width:100%;max-width:420px;min-height:100vh;padding:0 0 50px;}
+  .screen{display:none;}
+  .screen.active{display:block;}
+
+  .staff-bar{display:flex;justify-content:space-between;align-items:center;padding:14px 22px;background:var(--card);border-bottom:1px solid var(--line);font-size:12.5px;color:var(--ink-soft);gap:8px;}
+  .staff-bar input{flex:1;border:none;background:transparent;font-family:'Work Sans',sans-serif;font-size:12.5px;color:var(--ink);font-weight:600;text-align:right;}
+
+  .topbar{padding:18px 22px 4px;}
+  .topbar .sub{font-size:12px;color:var(--ink-soft);}
+  .topbar h1{font-family:'Fraunces',serif;font-style:italic;font-weight:500;font-size:26px;margin:2px 0 0;}
+  .member-search{padding:16px 22px 0;}
+  .member-search .row{display:flex;gap:8px;}
+  .member-search input{flex:1;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:10px 13px;font-size:14px;font-family:'Work Sans',sans-serif;color:var(--ink);}
+  .member-search button{background:var(--ink);color:#F4F1E9;border:none;border-radius:12px;padding:0 16px;font-size:13.5px;font-weight:600;cursor:pointer;}
+  .divider{display:flex;align-items:center;gap:10px;margin:18px 0 4px;color:var(--ink-soft);font-size:12px;}
+  .divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--line);}
+
+  .area-toggle{display:flex;gap:8px;padding:16px 22px 6px;}
+  .area-chip{flex:1;text-align:center;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-size:14px;color:var(--ink-soft);cursor:pointer;}
+  .area-chip.active{background:var(--pine);border-color:var(--pine);color:#F4F1E9;}
+  .room-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:14px 22px 0;}
+  .room-btn{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 8px;text-align:center;cursor:pointer;}
+  .room-btn .no{font-size:11px;color:var(--ink-soft);}
+  .room-btn .name{font-size:14px;font-weight:600;margin-top:2px;}
+  .room-btn[data-empty]{border-style:dashed;color:var(--ink-soft);}
+
+  .back-row{padding:16px 22px 0;font-size:13px;color:var(--ink-soft);cursor:pointer;}
+  .record-head{padding:6px 22px 0;}
+  .record-head .loc{font-size:12px;color:var(--ink-soft);}
+  .record-head h1{font-family:'Fraunces',serif;font-style:italic;font-weight:500;font-size:28px;margin:2px 0 0;}
+
+  .summary-card{margin:14px 22px 0;padding:13px 16px;border-radius:14px;font-size:13.5px;line-height:1.5;}
+  .summary-card.ok{background:var(--pine-soft);color:var(--pine);}
+  .summary-card.warn{background:var(--danger-soft);color:var(--danger);}
+
+  .field{padding:16px 22px 0;}
+  .field label{display:block;font-size:13px;color:var(--ink-soft);margin-bottom:8px;}
+  textarea,input[type=text],input[type=number]{
+    width:100%;border:1px solid var(--line);background:var(--card);border-radius:12px;
+    padding:10px 13px;font-family:'Work Sans',sans-serif;font-size:14.5px;color:var(--ink);
+  }
+  .chip-row{display:flex;flex-wrap:wrap;gap:8px;}
+  .chip{padding:8px 14px;border-radius:20px;border:1px solid var(--line);background:var(--card);font-size:13.5px;color:var(--ink-soft);cursor:pointer;user-select:none;}
+  .chip.active{background:var(--pine);border-color:var(--pine);color:#F4F1E9;}
+  .chip.active.warn{background:var(--danger);border-color:var(--danger);}
+  .cat-tabs{display:flex;gap:8px;padding:18px 22px 0;overflow-x:auto;}
+  .cat-tab{flex-shrink:0;padding:9px 15px;border-radius:20px;border:1px solid var(--line);background:var(--card);font-size:13.5px;color:var(--ink-soft);cursor:pointer;}
+  .cat-tab.active{background:var(--ochre);border-color:var(--ochre);color:#3A2A0F;}
+  .cat-panel{display:none;}
+  .cat-panel.show{display:block;}
+  .sub-group{padding:14px 22px 0;}
+  .sub-group .glabel{font-size:12.5px;color:var(--ink-soft);margin-bottom:6px;display:block;}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 22px 0;}
+
+  .submit-btn{width:100%;background:var(--pine);color:#F4F1E9;border:none;border-radius:14px;padding:15px;font-family:'Work Sans',sans-serif;font-weight:600;font-size:15px;cursor:pointer;}
+  .submit-row{padding:18px 22px 0;}
+
+  .today-section{margin-top:30px;padding:0 22px;}
+  .today-section h2{font-size:14px;color:var(--ink-soft);font-weight:500;margin:0 0 12px;}
+  .log-entry{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px 16px;margin-bottom:10px;}
+  .log-entry.warn{border-color:var(--danger);}
+  .log-entry .meta{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-soft);margin-bottom:4px;}
+  .log-entry p{margin:0;font-size:14px;line-height:1.5;}
+  .empty-note{font-size:13px;color:var(--ink-soft);text-align:center;padding:20px 0;}
+  .status-msg{padding:12px 22px;font-size:13px;color:var(--ink-soft);}
+
+  .day-tabs{display:flex;gap:8px;padding:0 22px 14px;overflow-x:auto;}
+  .day-tab{flex-shrink:0;padding:8px 14px;border-radius:20px;border:1px solid var(--line);background:var(--card);font-size:13px;color:var(--ink-soft);cursor:pointer;}
+  .day-tab.active{background:var(--ink);border-color:var(--ink);color:#F4F1E9;}
+  .summary-strip{display:flex;gap:10px;padding:0 22px 16px;}
+  .summary-item{flex:1;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 8px;text-align:center;}
+  .summary-item .num{font-family:'Fraunces',serif;font-size:18px;color:var(--pine);}
+  .summary-item .lbl{font-size:11px;color:var(--ink-soft);margin-top:2px;}
+</style>
+</head>
+<body>
+<div class="phone">
+
+  <div class="staff-bar">
+    <span>登打人員</span>
+    <input type="text" id="staffName" placeholder="輸入你的名字" value="">
+  </div>
+
+  <div id="loadingMsg" class="status-msg">連線資料庫中...</div>
+
+  <!-- SCREEN 1: room select -->
+  <div class="screen" id="screenRooms">
+    <div class="topbar">
+      <div class="sub">(inn)heart · 工作人員後台</div>
+      <h1>選擇房間</h1>
+    </div>
+
+    <div class="member-search">
+      <div class="row">
+        <input type="text" id="memberSearchInput" placeholder="輸入手機號碼查詢歷史紀錄">
+        <button id="memberSearchBtn">查詢</button>
+      </div>
+      <div class="divider">或依房間登打今日紀錄</div>
+    </div>
+
+    <div class="area-toggle">
+      <div class="area-chip active" data-area="cat">貓貓區 · 12 間</div>
+      <div class="area-chip" data-area="dog">狗狗區 · 11 間</div>
+    </div>
+    <div class="room-grid" id="roomGrid"></div>
+  </div>
+
+  <!-- SCREEN 4: new check-in -->
+  <div class="screen" id="screenCheckin">
+    <div class="back-row" id="ciBackBtn">← 返回房間列表</div>
+    <div class="record-head">
+      <div class="loc" id="ciLoc">貓貓區 · 4 號房</div>
+      <h1>新入住登記</h1>
+    </div>
+    <div class="field">
+      <label>寶貝名字</label>
+      <input type="text" id="ciPetName" placeholder="例如：可可">
+    </div>
+    <div class="field">
+      <label>家長手機號碼</label>
+      <input type="text" id="ciMemberNo" placeholder="例如：0912345678">
+    </div>
+    <div class="field">
+      <label>入住時間</label>
+      <input type="datetime-local" id="ciCheckinTime">
+    </div>
+    <div class="field">
+      <label>本次攜帶物品</label>
+      <div class="chip-row" data-multigroup="ciItems">
+        <div class="chip" data-val="飼料">飼料</div>
+        <div class="chip" data-val="零食">零食</div>
+        <div class="chip" data-val="藥品">藥品</div>
+        <div class="chip" data-val="睡墊/毯子">睡墊/毯子</div>
+        <div class="chip" data-val="玩具">玩具</div>
+        <div class="chip" data-val="外出籠">外出籠</div>
+      </div>
+    </div>
+    <div class="field">
+      <label>其他(自行填寫)</label>
+      <input type="text" id="ciItemsOther">
+    </div>
+    <div class="field">
+      <label>特殊注意事項提醒</label>
+      <div class="chip-row" data-multigroup="ciNotes">
+        <div class="chip warn" data-val="過敏">過敏</div>
+        <div class="chip warn" data-val="易緊張/怕生">易緊張/怕生</div>
+        <div class="chip warn" data-val="具攻擊性">具攻擊性</div>
+        <div class="chip warn" data-val="需要隔離">需要隔離</div>
+        <div class="chip warn" data-val="慢性病史">慢性病史</div>
+        <div class="chip warn" data-val="需按時服藥">需按時服藥</div>
+        <div class="chip warn" data-val="特殊飲食限制">特殊飲食限制</div>
+      </div>
+    </div>
+    <div class="field">
+      <label>其他說明</label>
+      <input type="text" id="ciNotesOther">
+    </div>
+    <div class="submit-row">
+      <button class="submit-btn" id="ciSubmitBtn">建立入住並綁定家長</button>
+    </div>
+  </div>
+
+  <!-- SCREEN 2: record entry -->
+  <div class="screen" id="screenRecord">
+    <div class="back-row" id="backBtn">← 返回房間列表</div>
+    <div class="record-head">
+      <div class="loc" id="recordLoc">貓貓區 · 3 號房</div>
+      <h1 id="recordName">抹茶</h1>
+      <div class="loc" id="recordMember" style="margin-top:4px;text-decoration:underline;cursor:pointer;">家長 0912-345-678</div>
+    </div>
+
+    <div class="summary-card ok" id="itemsCard"></div>
+    <div class="field" id="itemsEditPanel" style="display:none;">
+      <div class="chip-row" data-multigroup="recItems">
+        <div class="chip" data-val="飼料">飼料</div>
+        <div class="chip" data-val="零食">零食</div>
+        <div class="chip" data-val="藥品">藥品</div>
+        <div class="chip" data-val="睡墊/毯子">睡墊/毯子</div>
+        <div class="chip" data-val="玩具">玩具</div>
+        <div class="chip" data-val="外出籠">外出籠</div>
+      </div>
+      <label style="margin-top:12px;">其他</label>
+      <input type="text" id="recItemsOther">
+      <div class="submit-row"><button class="submit-btn" id="itemsSaveBtn">儲存攜帶物品</button></div>
+    </div>
+
+    <div class="summary-card warn" id="notesCard"></div>
+    <div class="field" id="notesEditPanel" style="display:none;">
+      <div class="chip-row" data-multigroup="recNotes">
+        <div class="chip warn" data-val="過敏">過敏</div>
+        <div class="chip warn" data-val="易緊張/怕生">易緊張/怕生</div>
+        <div class="chip warn" data-val="具攻擊性">具攻擊性</div>
+        <div class="chip warn" data-val="需要隔離">需要隔離</div>
+        <div class="chip warn" data-val="慢性病史">慢性病史</div>
+        <div class="chip warn" data-val="需按時服藥">需按時服藥</div>
+        <div class="chip warn" data-val="特殊飲食限制">特殊飲食限制</div>
+      </div>
+      <label style="margin-top:12px;">其他說明</label>
+      <input type="text" id="recNotesOther">
+      <div class="submit-row"><button class="submit-btn" id="notesSaveBtn">儲存注意事項</button></div>
+    </div>
+
+    <div class="field">
+      <button class="submit-btn" id="checkoutBtn" style="background:var(--danger);">辦理退房</button>
+    </div>
+
+    <div class="field">
+      <label>紀錄類型</label>
+      <div class="cat-tabs">
+        <div class="cat-tab active" data-cat="food">飲食飲水</div>
+        <div class="cat-tab" data-cat="toilet">排泄</div>
+        <div class="cat-tab" data-cat="mood">精神情緒</div>
+        <div class="cat-tab" data-cat="activity">活動放風</div>
+        <div class="cat-tab" data-cat="other">其他(用藥・檢查)</div>
+      </div>
+    </div>
+
+    <div class="cat-panel show" data-panel="food">
+      <div class="sub-group">
+        <span class="glabel">食欲程度</span>
+        <div class="chip-row" data-group="appetite">
+          <div class="chip" data-val="全部吃完">全部吃完</div>
+          <div class="chip" data-val="吃一半">吃一半</div>
+          <div class="chip warn" data-val="完全沒吃">完全沒吃</div>
+        </div>
+      </div>
+      <div class="two-col">
+        <div><label style="font-size:12.5px;color:var(--ink-soft);margin-bottom:6px;display:block;">進食量(g)</label><input type="number" min="0" id="foodGrams"></div>
+      </div>
+      <div class="sub-group">
+        <span class="glabel">飲水量</span>
+        <div class="chip-row" data-group="water">
+          <div class="chip" data-val="正常">正常</div>
+          <div class="chip" data-val="偏多">偏多</div>
+          <div class="chip warn" data-val="偏少">偏少</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cat-panel" data-panel="toilet">
+      <div class="two-col">
+        <div><label style="font-size:12.5px;color:var(--ink-soft);margin-bottom:6px;display:block;">排便次數</label><input type="number" min="0" id="poopCount"></div>
+        <div><label style="font-size:12.5px;color:var(--ink-soft);margin-bottom:6px;display:block;">排尿次數</label><input type="number" min="0" id="peeCount"></div>
+      </div>
+      <div class="sub-group">
+        <span class="glabel">排便型態</span>
+        <div class="chip-row" data-group="poop">
+          <div class="chip" data-val="正常">正常</div>
+          <div class="chip warn" data-val="軟便">軟便</div>
+          <div class="chip warn" data-val="拉稀">拉稀</div>
+        </div>
+      </div>
+      <div class="sub-group">
+        <span class="glabel">排尿顏色</span>
+        <div class="chip-row" data-group="urine">
+          <div class="chip" data-val="淡黃正常">淡黃正常</div>
+          <div class="chip warn" data-val="偏深">偏深</div>
+          <div class="chip warn" data-val="偏紅">偏紅</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cat-panel" data-panel="mood">
+      <div class="sub-group">
+        <span class="glabel">精神狀態</span>
+        <div class="chip-row" data-group="mood">
+          <div class="chip" data-val="活潑">活潑</div>
+          <div class="chip warn" data-val="沉鬱">沉鬱</div>
+          <div class="chip warn" data-val="緊張">緊張</div>
+        </div>
+      </div>
+      <div class="sub-group">
+        <span class="glabel">異常行為</span>
+        <div class="chip-row" data-group="behavior">
+          <div class="chip" data-val="無異常">無異常</div>
+          <div class="chip warn" data-val="異常吠叫">異常吠叫</div>
+          <div class="chip warn" data-val="放空">放空</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cat-panel" data-panel="activity">
+      <div class="sub-group">
+        <span class="glabel">社交情況</span>
+        <div class="chip-row" data-group="social">
+          <div class="chip" data-val="友善互動">友善互動</div>
+          <div class="chip" data-val="獨自活動">獨自活動</div>
+          <div class="chip warn" data-val="迴避其他寶貝">迴避其他寶貝</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cat-panel" data-panel="other">
+      <div class="sub-group">
+        <div class="chip-row" data-group="medOk">
+          <div class="chip" data-val="順利服藥">順利服藥</div>
+          <div class="chip warn" data-val="未順利服藥">未順利服藥</div>
+        </div>
+      </div>
+      <div class="sub-group">
+        <span class="glabel">身體檢查</span>
+        <div class="chip-row" data-group="eye">
+          <div class="chip" data-val="眼睛正常">眼睛正常</div>
+          <div class="chip warn" data-val="眼睛有分泌物">眼睛有分泌物</div>
+        </div>
+      </div>
+      <div class="sub-group">
+        <div class="chip-row" data-group="skin">
+          <div class="chip" data-val="無嘔吐/皮膚正常">無嘔吐/皮膚正常</div>
+          <div class="chip warn" data-val="有嘔吐">有嘔吐</div>
+          <div class="chip warn" data-val="皮膚異常抓癢">皮膚異常抓癢</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>備註說明</label>
+      <textarea id="noteText"></textarea>
+    </div>
+    <div class="field">
+      <label>紀錄時間</label>
+      <input type="datetime-local" id="entryTime">
+    </div>
+    <div class="submit-row">
+      <button class="submit-btn" id="submitBtn">送出這筆紀錄</button>
+    </div>
+
+    <div class="today-section">
+      <h2>入住紀錄</h2>
+      <div class="day-tabs" id="dayTabs"></div>
+      <div class="summary-strip" id="summaryStrip"></div>
+      <div id="logList"><div class="empty-note">目前還沒有紀錄</div></div>
+    </div>
+  </div>
+
+  <!-- SCREEN 3: member history -->
+  <div class="screen" id="screenMemberHistory">
+    <div class="back-row" id="mhBackBtn">← 返回房間列表</div>
+    <div class="record-head">
+      <div class="loc">家長資料</div>
+      <h1 id="mhName">查詢結果</h1>
+    </div>
+    <div id="mhStays"></div>
+  </div>
+
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+  import {
+    getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc,
+    addDoc, query, orderBy, serverTimestamp, arrayUnion, writeBatch
+  } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDF0t4WRcgRVGOApUdLn8Oj8VbHy6vMZp8",
+    authDomain: "innheart-2c876.firebaseapp.com",
+    projectId: "innheart-2c876",
+    storageBucket: "innheart-2c876.firebasestorage.app",
+    messagingSenderId: "1090283293954",
+    appId: "1:1090283293954:web:e4456c1c9b98cba333461b"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const catLabels = {food:'飲食飲水', toilet:'排泄', mood:'精神情緒', activity:'活動放風', other:'其他'};
+  let currentArea = 'cat';
+  let currentRoomId = null;
+  let allRooms = {};
+
+  function roomId(area, no){ return area + '-' + no; }
+
+  async function ensureRoomsSeeded(){
+    const snap = await getDocs(collection(db, 'rooms'));
+    if (!snap.empty) return;
+    const batch = writeBatch(db);
+    for (let i = 1; i <= 12; i++){
+      batch.set(doc(db, 'rooms', roomId('cat', i)), {area:'cat', no:i, name:null, phone:null, stayId:null, items:null, notes:null});
+    }
+    for (let i = 1; i <= 11; i++){
+      batch.set(doc(db, 'rooms', roomId('dog', i)), {area:'dog', no:i, name:null, phone:null, stayId:null, items:null, notes:null});
+    }
+    await batch.commit();
+  }
+
+  async function loadRooms(){
+    const snap = await getDocs(collection(db, 'rooms'));
+    allRooms = {};
+    snap.forEach(d => { allRooms[d.id] = d.data(); });
+  }
+
+  function renderRooms(){
+    const grid = document.getElementById('roomGrid');
+    const count = currentArea === 'cat' ? 12 : 11;
+    let html = '';
+    for (let i = 1; i <= count; i++){
+      const id = roomId(currentArea, i);
+      const room = allRooms[id] || {name:null};
+      if (!room.name){
+        html += `<div class="room-btn" data-id="${id}" data-empty="1"><div class="no">${i} 號房</div><div class="name">＋ 新入住</div></div>`;
+      } else {
+        html += `<div class="room-btn" data-id="${id}"><div class="no">${i} 號房</div><div class="name">${room.name}</div></div>`;
+      }
+    }
+    grid.innerHTML = html;
+    grid.querySelectorAll('.room-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (btn.dataset.empty) openCheckin(btn.dataset.id);
+        else openRecord(btn.dataset.id);
+      });
+    });
+  }
+
+  document.querySelectorAll('.area-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.area-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      currentArea = chip.dataset.area;
+      renderRooms();
+    });
+  });
+
+  function showScreen(id){
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  function toDatetimeLocalValue(d){
+    const pad = n => String(n).padStart(2,'0');
+    return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+
+  // ---------- check-in ----------
+  function openCheckin(id){
+    currentRoomId = id;
+    const room = allRooms[id];
+    document.getElementById('ciLoc').textContent = (room.area === 'cat' ? '貓貓區' : '狗狗區') + ' · ' + room.no + ' 號房';
+    document.getElementById('ciPetName').value = '';
+    document.getElementById('ciMemberNo').value = '';
+    document.getElementById('ciCheckinTime').value = toDatetimeLocalValue(new Date());
+    document.getElementById('ciItemsOther').value = '';
+    document.getElementById('ciNotesOther').value = '';
+    document.querySelectorAll('#screenCheckin .chip').forEach(c => c.classList.remove('active'));
+    showScreen('screenCheckin');
+  }
+
+  document.getElementById('ciBackBtn').addEventListener('click', () => showScreen('screenRooms'));
+
+  document.getElementById('ciSubmitBtn').addEventListener('click', async () => {
+    const petName = document.getElementById('ciPetName').value.trim();
+    const phone = document.getElementById('ciMemberNo').value.trim();
+    if (!petName || !phone){ alert('請輸入寶貝名字與家長手機號碼'); return; }
+
+    const itemsList = Array.from(document.querySelectorAll('.chip-row[data-multigroup="ciItems"] .chip.active')).map(c => c.dataset.val);
+    const itemsOther = document.getElementById('ciItemsOther').value.trim();
+    const notesList = Array.from(document.querySelectorAll('.chip-row[data-multigroup="ciNotes"] .chip.active')).map(c => c.dataset.val);
+    const notesOther = document.getElementById('ciNotesOther').value.trim();
+    const stayId = 'stay-' + Date.now();
+    const checkinTimeVal = document.getElementById('ciCheckinTime').value;
+    const checkinDisplay = checkinTimeVal ? checkinTimeVal.replace('T', ' ') : new Date().toLocaleString('zh-TW');
+
+    await setDoc(doc(db, 'rooms', currentRoomId), {
+      area: allRooms[currentRoomId].area,
+      no: allRooms[currentRoomId].no,
+      name: petName,
+      phone: phone,
+      stayId: stayId,
+      items: (itemsList.length || itemsOther) ? {list: itemsList, other: itemsOther} : null,
+      notes: (notesList.length || notesOther) ? {list: notesList, other: notesOther} : null,
+      checkinDate: checkinDisplay
+    });
+
+    await setDoc(doc(db, 'members', phone), { name: '' , updatedAt: serverTimestamp() }, { merge: true });
+
+    await loadRooms();
+    openRecord(currentRoomId);
+  });
+
+  // ---------- record page ----------
+  async function openRecord(id){
+    currentRoomId = id;
+    const room = allRooms[id];
+    document.getElementById('recordLoc').textContent = (room.area === 'cat' ? '貓貓區' : '狗狗區') + ' · ' + room.no + ' 號房';
+    document.getElementById('recordName').textContent = room.name;
+    document.getElementById('recordMember').textContent = '家長 ' + room.phone;
+    document.getElementById('itemsEditPanel').style.display = 'none';
+    document.getElementById('notesEditPanel').style.display = 'none';
+    document.getElementById('entryTime').value = toDatetimeLocalValue(new Date());
+    renderItemsCard(room);
+    renderNotesCard(room);
+    showScreen('screenRecord');
+    await renderLog();
+  }
+
+  document.getElementById('backBtn').addEventListener('click', () => showScreen('screenRooms'));
+
+  document.getElementById('recordMember').addEventListener('click', () => {
+    document.getElementById('memberSearchInput').value = allRooms[currentRoomId].phone;
+    document.getElementById('memberSearchBtn').click();
+  });
+
+  // items / notes cards
+  function renderItemsCard(room){
+    const el = document.getElementById('itemsCard');
+    const text = room.items ? [...room.items.list, ...(room.items.other ? ['其他:' + room.items.other] : [])].join('、') : '';
+    el.className = 'summary-card ok';
+    el.innerHTML = (room.items ? '本次攜帶物品:' + text : '尚未登記攜帶物品') +
+      ' <span id="itemsEditLink" style="text-decoration:underline;cursor:pointer;">' + (room.items ? '編輯' : '新增') + '</span>';
+    document.getElementById('itemsEditLink').addEventListener('click', () => {
+      const panel = document.getElementById('itemsEditPanel');
+      panel.style.display = 'block';
+      const selected = room.items ? room.items.list : [];
+      panel.querySelectorAll('.chip-row[data-multigroup="recItems"] .chip').forEach(c => c.classList.toggle('active', selected.includes(c.dataset.val)));
+      document.getElementById('recItemsOther').value = room.items ? room.items.other : '';
+    });
+  }
+
+  function renderNotesCard(room){
+    const el = document.getElementById('notesCard');
+    const text = room.notes ? [...room.notes.list, ...(room.notes.other ? ['其他:' + room.notes.other] : [])].join('、') : '';
+    el.className = 'summary-card ' + (room.notes ? 'warn' : 'ok');
+    el.innerHTML = (room.notes ? '特殊注意事項:' + text : '尚無特殊注意事項') +
+      ' <span id="notesEditLink" style="text-decoration:underline;cursor:pointer;">' + (room.notes ? '編輯' : '新增') + '</span>';
+    document.getElementById('notesEditLink').addEventListener('click', () => {
+      const panel = document.getElementById('notesEditPanel');
+      panel.style.display = 'block';
+      const selected = room.notes ? room.notes.list : [];
+      panel.querySelectorAll('.chip-row[data-multigroup="recNotes"] .chip').forEach(c => c.classList.toggle('active', selected.includes(c.dataset.val)));
+      document.getElementById('recNotesOther').value = room.notes ? room.notes.other : '';
+    });
+  }
+
+  document.getElementById('itemsSaveBtn').addEventListener('click', async () => {
+    const list = Array.from(document.querySelectorAll('.chip-row[data-multigroup="recItems"] .chip.active')).map(c => c.dataset.val);
+    const other = document.getElementById('recItemsOther').value.trim();
+    const items = (list.length || other) ? {list, other} : null;
+    await updateDoc(doc(db, 'rooms', currentRoomId), { items });
+    allRooms[currentRoomId].items = items;
+    document.getElementById('itemsEditPanel').style.display = 'none';
+    renderItemsCard(allRooms[currentRoomId]);
+  });
+
+  document.getElementById('notesSaveBtn').addEventListener('click', async () => {
+    const list = Array.from(document.querySelectorAll('.chip-row[data-multigroup="recNotes"] .chip.active')).map(c => c.dataset.val);
+    const other = document.getElementById('recNotesOther').value.trim();
+    const notes = (list.length || other) ? {list, other} : null;
+    await updateDoc(doc(db, 'rooms', currentRoomId), { notes });
+    allRooms[currentRoomId].notes = notes;
+    document.getElementById('notesEditPanel').style.display = 'none';
+    renderNotesCard(allRooms[currentRoomId]);
+  });
+
+  // checkout
+  document.getElementById('checkoutBtn').addEventListener('click', async () => {
+    if (!confirm('確定要辦理退房嗎?')) return;
+    const room = allRooms[currentRoomId];
+    await updateDoc(doc(db, 'members', room.phone), {
+      history: arrayUnion({
+        petName: room.name, area: room.area, room: room.no,
+        checkedOutAt: new Date().toLocaleString('zh-TW')
+      })
+    });
+    await setDoc(doc(db, 'rooms', currentRoomId), {
+      area: room.area, no: room.no, name: null, phone: null, stayId: null, items: null, notes: null
+    });
+    await loadRooms();
+    showScreen('screenRooms');
+    renderRooms();
+  });
+
+  // category tabs
+  document.querySelectorAll('.cat-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      document.querySelectorAll('.cat-panel').forEach(p => p.classList.remove('show'));
+      document.querySelector('.cat-panel[data-panel="'+tab.dataset.cat+'"]').classList.add('show');
+    });
+  });
+
+  document.querySelectorAll('.chip-row[data-group] .chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      chip.parentElement.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+    });
+  });
+  document.querySelectorAll('.chip-row[data-multigroup] .chip').forEach(chip => {
+    chip.addEventListener('click', () => chip.classList.toggle('active'));
+  });
+
+  // ---------- daily entries ----------
+  function dateStrOf(d){
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  }
+  function dateLabelOf(dateStr){
+    const today = dateStrOf(new Date());
+    const parts = dateStr.split('-');
+    const md = parts[1] + '/' + parts[2];
+    return dateStr === today ? '今天 ' + md : md;
+  }
+
+  let currentEntriesByDate = {};
+  let currentSelectedDate = null;
+
+  async function renderLog(){
+    const list = document.getElementById('logList');
+    list.innerHTML = '讀取中...';
+    const stayId = allRooms[currentRoomId].stayId;
+    const entriesSnap = await getDocs(collection(db, 'rooms', currentRoomId, 'entries'));
+    const entries = [];
+    entriesSnap.forEach(d => { const data = d.data(); if (data.stayId === stayId) entries.push(data); });
+
+    currentEntriesByDate = {};
+    entries.forEach(e => {
+      const ds = e.dateStr || dateStrOf(new Date(e.createdAtMs || Date.now()));
+      if (!currentEntriesByDate[ds]) currentEntriesByDate[ds] = [];
+      currentEntriesByDate[ds].push(e);
+    });
+
+    const today = dateStrOf(new Date());
+    if (!currentEntriesByDate[today]) currentEntriesByDate[today] = [];
+    const dates = Object.keys(currentEntriesByDate).sort().reverse();
+    currentSelectedDate = today;
+
+    const dayTabs = document.getElementById('dayTabs');
+    dayTabs.innerHTML = dates.map(ds =>
+      `<div class="day-tab ${ds === currentSelectedDate ? 'active' : ''}" data-date="${ds}">${dateLabelOf(ds)}</div>`
+    ).join('');
+    dayTabs.querySelectorAll('.day-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        currentSelectedDate = tab.dataset.date;
+        dayTabs.querySelectorAll('.day-tab').forEach(t => t.classList.toggle('active', t.dataset.date === currentSelectedDate));
+        renderSelectedDay();
+      });
+    });
+
+    renderSelectedDay();
+  }
+
+  function renderSelectedDay(){
+    const list = document.getElementById('logList');
+    const dayEntries = (currentEntriesByDate[currentSelectedDate] || []).slice().sort((a,b) => (b.createdAtMs || 0) - (a.createdAtMs || 0));
+
+    const totalGrams = dayEntries.reduce((s,e) => s + (e.grams || 0), 0);
+    const totalPoop = dayEntries.reduce((s,e) => s + (e.poopCount || 0), 0);
+    const totalPee = dayEntries.reduce((s,e) => s + (e.peeCount || 0), 0);
+    document.getElementById('summaryStrip').innerHTML = `
+      <div class="summary-item"><div class="num">${totalGrams}g</div><div class="lbl">進食量</div></div>
+      <div class="summary-item"><div class="num">${totalPoop}</div><div class="lbl">大便次數</div></div>
+      <div class="summary-item"><div class="num">${totalPee}</div><div class="lbl">小便次數</div></div>
+    `;
+
+    if (dayEntries.length === 0){
+      list.innerHTML = '<div class="empty-note">這天還沒有紀錄</div>';
+      return;
+    }
+    list.innerHTML = dayEntries.map(e => `
+      <div class="log-entry ${e.warn ? 'warn' : ''}">
+        <div class="meta"><span>${e.timeStr} · ${e.cat}${e.staff ? '｜' + e.staff : ''}</span></div>
+        <p>${e.content}</p>
+      </div>
+    `).join('');
+  }
+
+  document.getElementById('submitBtn').addEventListener('click', async () => {
+    const activeTab = document.querySelector('.cat-tab.active').dataset.cat;
+    const panel = document.querySelector('.cat-panel[data-panel="'+activeTab+'"]');
+    const chosen = [];
+    let hasWarn = false;
+    panel.querySelectorAll('.chip-row[data-group] .chip.active').forEach(c => {
+      chosen.push(c.dataset.val);
+      if (c.classList.contains('warn')) hasWarn = true;
+    });
+    const note = document.getElementById('noteText').value.trim();
+
+    let content = chosen.join('、');
+    let grams = null, poopCount = null, peeCount = null;
+    if (activeTab === 'food'){
+      const gramsVal = document.getElementById('foodGrams').value.trim();
+      if (gramsVal){
+        grams = Number(gramsVal);
+        content = content ? content + '、進食量約 ' + gramsVal + 'g' : '進食量約 ' + gramsVal + 'g';
+      }
+    }
+    if (activeTab === 'toilet'){
+      const poopVal = document.getElementById('poopCount').value.trim();
+      const peeVal = document.getElementById('peeCount').value.trim();
+      if (poopVal){ poopCount = Number(poopVal); content = '排便 ' + poopVal + ' 次、' + content; }
+      if (peeVal){ peeCount = Number(peeVal); content = content + '、排尿 ' + peeVal + ' 次'; }
+    }
+    if (note) content = content ? content + '。' + note : note;
+    if (!content){ alert('請至少選擇一項狀況或填寫備註'); return; }
+
+    const timeVal = document.getElementById('entryTime').value;
+    const chosenTime = timeVal ? new Date(timeVal) : new Date();
+    await addDoc(collection(db, 'rooms', currentRoomId, 'entries'), {
+      stayId: allRooms[currentRoomId].stayId,
+      cat: catLabels[activeTab],
+      content,
+      warn: hasWarn,
+      grams, poopCount, peeCount,
+      staff: document.getElementById('staffName').value.trim() || '未填寫',
+      timeStr: chosenTime.getHours().toString().padStart(2,'0') + ':' + chosenTime.getMinutes().toString().padStart(2,'0'),
+      dateStr: dateStrOf(chosenTime),
+      createdAtMs: chosenTime.getTime()
+    });
+
+    document.getElementById('noteText').value = '';
+    document.getElementById('entryTime').value = toDatetimeLocalValue(new Date());
+    panel.querySelectorAll('.chip.active').forEach(c => c.classList.remove('active'));
+    panel.querySelectorAll('input[type=number]').forEach(i => i.value = '');
+    await renderLog();
+  });
+
+  // ---------- member search ----------
+  document.getElementById('memberSearchBtn').addEventListener('click', async () => {
+    const phone = document.getElementById('memberSearchInput').value.trim();
+    if (!phone) return;
+    const snap = await getDoc(doc(db, 'members', phone));
+    if (!snap.exists()){
+      alert('查無此手機號碼的會員資料');
+      return;
+    }
+    const member = snap.data();
+    document.getElementById('mhName').textContent = phone;
+    const history = member.history || [];
+    const stayHtml = history.length === 0
+      ? '<div class="status-msg">目前沒有已退房的歷史紀錄</div>'
+      : history.map(h => `
+          <div class="log-entry">
+            <div class="meta"><span>${h.petName}・${h.area === 'cat' ? '貓貓區' : '狗狗區'} ${h.room} 號房</span></div>
+            <p>退房時間:${h.checkedOutAt}</p>
+          </div>
+        `).join('');
+    document.getElementById('mhStays').innerHTML = stayHtml;
+    showScreen('screenMemberHistory');
+  });
+
+  document.getElementById('mhBackBtn').addEventListener('click', () => showScreen('screenRooms'));
+
+  // ---------- boot ----------
+  (async function init(){
+    try {
+      await ensureRoomsSeeded();
+      await loadRooms();
+      document.getElementById('loadingMsg').style.display = 'none';
+      showScreen('screenRooms');
+      renderRooms();
+    } catch (err) {
+      document.getElementById('loadingMsg').textContent = '連線失敗:' + err.message;
+    }
+  })();
+</script>
+</body>
+</html>
