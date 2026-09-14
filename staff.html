@@ -49,6 +49,15 @@
   .summary-card.ok{background:var(--pine-soft);color:var(--pine);}
   .summary-card.warn{background:var(--danger-soft);color:var(--danger);}
 
+  .info-card{margin:16px 22px 0;background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;}
+  .info-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 16px;border-bottom:1px solid var(--line);}
+  .info-row:last-child{border-bottom:none;}
+  .info-row.alert{border-left:3px solid var(--danger);}
+  .info-label{font-size:11.5px;color:var(--ink-soft);margin-bottom:2px;}
+  .info-value{font-size:13.5px;color:var(--ink);}
+  .info-row.alert .info-value{color:var(--danger);}
+  .info-edit{flex-shrink:0;background:var(--ochre-soft);color:var(--ochre);font-size:12px;font-weight:600;padding:6px 12px;border-radius:20px;cursor:pointer;}
+
   .field{padding:16px 22px 0;}
   .field label{display:block;font-size:13px;color:var(--ink-soft);margin-bottom:8px;}
   textarea,input[type=text],input[type=number]{
@@ -161,6 +170,10 @@
       <input type="text" id="ciMemberNo" placeholder="例如：0912345678">
     </div>
     <div class="field">
+      <label>家長姓名</label>
+      <input type="text" id="ciMemberName" placeholder="例如：陳小姐">
+    </div>
+    <div class="field">
       <label>入住時間</label>
       <input type="datetime-local" id="ciCheckinTime">
     </div>
@@ -225,7 +238,30 @@
       </div>
     </div>
 
-    <div class="summary-card ok" id="itemsCard"></div>
+    <div class="info-card">
+      <div class="info-row" id="itemsRow">
+        <div class="info-text">
+          <div class="info-label">攜帶物品</div>
+          <div class="info-value" id="itemsValue">尚未登記</div>
+        </div>
+        <span class="info-edit" id="itemsEditLink">編輯</span>
+      </div>
+      <div class="info-row" id="notesRow">
+        <div class="info-text">
+          <div class="info-label">特殊注意事項</div>
+          <div class="info-value" id="notesValue">尚無</div>
+        </div>
+        <span class="info-edit" id="notesEditLink">編輯</span>
+      </div>
+      <div class="info-row" id="cameraRow">
+        <div class="info-text">
+          <div class="info-label">監視器分享連結</div>
+          <div class="info-value" id="cameraValue">尚未設定</div>
+        </div>
+        <span class="info-edit" id="cameraEditLink">編輯</span>
+      </div>
+    </div>
+
     <div class="field" id="itemsEditPanel" style="display:none;">
       <div class="chip-row" data-multigroup="recItems">
         <div class="chip" data-val="飼料">飼料</div>
@@ -240,7 +276,6 @@
       <div class="submit-row"><button class="submit-btn" id="itemsSaveBtn">儲存攜帶物品</button></div>
     </div>
 
-    <div class="summary-card warn" id="notesCard"></div>
     <div class="field" id="notesEditPanel" style="display:none;">
       <div class="chip-row" data-multigroup="recNotes">
         <div class="chip warn" data-val="過敏">過敏</div>
@@ -256,7 +291,6 @@
       <div class="submit-row"><button class="submit-btn" id="notesSaveBtn">儲存注意事項</button></div>
     </div>
 
-    <div class="summary-card ok" id="cameraCard"></div>
     <div class="field" id="cameraEditPanel" style="display:none;">
       <label>監視器分享連結</label>
       <input type="text" id="recCameraUrl" placeholder="https://...">
@@ -546,6 +580,7 @@
     document.getElementById('ciLoc').textContent = (room.area === 'cat' ? '貓貓區' : '狗狗區') + ' · ' + room.no + ' 號房';
     document.getElementById('ciPetName').value = '';
     document.getElementById('ciMemberNo').value = '';
+    document.getElementById('ciMemberName').value = '';
     document.getElementById('ciCheckinTime').value = toDatetimeLocalValue(new Date());
     document.getElementById('ciCameraUrl').value = '';
     document.getElementById('ciItemsOther').value = '';
@@ -562,11 +597,16 @@
     const phone = document.getElementById('ciMemberNo').value.trim();
     if (!phone || ciNewAvatarFile) return;
     const snap = await getDoc(doc(db, 'members', phone));
-    if (snap.exists() && snap.data().avatarUrl){
-      ciExistingAvatarUrl = snap.data().avatarUrl;
-      document.getElementById('ciAvatarPreview').src = ciExistingAvatarUrl;
-      document.getElementById('ciAvatarPreview').style.display = 'block';
-      document.getElementById('ciAvatarNote').textContent = '偵測到這支手機之前上傳過的照片,預設會沿用;如需更換請直接上傳新照片。';
+    if (snap.exists()){
+      if (snap.data().name && !document.getElementById('ciMemberName').value.trim()){
+        document.getElementById('ciMemberName').value = snap.data().name;
+      }
+      if (snap.data().avatarUrl){
+        ciExistingAvatarUrl = snap.data().avatarUrl;
+        document.getElementById('ciAvatarPreview').src = ciExistingAvatarUrl;
+        document.getElementById('ciAvatarPreview').style.display = 'block';
+        document.getElementById('ciAvatarNote').textContent = '偵測到這支手機之前上傳過的照片,預設會沿用;如需更換請直接上傳新照片。';
+      }
     }
   });
 
@@ -625,7 +665,8 @@
     });
 
     await setDoc(doc(db, 'members', phone), {
-      name: '', updatedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      ...(document.getElementById('ciMemberName').value.trim() ? { name: document.getElementById('ciMemberName').value.trim() } : {}),
       ...(avatarUrl ? { avatarUrl } : {})
     }, { merge: true });
 
@@ -663,46 +704,41 @@
     document.getElementById('memberSearchBtn').click();
   });
 
-  // items / notes cards
+  // items / notes rows
   function renderItemsCard(room){
-    const el = document.getElementById('itemsCard');
-    const text = room.items ? [...room.items.list, ...(room.items.other ? ['其他:' + room.items.other] : [])].join('、') : '';
-    el.className = 'summary-card ok';
-    el.innerHTML = (room.items ? '本次攜帶物品:' + text : '尚未登記攜帶物品') +
-      ' <span id="itemsEditLink" style="text-decoration:underline;cursor:pointer;">' + (room.items ? '編輯' : '新增') + '</span>';
-    document.getElementById('itemsEditLink').addEventListener('click', () => {
+    const text = room.items ? [...room.items.list, ...(room.items.other ? ['其他:' + room.items.other] : [])].join('、') : '尚未登記';
+    document.getElementById('itemsValue').textContent = text;
+    document.getElementById('itemsEditLink').textContent = room.items ? '編輯' : '新增';
+    document.getElementById('itemsEditLink').onclick = () => {
       const panel = document.getElementById('itemsEditPanel');
       panel.style.display = 'block';
       const selected = room.items ? room.items.list : [];
       panel.querySelectorAll('.chip-row[data-multigroup="recItems"] .chip').forEach(c => c.classList.toggle('active', selected.includes(c.dataset.val)));
       document.getElementById('recItemsOther').value = room.items ? room.items.other : '';
-    });
+    };
   }
 
   function renderNotesCard(room){
-    const el = document.getElementById('notesCard');
-    const text = room.notes ? [...room.notes.list, ...(room.notes.other ? ['其他:' + room.notes.other] : [])].join('、') : '';
-    el.className = 'summary-card ' + (room.notes ? 'warn' : 'ok');
-    el.innerHTML = (room.notes ? '特殊注意事項:' + text : '尚無特殊注意事項') +
-      ' <span id="notesEditLink" style="text-decoration:underline;cursor:pointer;">' + (room.notes ? '編輯' : '新增') + '</span>';
-    document.getElementById('notesEditLink').addEventListener('click', () => {
+    const text = room.notes ? [...room.notes.list, ...(room.notes.other ? ['其他:' + room.notes.other] : [])].join('、') : '尚無';
+    document.getElementById('notesValue').textContent = text;
+    document.getElementById('notesEditLink').textContent = room.notes ? '編輯' : '新增';
+    document.getElementById('notesRow').classList.toggle('alert', !!room.notes);
+    document.getElementById('notesEditLink').onclick = () => {
       const panel = document.getElementById('notesEditPanel');
       panel.style.display = 'block';
       const selected = room.notes ? room.notes.list : [];
       panel.querySelectorAll('.chip-row[data-multigroup="recNotes"] .chip').forEach(c => c.classList.toggle('active', selected.includes(c.dataset.val)));
       document.getElementById('recNotesOther').value = room.notes ? room.notes.other : '';
-    });
+    };
   }
 
   function renderCameraCard(room){
-    const el = document.getElementById('cameraCard');
-    el.className = 'summary-card ok';
-    el.innerHTML = (room.cameraUrl ? '監視器連結已設定' : '尚未設定監視器分享連結') +
-      ' <span id="cameraEditLink" style="text-decoration:underline;cursor:pointer;">' + (room.cameraUrl ? '編輯' : '新增') + '</span>';
-    document.getElementById('cameraEditLink').addEventListener('click', () => {
+    document.getElementById('cameraValue').textContent = room.cameraUrl ? '已設定' : '尚未設定';
+    document.getElementById('cameraEditLink').textContent = room.cameraUrl ? '編輯' : '新增';
+    document.getElementById('cameraEditLink').onclick = () => {
       document.getElementById('cameraEditPanel').style.display = 'block';
       document.getElementById('recCameraUrl').value = room.cameraUrl || '';
-    });
+    };
   }
 
   document.getElementById('cameraSaveBtn').addEventListener('click', async () => {
