@@ -75,6 +75,7 @@
   .cat-panel.show{display:block;}
   .sub-group{padding:14px 22px 0;}
   .sub-group .glabel{font-size:12.5px;color:var(--ink-soft);margin-bottom:6px;display:block;}
+  .glabel{font-size:12.5px;color:var(--ink-soft);margin-bottom:6px;display:block;}
   .two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 22px 0;}
 
   .submit-btn{width:100%;background:var(--pine);color:#F4F1E9;border:none;border-radius:14px;padding:15px;font-family:'Noto Sans TC',sans-serif;font-weight:600;font-size:15px;cursor:pointer;}
@@ -84,6 +85,11 @@
   .today-section{margin-top:30px;padding:0 22px;}
   .today-section h2{font-size:14px;color:var(--ink-soft);font-weight:500;margin:0 0 12px;}
   .log-entry{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px 16px;margin-bottom:10px;}
+  .member-row{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px 16px;margin-bottom:10px;}
+  .member-row .mline{font-size:12.5px;color:var(--ink-soft);margin-bottom:3px;}
+  .member-row .mline b{color:var(--ink);font-weight:600;}
+  .member-row .mactions{display:flex;gap:8px;margin-top:10px;}
+  .member-row .mactions button{flex:1;border:none;border-radius:10px;padding:8px;font-size:12.5px;font-weight:600;cursor:pointer;}
   .log-entry.warn{border-color:var(--danger);}
   .log-entry .meta{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-soft);margin-bottom:4px;}
   .log-entry p{margin:0;font-size:14px;line-height:1.5;}
@@ -133,18 +139,24 @@
   <div id="loadingMsg" class="status-msg" style="display:none;">連線資料庫中...</div>
 
   <!-- SCREEN 1: room select -->
+  <div class="screen" id="screenMenu">
+    <div class="topbar">
+      <div class="sub">(inn)heart · 工作人員後台</div>
+      <h1>請選擇</h1>
+    </div>
+    <div style="padding:20px 22px 0;display:flex;flex-direction:column;gap:12px;">
+      <button class="submit-btn" id="menuCareBtn">照護紀錄</button>
+      <button class="submit-btn" id="menuHistoryBtn" style="background:var(--ochre);color:#2A2A2C;">歷史紀錄</button>
+      <button class="submit-btn" id="menuMembersBtn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);">會員資料管理</button>
+      <div id="cameraSettingLink" style="text-align:center;font-size:12.5px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:8px;">設定小米 App 連結</div>
+    </div>
+  </div>
+
   <div class="screen" id="screenRooms">
+    <div class="back-row" id="roomsBackBtn">← 返回選單</div>
     <div class="topbar">
       <div class="sub">(inn)heart · 工作人員後台</div>
       <h1>選擇房間</h1>
-    </div>
-
-    <div class="member-search">
-      <div class="row">
-        <input type="text" id="memberSearchInput" placeholder="輸入手機、家長姓名或寶貝名字查詢">
-        <button id="memberSearchBtn">查詢</button>
-      </div>
-      <div class="divider">或依房間登打今日紀錄</div>
     </div>
 
     <div class="area-toggle">
@@ -152,6 +164,29 @@
       <div class="area-chip" data-area="dog">狗狗區 · 11 間</div>
     </div>
     <div class="room-grid" id="roomGrid"></div>
+  </div>
+
+  <div class="screen" id="screenHistorySearch">
+    <div class="back-row" id="historyBackBtn">← 返回選單</div>
+    <div class="topbar">
+      <div class="sub">(inn)heart · 工作人員後台</div>
+      <h1>歷史紀錄查詢</h1>
+    </div>
+    <div class="member-search">
+      <div class="row">
+        <input type="text" id="memberSearchInput" placeholder="輸入手機、家長姓名或寶貝名字查詢">
+        <button id="memberSearchBtn">查詢</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="screenMemberManage">
+    <div class="back-row" id="manageBackBtn">← 返回選單</div>
+    <div class="topbar">
+      <div class="sub">(inn)heart · 工作人員後台</div>
+      <h1>會員資料管理</h1>
+    </div>
+    <div id="memberManageList" style="padding:16px 22px 0;"></div>
   </div>
 
   <!-- SCREEN 4: new check-in -->
@@ -186,25 +221,83 @@
         <input type="file" accept="image/*" id="ciAvatarInput" style="display:none;">
       </label>
     </div>
-    <div class="field">
-      <label>監視器分享連結(選填,從米家 App 分享後貼上)</label>
-      <input type="text" id="ciCameraUrl" placeholder="https://...">
-    </div>
+
     <div class="field">
       <label>本次攜帶物品</label>
       <div class="chip-row" data-multigroup="ciItems">
         <div class="chip" data-val="飼料">飼料</div>
         <div class="chip" data-val="零食">零食</div>
         <div class="chip" data-val="藥品">藥品</div>
+        <div class="chip" data-val="保健食品">保健食品</div>
         <div class="chip" data-val="睡墊/毯子">睡墊/毯子</div>
         <div class="chip" data-val="玩具">玩具</div>
         <div class="chip" data-val="外出籠">外出籠</div>
       </div>
     </div>
+
+    <div class="field" id="ciFoodDetail" style="display:none;">
+      <label class="glabel">飼料資訊</label>
+      <input type="text" id="ciFoodBrand" placeholder="品牌" style="margin-bottom:8px;">
+      <div class="chip-row" data-multigroup="ciFoodType">
+        <div class="chip" data-val="乾糧">乾糧</div>
+        <div class="chip" data-val="濕食">濕食</div>
+        <div class="chip" data-val="鮮食">鮮食</div>
+      </div>
+      <input type="text" id="ciFoodOther" placeholder="其他" style="margin-top:8px;">
+    </div>
+
+    <div class="field" id="ciSnackDetail" style="display:none;">
+      <label class="glabel">零食資訊</label>
+      <div class="chip-row" data-multigroup="ciSnackType">
+        <div class="chip" data-val="肉泥">肉泥</div>
+        <div class="chip" data-val="凍乾">凍乾</div>
+      </div>
+      <input type="text" id="ciSnackAmount" placeholder="量" style="margin-top:8px;margin-bottom:8px;">
+      <input type="text" id="ciSnackOther" placeholder="其他">
+    </div>
+
+    <div class="field" id="ciMedDetail" style="display:none;">
+      <label class="glabel">項目</label>
+      <div class="chip-row" data-group="ciMedCategory">
+        <div class="chip" data-val="口服藥">口服藥</div>
+        <div class="chip" data-val="外用藥">外用藥</div>
+      </div>
+      <div class="chip-row" data-group="ciMedOralType" id="ciMedOralTypeWrap" style="display:none;margin-top:8px;">
+        <div class="chip" data-val="藥水">藥水</div>
+        <div class="chip" data-val="藥粉">藥粉</div>
+        <div class="chip" data-val="藥丸">藥丸</div>
+      </div>
+      <div class="chip-row" data-group="ciMedTopicalType" id="ciMedTopicalTypeWrap" style="display:none;margin-top:8px;">
+        <div class="chip" data-val="眼藥水">眼藥水</div>
+        <div class="chip" data-val="耳藥">耳藥</div>
+        <div class="chip" data-val="皮膚藥膏">皮膚藥膏</div>
+      </div>
+      <input type="text" id="ciMedDosage" placeholder="劑量" style="margin-top:8px;margin-bottom:8px;">
+      <input type="text" id="ciMedTime" placeholder="預定投藥時間" style="margin-bottom:8px;">
+      <input type="text" id="ciMedTips" placeholder="投藥小技巧">
+    </div>
+
+    <div class="field" id="ciSupplementDetail" style="display:none;">
+      <label class="glabel">保健食品資訊</label>
+      <input type="text" id="ciSupName" placeholder="名稱" style="margin-bottom:8px;">
+      <input type="text" id="ciSupFreq" placeholder="頻率" style="margin-bottom:8px;">
+      <div class="chip-row" data-multigroup="ciSupMeal" style="margin-bottom:8px;">
+        <div class="chip" data-val="隨餐">隨餐</div>
+        <div class="chip" data-val="非隨餐">非隨餐</div>
+      </div>
+      <div class="chip-row" data-multigroup="ciSupForm">
+        <div class="chip" data-val="藥粉">藥粉</div>
+        <div class="chip" data-val="藥丸">藥丸</div>
+        <div class="chip" data-val="藥劑">藥劑</div>
+      </div>
+      <input type="text" id="ciSupOther" placeholder="其他" style="margin-top:8px;">
+    </div>
+
     <div class="field">
       <label>其他(自行填寫)</label>
       <input type="text" id="ciItemsOther">
     </div>
+
     <div class="field">
       <label>特殊注意事項提醒</label>
       <div class="chip-row" data-multigroup="ciNotes">
@@ -217,6 +310,19 @@
         <div class="chip warn" data-val="特殊飲食限制">特殊飲食限制</div>
       </div>
     </div>
+
+    <div class="field" id="ciChronicDetail" style="display:none;">
+      <label class="glabel">慢性病史資訊</label>
+      <input type="text" id="ciChronicDisease" placeholder="疾病" style="margin-bottom:8px;">
+      <input type="text" id="ciChronicNote" placeholder="備註">
+    </div>
+
+    <div class="field" id="ciDietDetail" style="display:none;">
+      <label class="glabel">特殊飲食限制資訊</label>
+      <input type="text" id="ciDietLimit" placeholder="限制" style="margin-bottom:8px;">
+      <input type="text" id="ciDietReason" placeholder="原因">
+    </div>
+
     <div class="field">
       <label>其他說明</label>
       <input type="text" id="ciNotesOther">
@@ -233,7 +339,10 @@
       <img id="recordAvatar" style="display:none;width:64px;height:64px;border-radius:16px;object-fit:cover;flex-shrink:0;">
       <div>
         <div class="loc" id="recordLoc">貓貓區 · 3 號房</div>
-        <h1 id="recordName">抹茶</h1>
+        <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;">
+          <h1 id="recordName" style="margin:0;">抹茶</h1>
+          <span id="notesBadge" style="font-size:11.5px;cursor:pointer;"></span>
+        </div>
         <div class="loc" id="recordMember" style="margin-top:4px;text-decoration:underline;cursor:pointer;">家長 0912-345-678</div>
       </div>
     </div>
@@ -246,20 +355,6 @@
         </div>
         <span class="info-edit" id="itemsEditLink">編輯</span>
       </div>
-      <div class="info-row" id="notesRow">
-        <div class="info-text">
-          <div class="info-label">特殊注意事項</div>
-          <div class="info-value" id="notesValue">尚無</div>
-        </div>
-        <span class="info-edit" id="notesEditLink">編輯</span>
-      </div>
-      <div class="info-row" id="cameraRow">
-        <div class="info-text">
-          <div class="info-label">監視器分享連結</div>
-          <div class="info-value" id="cameraValue">尚未設定</div>
-        </div>
-        <span class="info-edit" id="cameraEditLink">編輯</span>
-      </div>
     </div>
 
     <div class="field" id="itemsEditPanel" style="display:none;">
@@ -267,10 +362,70 @@
         <div class="chip" data-val="飼料">飼料</div>
         <div class="chip" data-val="零食">零食</div>
         <div class="chip" data-val="藥品">藥品</div>
+        <div class="chip" data-val="保健食品">保健食品</div>
         <div class="chip" data-val="睡墊/毯子">睡墊/毯子</div>
         <div class="chip" data-val="玩具">玩具</div>
         <div class="chip" data-val="外出籠">外出籠</div>
       </div>
+
+      <div class="field" id="recFoodDetail" style="display:none;padding:14px 0 0;">
+        <label class="glabel">飼料資訊</label>
+        <input type="text" id="recFoodBrand" placeholder="品牌" style="margin-bottom:8px;">
+        <div class="chip-row" data-multigroup="recFoodType">
+          <div class="chip" data-val="乾糧">乾糧</div>
+          <div class="chip" data-val="濕食">濕食</div>
+          <div class="chip" data-val="鮮食">鮮食</div>
+        </div>
+        <input type="text" id="recFoodOther" placeholder="其他" style="margin-top:8px;">
+      </div>
+
+      <div class="field" id="recSnackDetail" style="display:none;padding:14px 0 0;">
+        <label class="glabel">零食資訊</label>
+        <div class="chip-row" data-multigroup="recSnackType">
+          <div class="chip" data-val="肉泥">肉泥</div>
+          <div class="chip" data-val="凍乾">凍乾</div>
+        </div>
+        <input type="text" id="recSnackAmount" placeholder="量" style="margin-top:8px;margin-bottom:8px;">
+        <input type="text" id="recSnackOther" placeholder="其他">
+      </div>
+
+      <div class="field" id="recMedDetail" style="display:none;padding:14px 0 0;">
+        <label class="glabel">項目</label>
+        <div class="chip-row" data-group="recMedCategory">
+          <div class="chip" data-val="口服藥">口服藥</div>
+          <div class="chip" data-val="外用藥">外用藥</div>
+        </div>
+        <div class="chip-row" data-group="recMedOralType" id="recMedOralTypeWrap" style="display:none;margin-top:8px;">
+          <div class="chip" data-val="藥水">藥水</div>
+          <div class="chip" data-val="藥粉">藥粉</div>
+          <div class="chip" data-val="藥丸">藥丸</div>
+        </div>
+        <div class="chip-row" data-group="recMedTopicalType" id="recMedTopicalTypeWrap" style="display:none;margin-top:8px;">
+          <div class="chip" data-val="眼藥水">眼藥水</div>
+          <div class="chip" data-val="耳藥">耳藥</div>
+          <div class="chip" data-val="皮膚藥膏">皮膚藥膏</div>
+        </div>
+        <input type="text" id="recMedDosage" placeholder="劑量" style="margin-top:8px;margin-bottom:8px;">
+        <input type="text" id="recMedTime" placeholder="預定投藥時間" style="margin-bottom:8px;">
+        <input type="text" id="recMedTips" placeholder="投藥小技巧">
+      </div>
+
+      <div class="field" id="recSupplementDetail" style="display:none;padding:14px 0 0;">
+        <label class="glabel">保健食品資訊</label>
+        <input type="text" id="recSupName" placeholder="名稱" style="margin-bottom:8px;">
+        <input type="text" id="recSupFreq" placeholder="頻率" style="margin-bottom:8px;">
+        <div class="chip-row" data-multigroup="recSupMeal" style="margin-bottom:8px;">
+          <div class="chip" data-val="隨餐">隨餐</div>
+          <div class="chip" data-val="非隨餐">非隨餐</div>
+        </div>
+        <div class="chip-row" data-multigroup="recSupForm">
+          <div class="chip" data-val="藥粉">藥粉</div>
+          <div class="chip" data-val="藥丸">藥丸</div>
+          <div class="chip" data-val="藥劑">藥劑</div>
+        </div>
+        <input type="text" id="recSupOther" placeholder="其他" style="margin-top:8px;">
+      </div>
+
       <label style="margin-top:12px;">其他</label>
       <input type="text" id="recItemsOther">
       <div class="submit-row"><button class="submit-btn" id="itemsSaveBtn">儲存攜帶物品</button></div>
@@ -286,15 +441,22 @@
         <div class="chip warn" data-val="需按時服藥">需按時服藥</div>
         <div class="chip warn" data-val="特殊飲食限制">特殊飲食限制</div>
       </div>
+
+      <div class="field" id="recChronicDetail" style="display:none;padding:14px 0 0;">
+        <label class="glabel">慢性病史資訊</label>
+        <input type="text" id="recChronicDisease" placeholder="疾病" style="margin-bottom:8px;">
+        <input type="text" id="recChronicNote" placeholder="備註">
+      </div>
+
+      <div class="field" id="recDietDetail" style="display:none;padding:14px 0 0;">
+        <label class="glabel">特殊飲食限制資訊</label>
+        <input type="text" id="recDietLimit" placeholder="限制" style="margin-bottom:8px;">
+        <input type="text" id="recDietReason" placeholder="原因">
+      </div>
+
       <label style="margin-top:12px;">其他說明</label>
       <input type="text" id="recNotesOther">
       <div class="submit-row"><button class="submit-btn" id="notesSaveBtn">儲存注意事項</button></div>
-    </div>
-
-    <div class="field" id="cameraEditPanel" style="display:none;">
-      <label>監視器分享連結</label>
-      <input type="text" id="recCameraUrl" placeholder="https://...">
-      <div class="submit-row"><button class="submit-btn" id="cameraSaveBtn">儲存連結</button></div>
     </div>
 
     <div class="field">
@@ -305,112 +467,300 @@
     </div>
 
     <div class="field">
-      <label>紀錄類型</label>
-      <div class="cat-tabs">
-        <div class="cat-tab active" data-cat="food">飲食飲水</div>
-        <div class="cat-tab" data-cat="toilet">排泄</div>
-        <div class="cat-tab" data-cat="mood">精神情緒</div>
-        <div class="cat-tab" data-cat="activity">活動放風</div>
-        <div class="cat-tab" data-cat="other">其他(用藥・檢查)</div>
+      <label>登打時段</label>
+      <div class="cat-tabs" id="sessionTabs">
+        <div class="cat-tab active" data-session="morning">早上</div>
+        <div class="cat-tab" data-session="evening">晚上</div>
+        <div class="cat-tab" data-session="special">特殊紀錄</div>
       </div>
     </div>
 
-    <div class="cat-panel show" data-panel="food">
-      <div class="sub-group">
-        <span class="glabel">食欲程度</span>
-        <div class="chip-row" data-group="appetite">
-          <div class="chip" data-val="全部吃完">全部吃完</div>
-          <div class="chip" data-val="吃一半">吃一半</div>
-          <div class="chip warn" data-val="完全沒吃">完全沒吃</div>
-        </div>
+    <div class="field" id="sessionSubTabsWrap">
+      <div class="cat-tabs" id="sessionSubTabs">
+        <div class="cat-tab active" data-sub="bodycheck">身心評估</div>
+        <div class="cat-tab" data-sub="feedtoilet">進食與排泄紀錄</div>
       </div>
-      <div class="two-col">
-        <div><label style="font-size:12.5px;color:var(--ink-soft);margin-bottom:6px;display:block;">進食量(g)</label><input type="number" min="0" id="foodGrams"></div>
+    </div>
+
+    <div class="field" id="specialSubTabsWrap" style="display:none;">
+      <div class="cat-tabs" id="specialSubTabs">
+        <div class="cat-tab active" data-sub="spFood">進食狀況</div>
+        <div class="cat-tab" data-sub="spToilet">排泄狀況</div>
+        <div class="cat-tab" data-sub="spActivity">活動紀錄</div>
+        <div class="cat-tab" data-sub="spAbnormal">異常狀況</div>
+        <div class="cat-tab" data-sub="spMed">用藥紀錄</div>
+        <div class="cat-tab" data-sub="spMedObs">用藥後觀察</div>
+        <div class="cat-tab" data-sub="spOther">其他</div>
       </div>
+    </div>
+
+    <!-- 身心評估 -->
+    <div class="cat-panel show" data-panel="bodycheck">
       <div class="sub-group">
-        <span class="glabel">飲水量</span>
-        <div class="chip-row" data-group="water">
+        <span class="glabel">皮膚</span>
+        <div class="chip-row" data-group="bcSkin">
           <div class="chip" data-val="正常">正常</div>
-          <div class="chip" data-val="偏多">偏多</div>
-          <div class="chip warn" data-val="偏少">偏少</div>
+          <div class="chip warn" data-val="異常">異常</div>
         </div>
-      </div>
-    </div>
-
-    <div class="cat-panel" data-panel="toilet">
-      <div class="two-col">
-        <div><label style="font-size:12.5px;color:var(--ink-soft);margin-bottom:6px;display:block;">排便次數</label><input type="number" min="0" id="poopCount"></div>
-        <div><label style="font-size:12.5px;color:var(--ink-soft);margin-bottom:6px;display:block;">排尿次數</label><input type="number" min="0" id="peeCount"></div>
+        <input type="text" id="bcSkinNote" placeholder="說明" style="margin-top:8px;display:none;">
       </div>
       <div class="sub-group">
-        <span class="glabel">排便型態</span>
-        <div class="chip-row" data-group="poop">
+        <span class="glabel">精神</span>
+        <div class="chip-row" data-group="bcSpirit">
           <div class="chip" data-val="正常">正常</div>
-          <div class="chip warn" data-val="軟便">軟便</div>
-          <div class="chip warn" data-val="拉稀">拉稀</div>
+          <div class="chip warn" data-val="異常">異常</div>
         </div>
+        <input type="text" id="bcSpiritNote" placeholder="說明" style="margin-top:8px;display:none;">
       </div>
       <div class="sub-group">
-        <span class="glabel">排尿顏色</span>
-        <div class="chip-row" data-group="urine">
-          <div class="chip" data-val="淡黃正常">淡黃正常</div>
-          <div class="chip warn" data-val="偏深">偏深</div>
-          <div class="chip warn" data-val="偏紅">偏紅</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="cat-panel" data-panel="mood">
-      <div class="sub-group">
-        <span class="glabel">精神狀態</span>
-        <div class="chip-row" data-group="mood">
-          <div class="chip" data-val="活潑">活潑</div>
-          <div class="chip warn" data-val="沉鬱">沉鬱</div>
+        <span class="glabel">情緒(異常可複選)</span>
+        <div class="chip-row" data-multigroup="bcMood">
+          <div class="chip" data-val="良好">良好</div>
+          <div class="chip warn" data-val="沈鬱">沈鬱</div>
           <div class="chip warn" data-val="緊張">緊張</div>
+          <div class="chip warn" data-val="防禦">防禦</div>
+        </div>
+        <div id="bcMoodFreqWrap" style="display:none;margin-top:8px;">
+          <div class="chip-row" data-group="bcMoodFreq">
+            <div class="chip" data-val="偶爾">偶爾</div>
+            <div class="chip" data-val="時常">時常</div>
+          </div>
+          <input type="text" id="bcMoodNote" placeholder="說明狀態" style="margin-top:8px;">
         </div>
       </div>
       <div class="sub-group">
-        <span class="glabel">異常行為</span>
-        <div class="chip-row" data-group="behavior">
+        <span class="glabel">眼鼻分泌物</span>
+        <div class="chip-row" data-multigroup="bcDischarge">
+          <div class="chip" data-val="無">無</div>
+          <div class="chip warn" data-val="眼屎">眼屎</div>
+          <div class="chip warn" data-val="鼻涕">鼻涕</div>
+        </div>
+        <div id="bcEyeDetail" style="display:none;margin-top:8px;">
+          <input type="text" id="bcEyeQuality" placeholder="眼屎性質">
+          <label style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:13px;color:var(--ink-soft);"><input type="checkbox" id="bcEyeHandled"> 已處理</label>
+        </div>
+        <div id="bcNoseDetail" style="display:none;margin-top:8px;">
+          <input type="text" id="bcNoseQuality" placeholder="鼻涕性質">
+          <label style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:13px;color:var(--ink-soft);"><input type="checkbox" id="bcNoseHandled"> 已處理</label>
+        </div>
+      </div>
+      <div class="field" style="padding:14px 0 0;">
+        <label>圖片補充說明</label>
+        <img id="bcPhotoPreview" style="display:none;width:100%;max-height:200px;object-fit:cover;border-radius:12px;margin-bottom:8px;">
+        <label style="display:inline-block;border:1px dashed var(--line);background:var(--card);border-radius:12px;padding:10px 16px;font-size:13px;color:var(--ink-soft);cursor:pointer;margin-right:8px;">
+          選擇照片
+          <input type="file" accept="image/*" id="bcPhotoInput" style="display:none;">
+        </label>
+        <label style="display:inline-block;border:1px dashed var(--line);background:var(--card);border-radius:12px;padding:10px 16px;font-size:13px;color:var(--ink-soft);cursor:pointer;">
+          拍照
+          <input type="file" accept="image/*" capture="environment" id="bcCameraInput" style="display:none;">
+        </label>
+      </div>
+      <div class="submit-row">
+        <button class="small-btn" id="continueToFeedtoiletBtn" style="background:var(--pine);color:#F4F1E9;width:100%;">送出身心評估,並繼續填寫進食與排泄紀錄</button>
+      </div>
+    </div>
+
+    <!-- 進食與排泄紀錄 -->
+    <div class="cat-panel" data-panel="feedtoilet">
+      <div class="sub-group">
+        <span class="glabel">嘔吐</span>
+        <div class="chip-row" data-group="ftVomit">
+          <div class="chip" data-val="無">無</div>
+          <div class="chip warn" data-val="吐毛">吐毛</div>
+          <div class="chip warn" data-val="吐食物">吐食物</div>
+          <div class="chip warn" data-val="吐水">吐水</div>
+          <div class="chip warn" data-val="其他">其他</div>
+        </div>
+        <input type="text" id="ftVomitNote" placeholder="說明" style="margin-top:8px;display:none;">
+      </div>
+
+      <div class="sub-group">
+        <span class="glabel">進食紀錄(可複選)</span>
+        <div class="chip-row" data-multigroup="ftFood">
+          <div class="chip" data-val="乾糧">乾糧</div>
+          <div class="chip" data-val="濕食">濕食</div>
+          <div class="chip" data-val="鮮食">鮮食</div>
+        </div>
+      </div>
+      <div id="ftDryDetail" style="display:none;padding:10px 0 0;">
+        <span class="glabel">乾糧</span>
+        <div class="chip-row" data-group="ftDryStatus">
+          <div class="chip" data-val="首次餵食">首次餵食</div>
+          <div class="chip" data-val="更換">更換</div>
+          <div class="chip" data-val="增加">增加</div>
+        </div>
+        <div class="two-col">
+          <div><label class="glabel" style="margin-top:8px;">餵食量(g)</label><input type="number" min="0" id="ftDryGrams"></div>
+          <div id="ftDryLeftoverWrap" style="display:none;"><label class="glabel" style="margin-top:8px;">原本剩餘(g)</label><input type="number" min="0" id="ftDryLeftover"></div>
+        </div>
+      </div>
+      <div id="ftWetDetail" style="display:none;padding:10px 0 0;">
+        <span class="glabel">濕食</span>
+        <div class="two-col">
+          <div><label class="glabel">餵食(g)</label><input type="number" min="0" id="ftWetGrams"></div>
+          <div><label class="glabel">剩餘棄置(g)</label><input type="number" min="0" id="ftWetLeftover"></div>
+        </div>
+        <div style="font-size:11.5px;color:var(--ink-soft);margin-top:4px;">若還有剩餘,約 1 小時後記得回來「特殊紀錄→進食狀況」補登棄置量</div>
+      </div>
+      <div id="ftFreshDetail" style="display:none;padding:10px 0 0;">
+        <span class="glabel">鮮食</span>
+        <div class="two-col">
+          <div><label class="glabel">餵食(g)</label><input type="number" min="0" id="ftFreshGrams"></div>
+          <div><label class="glabel">剩餘棄置(g)</label><input type="number" min="0" id="ftFreshLeftover"></div>
+        </div>
+        <div style="font-size:11.5px;color:var(--ink-soft);margin-top:4px;">若還有剩餘,約 1 小時後記得回來「特殊紀錄→進食狀況」補登棄置量</div>
+      </div>
+
+      <div class="sub-group">
+        <span class="glabel">飲水紀錄 · 首次補水(ML)</span>
+        <input type="number" min="0" id="ftWaterMl">
+      </div>
+
+      <div class="sub-group" id="ftPeeCat" style="display:none;">
+        <span class="glabel">排尿紀錄(貓貓區)</span>
+        <input type="number" min="0" id="ftPeeCatGrams" placeholder="重量(含貓砂,g)">
+        <label style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:13px;color:var(--ink-soft);"><input type="checkbox" id="ftPeeCatMulti"> 多貓同住,無法精準判斷</label>
+      </div>
+      <div class="sub-group" id="ftPeeDog" style="display:none;">
+        <span class="glabel">排尿紀錄(狗狗區)</span>
+        <div class="chip-row" data-group="ftPeeDogType">
+          <div class="chip" data-val="尿布墊">尿布墊</div>
+          <div class="chip" data-val="戶外">戶外</div>
+        </div>
+        <div id="ftPeeDogPadWrap" style="display:none;margin-top:8px;"><input type="number" min="0" id="ftPeeDogPadGrams" placeholder="重量(已扣除尿布墊,g)"></div>
+        <div id="ftPeeDogOutWrap" style="display:none;margin-top:8px;">
+          <input type="number" min="0" id="ftPeeDogOutCount" placeholder="次數">
+          <div style="font-size:11.5px;color:var(--ink-soft);margin-top:4px;">戶外如廁也可以之後在「特殊紀錄→排泄狀況」補登</div>
+        </div>
+      </div>
+
+      <div class="sub-group" id="ftPoopCat" style="display:none;">
+        <span class="glabel">排便紀錄(貓貓區)</span>
+        <input type="number" min="0" id="ftPoopCatGrams" placeholder="重量(含貓砂,g)">
+        <label style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:13px;color:var(--ink-soft);"><input type="checkbox" id="ftPoopCatMulti"> 多貓同住,無法精準判斷</label>
+      </div>
+      <div class="sub-group" id="ftPoopDog" style="display:none;">
+        <span class="glabel">排便紀錄(狗狗區)</span>
+        <div class="two-col">
+          <div><label class="glabel">尿布墊(已扣除,g)</label><input type="number" min="0" id="ftPoopDogPadGrams"></div>
+          <div><label class="glabel">戶外(g)</label><input type="number" min="0" id="ftPoopDogOutGrams"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 特殊紀錄:進食狀況 -->
+    <div class="cat-panel" data-panel="spFood">
+      <div class="sub-group">
+        <span class="glabel">項目(可複選)</span>
+        <div class="chip-row" data-multigroup="spFoodType">
+          <div class="chip" data-val="乾糧">乾糧</div>
+          <div class="chip" data-val="濕食">濕食</div>
+          <div class="chip" data-val="鮮食">鮮食</div>
+          <div class="chip" data-val="加餐/宵夜">加餐/宵夜</div>
+        </div>
+      </div>
+      <div class="sub-group">
+        <span class="glabel">棄置量(g)(關閉先前濕食/鮮食剩餘時使用)</span>
+        <input type="number" min="0" id="spFoodDiscard">
+      </div>
+      <div class="sub-group">
+        <span class="glabel">本次餵食量(g)(若為加餐/宵夜或需另外計入份量時填寫)</span>
+        <input type="number" min="0" id="spFoodGrams">
+      </div>
+      <div class="field">
+        <label>其他</label>
+        <input type="text" id="spFoodOther">
+      </div>
+    </div>
+
+    <!-- 特殊紀錄:排泄狀況 -->
+    <div class="cat-panel" data-panel="spToilet">
+      <div class="two-col">
+        <div><label class="glabel">戶外大便(g)</label><input type="number" min="0" id="spToiletPoopGrams"></div>
+        <div><label class="glabel">小便次數</label><input type="number" min="0" id="spToiletPeeCount"></div>
+      </div>
+      <div class="field">
+        <label>其他</label>
+        <input type="text" id="spToiletOther">
+      </div>
+    </div>
+
+    <!-- 特殊紀錄:活動紀錄 -->
+    <div class="cat-panel" data-panel="spActivity">
+      <div class="sub-group">
+        <span class="glabel">放風時間(分鐘)</span>
+        <input type="number" min="0" id="spActivityMinutes">
+      </div>
+      <div class="sub-group">
+        <span class="glabel">狀態</span>
+        <div class="chip-row" data-group="spActivityState">
+          <div class="chip" data-val="興奮開心">興奮開心</div>
+          <div class="chip" data-val="溫和探索">溫和探索</div>
+          <div class="chip warn" data-val="憂鬱">憂鬱</div>
+          <div class="chip warn" data-val="緊張防衛">緊張防衛</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 特殊紀錄:異常狀況 -->
+    <div class="cat-panel" data-panel="spAbnormal">
+      <div class="sub-group">
+        <span class="glabel">狀況(可複選)</span>
+        <div class="chip-row" data-multigroup="spAbnormalType">
+          <div class="chip" data-val="無">無</div>
+          <div class="chip warn" data-val="持續踱步">持續踱步</div>
+          <div class="chip warn" data-val="焦慮繞圈">焦慮繞圈</div>
+          <div class="chip warn" data-val="持續嚎叫">持續嚎叫</div>
+          <div class="chip warn" data-val="哭泣">哭泣</div>
+          <div class="chip warn" data-val="抓門">抓門</div>
+          <div class="chip warn" data-val="過度舔毛">過度舔毛</div>
+          <div class="chip warn" data-val="無法安定">無法安定</div>
+          <div class="chip warn" data-val="其他">其他</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>詳細說明</label>
+        <textarea id="spAbnormalNote"></textarea>
+      </div>
+    </div>
+
+    <!-- 特殊紀錄:用藥紀錄 -->
+    <div class="cat-panel" data-panel="spMed">
+      <div class="sub-group">
+        <span class="glabel">投藥結果</span>
+        <div class="chip-row" data-group="spMedResult">
+          <div class="chip" data-val="已成功投藥">已成功投藥</div>
+          <div class="chip warn" data-val="投藥失敗">投藥失敗</div>
+          <div class="chip warn" data-val="拒食挑食">拒食挑食(藥混食物中未吃完)</div>
+        </div>
+      </div>
+      <div class="sub-group" id="spMedFailReasonWrap" style="display:none;">
+        <span class="glabel">失敗原因</span>
+        <div class="chip-row" data-group="spMedFailReason">
+          <div class="chip warn" data-val="強烈反抗">強烈反抗</div>
+          <div class="chip warn" data-val="吐藥">吐藥</div>
+          <div class="chip warn" data-val="咬人">咬人</div>
+          <div class="chip warn" data-val="躲藏無法觸摸">躲藏無法觸摸</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 特殊紀錄:用藥後觀察 -->
+    <div class="cat-panel" data-panel="spMedObs">
+      <div class="sub-group">
+        <span class="glabel">觀察(可複選)</span>
+        <div class="chip-row" data-multigroup="spMedObsType">
           <div class="chip" data-val="無異常">無異常</div>
-          <div class="chip warn" data-val="異常吠叫">異常吠叫</div>
-          <div class="chip warn" data-val="放空">放空</div>
+          <div class="chip warn" data-val="有吐藥流涎(流口水)">有吐藥流涎(流口水)</div>
+          <div class="chip warn" data-val="精神變差嗜睡">精神變差嗜睡</div>
         </div>
       </div>
     </div>
 
-    <div class="cat-panel" data-panel="activity">
-      <div class="sub-group">
-        <span class="glabel">社交情況</span>
-        <div class="chip-row" data-group="social">
-          <div class="chip" data-val="友善互動">友善互動</div>
-          <div class="chip" data-val="獨自活動">獨自活動</div>
-          <div class="chip warn" data-val="迴避其他寶貝">迴避其他寶貝</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="cat-panel" data-panel="other">
-      <div class="sub-group">
-        <div class="chip-row" data-group="medOk">
-          <div class="chip" data-val="順利服藥">順利服藥</div>
-          <div class="chip warn" data-val="未順利服藥">未順利服藥</div>
-        </div>
-      </div>
-      <div class="sub-group">
-        <span class="glabel">身體檢查</span>
-        <div class="chip-row" data-group="eye">
-          <div class="chip" data-val="眼睛正常">眼睛正常</div>
-          <div class="chip warn" data-val="眼睛有分泌物">眼睛有分泌物</div>
-        </div>
-      </div>
-      <div class="sub-group">
-        <div class="chip-row" data-group="skin">
-          <div class="chip" data-val="無嘔吐/皮膚正常">無嘔吐/皮膚正常</div>
-          <div class="chip warn" data-val="有嘔吐">有嘔吐</div>
-          <div class="chip warn" data-val="皮膚異常抓癢">皮膚異常抓癢</div>
-        </div>
-      </div>
+    <!-- 特殊紀錄:其他 -->
+    <div class="cat-panel" data-panel="spOther">
+      <div class="status-msg">直接在下方「備註說明」填寫即可。</div>
     </div>
 
     <div class="field">
@@ -501,7 +851,6 @@
   const storage = getStorage(app);
   const googleProvider = new GoogleAuthProvider();
 
-  const catLabels = {food:'飲食飲水', toilet:'排泄', mood:'精神情緒', activity:'活動放風', other:'其他'};
   let currentArea = 'cat';
   let currentRoomId = null;
   let allRooms = {};
@@ -582,9 +931,14 @@
     document.getElementById('ciMemberNo').value = '';
     document.getElementById('ciMemberName').value = '';
     document.getElementById('ciCheckinTime').value = toDatetimeLocalValue(new Date());
-    document.getElementById('ciCameraUrl').value = '';
     document.getElementById('ciItemsOther').value = '';
     document.getElementById('ciNotesOther').value = '';
+    ['ciFoodBrand','ciFoodOther','ciSnackAmount','ciSnackOther','ciMedDosage','ciMedTime','ciMedTips',
+     'ciSupName','ciSupFreq','ciSupOther','ciChronicDisease','ciChronicNote','ciDietLimit','ciDietReason'
+    ].forEach(id => { document.getElementById(id).value = ''; });
+    ['ciFoodDetail','ciSnackDetail','ciMedDetail','ciSupplementDetail','ciChronicDetail','ciDietDetail',
+     'ciMedOralTypeWrap','ciMedTopicalTypeWrap']
+      .forEach(id => { document.getElementById(id).style.display = 'none'; });
     document.querySelectorAll('#screenCheckin .chip').forEach(c => c.classList.remove('active'));
     ciExistingAvatarUrl = null;
     ciNewAvatarFile = null;
@@ -637,7 +991,57 @@
     const stayId = 'stay-' + Date.now();
     const checkinTimeVal = document.getElementById('ciCheckinTime').value;
     const checkinDisplay = checkinTimeVal ? checkinTimeVal.replace('T', ' ') : new Date().toLocaleString('zh-TW');
-    const cameraUrl = document.getElementById('ciCameraUrl').value.trim();
+
+    const itemDetails = {};
+    if (itemsList.includes('飼料')){
+      itemDetails['飼料'] = {
+        品牌: document.getElementById('ciFoodBrand').value.trim(),
+        型態: Array.from(document.querySelectorAll('.chip-row[data-multigroup="ciFoodType"] .chip.active')).map(c => c.dataset.val).join('、'),
+        其他: document.getElementById('ciFoodOther').value.trim()
+      };
+    }
+    if (itemsList.includes('零食')){
+      itemDetails['零食'] = {
+        類型: Array.from(document.querySelectorAll('.chip-row[data-multigroup="ciSnackType"] .chip.active')).map(c => c.dataset.val).join('、'),
+        量: document.getElementById('ciSnackAmount').value.trim(),
+        其他: document.getElementById('ciSnackOther').value.trim()
+      };
+    }
+    if (itemsList.includes('藥品')){
+      const cat = document.querySelector('.chip-row[data-group="ciMedCategory"] .chip.active');
+      const subType = cat && cat.dataset.val === '口服藥'
+        ? document.querySelector('.chip-row[data-group="ciMedOralType"] .chip.active')
+        : document.querySelector('.chip-row[data-group="ciMedTopicalType"] .chip.active');
+      itemDetails['藥品'] = {
+        項目: (cat ? cat.dataset.val : '') + (subType ? '・' + subType.dataset.val : ''),
+        劑量: document.getElementById('ciMedDosage').value.trim(),
+        預定投藥時間: document.getElementById('ciMedTime').value.trim(),
+        投藥小技巧: document.getElementById('ciMedTips').value.trim()
+      };
+    }
+    if (itemsList.includes('保健食品')){
+      itemDetails['保健食品'] = {
+        名稱: document.getElementById('ciSupName').value.trim(),
+        頻率: document.getElementById('ciSupFreq').value.trim(),
+        隨餐: Array.from(document.querySelectorAll('.chip-row[data-multigroup="ciSupMeal"] .chip.active')).map(c => c.dataset.val).join('、'),
+        劑型: Array.from(document.querySelectorAll('.chip-row[data-multigroup="ciSupForm"] .chip.active')).map(c => c.dataset.val).join('、'),
+        其他: document.getElementById('ciSupOther').value.trim()
+      };
+    }
+
+    const notesDetails = {};
+    if (notesList.includes('慢性病史')){
+      notesDetails['慢性病史'] = {
+        疾病: document.getElementById('ciChronicDisease').value.trim(),
+        備註: document.getElementById('ciChronicNote').value.trim()
+      };
+    }
+    if (notesList.includes('特殊飲食限制')){
+      notesDetails['特殊飲食限制'] = {
+        限制: document.getElementById('ciDietLimit').value.trim(),
+        原因: document.getElementById('ciDietReason').value.trim()
+      };
+    }
 
     let avatarUrl = ciExistingAvatarUrl;
     if (ciNewAvatarFile){
@@ -657,11 +1061,11 @@
       name: petName,
       phone: phone,
       stayId: stayId,
-      items: (itemsList.length || itemsOther) ? {list: itemsList, other: itemsOther} : null,
-      notes: (notesList.length || notesOther) ? {list: notesList, other: notesOther} : null,
+      items: (itemsList.length || itemsOther) ? {list: itemsList, other: itemsOther, details: itemDetails} : null,
+      notes: (notesList.length || notesOther) ? {list: notesList, other: notesOther, details: notesDetails} : null,
       checkinDate: checkinDisplay,
       avatarUrl: avatarUrl || null,
-      cameraUrl: cameraUrl || null
+      pendingDryGrams: 0
     });
 
     await setDoc(doc(db, 'members', phone), {
@@ -686,13 +1090,14 @@
     else { avatarEl.style.display = 'none'; }
     document.getElementById('itemsEditPanel').style.display = 'none';
     document.getElementById('notesEditPanel').style.display = 'none';
-    document.getElementById('cameraEditPanel').style.display = 'none';
+    ['recFoodDetail','recSnackDetail','recMedDetail','recSupplementDetail','recChronicDetail','recDietDetail']
+      .forEach(elId => { document.getElementById(elId).style.display = 'none'; });
     document.getElementById('entryTime').value = toDatetimeLocalValue(new Date());
     entryPhotoFile = null;
     document.getElementById('entryPhotoPreview').style.display = 'none';
+    resetEntryForm();
     renderItemsCard(room);
     renderNotesCard(room);
-    renderCameraCard(room);
     showScreen('screenRecord');
     await renderLog();
   }
@@ -704,55 +1109,157 @@
     document.getElementById('memberSearchBtn').click();
   });
 
+  function detailText(details, val, fields){
+    if (!details || !details[val]) return val;
+    const parts = fields.map(f => details[val][f]).filter(v => v);
+    return parts.length ? val + '(' + parts.join('・') + ')' : val;
+  }
+
   // items / notes rows
   function renderItemsCard(room){
-    const text = room.items ? [...room.items.list, ...(room.items.other ? ['其他:' + room.items.other] : [])].join('、') : '尚未登記';
+    let text = '尚未登記';
+    if (room.items){
+      const d = room.items.details || {};
+      const parts = room.items.list.map(v => {
+        if (v === '飼料') return detailText(d, v, ['品牌','型態','其他']);
+        if (v === '零食') return detailText(d, v, ['類型','量','其他']);
+        if (v === '藥品') return detailText(d, v, ['項目','劑量','預定投藥時間','投藥小技巧']);
+        if (v === '保健食品') return detailText(d, v, ['名稱','頻率','隨餐','劑型','其他']);
+        return v;
+      });
+      if (room.items.other) parts.push('其他:' + room.items.other);
+      text = parts.join('、');
+    }
     document.getElementById('itemsValue').textContent = text;
     document.getElementById('itemsEditLink').textContent = room.items ? '編輯' : '新增';
     document.getElementById('itemsEditLink').onclick = () => {
       const panel = document.getElementById('itemsEditPanel');
       panel.style.display = 'block';
       const selected = room.items ? room.items.list : [];
+      const d = (room.items && room.items.details) || {};
       panel.querySelectorAll('.chip-row[data-multigroup="recItems"] .chip').forEach(c => c.classList.toggle('active', selected.includes(c.dataset.val)));
       document.getElementById('recItemsOther').value = room.items ? room.items.other : '';
+
+      const showMap = { '飼料':'recFoodDetail', '零食':'recSnackDetail', '藥品':'recMedDetail', '保健食品':'recSupplementDetail' };
+      Object.keys(showMap).forEach(v => {
+        document.getElementById(showMap[v]).style.display = selected.includes(v) ? 'block' : 'none';
+      });
+      document.getElementById('recFoodBrand').value = (d['飼料'] && d['飼料'].品牌) || '';
+      document.getElementById('recFoodOther').value = (d['飼料'] && d['飼料'].其他) || '';
+      document.querySelectorAll('.chip-row[data-multigroup="recFoodType"] .chip').forEach(c => c.classList.toggle('active', d['飼料'] && (d['飼料'].型態 || '').includes(c.dataset.val)));
+      document.querySelectorAll('.chip-row[data-multigroup="recSnackType"] .chip').forEach(c => c.classList.toggle('active', d['零食'] && (d['零食'].類型 || '').includes(c.dataset.val)));
+      document.getElementById('recSnackAmount').value = (d['零食'] && d['零食'].量) || '';
+      document.getElementById('recSnackOther').value = (d['零食'] && d['零食'].其他) || '';
+      document.getElementById('recMedDosage').value = (d['藥品'] && d['藥品'].劑量) || '';
+      document.getElementById('recMedTime').value = (d['藥品'] && d['藥品'].預定投藥時間) || '';
+      document.getElementById('recMedTips').value = (d['藥品'] && d['藥品'].投藥小技巧) || '';
+      document.querySelectorAll('.chip-row[data-group="recMedCategory"] .chip, .chip-row[data-group="recMedOralType"] .chip, .chip-row[data-group="recMedTopicalType"] .chip').forEach(c => c.classList.remove('active'));
+      document.getElementById('recMedOralTypeWrap').style.display = 'none';
+      document.getElementById('recMedTopicalTypeWrap').style.display = 'none';
+      if (d['藥品'] && d['藥品'].項目){
+        const [medCat, medSub] = d['藥品'].項目.split('・');
+        const catChip = document.querySelector('.chip-row[data-group="recMedCategory"] .chip[data-val="'+medCat+'"]');
+        if (catChip) catChip.classList.add('active');
+        if (medCat === '口服藥'){
+          document.getElementById('recMedOralTypeWrap').style.display = 'flex';
+          const subChip = document.querySelector('.chip-row[data-group="recMedOralType"] .chip[data-val="'+medSub+'"]');
+          if (subChip) subChip.classList.add('active');
+        } else if (medCat === '外用藥'){
+          document.getElementById('recMedTopicalTypeWrap').style.display = 'flex';
+          const subChip = document.querySelector('.chip-row[data-group="recMedTopicalType"] .chip[data-val="'+medSub+'"]');
+          if (subChip) subChip.classList.add('active');
+        }
+      }
+      document.getElementById('recSupName').value = (d['保健食品'] && d['保健食品'].名稱) || '';
+      document.getElementById('recSupFreq').value = (d['保健食品'] && d['保健食品'].頻率) || '';
+      document.getElementById('recSupOther').value = (d['保健食品'] && d['保健食品'].其他) || '';
+      document.querySelectorAll('.chip-row[data-multigroup="recSupMeal"] .chip').forEach(c => c.classList.toggle('active', d['保健食品'] && (d['保健食品'].隨餐 || '').includes(c.dataset.val)));
+      document.querySelectorAll('.chip-row[data-multigroup="recSupForm"] .chip').forEach(c => c.classList.toggle('active', d['保健食品'] && (d['保健食品'].劑型 || '').includes(c.dataset.val)));
     };
   }
+
+  const recItemDetailMap = { '飼料':'recFoodDetail', '零食':'recSnackDetail', '藥品':'recMedDetail', '保健食品':'recSupplementDetail' };
+  Object.keys(recItemDetailMap).forEach(val => {
+    const chip = document.querySelector('.chip-row[data-multigroup="recItems"] .chip[data-val="' + val + '"]');
+    if (chip) chip.addEventListener('click', () => {
+      document.getElementById(recItemDetailMap[val]).style.display = chip.classList.contains('active') ? 'block' : 'none';
+    });
+  });
+  const recNotesDetailMap = { '慢性病史':'recChronicDetail', '特殊飲食限制':'recDietDetail' };
+  Object.keys(recNotesDetailMap).forEach(val => {
+    const chip = document.querySelector('.chip-row[data-multigroup="recNotes"] .chip[data-val="' + val + '"]');
+    if (chip) chip.addEventListener('click', () => {
+      document.getElementById(recNotesDetailMap[val]).style.display = chip.classList.contains('active') ? 'block' : 'none';
+    });
+  });
 
   function renderNotesCard(room){
-    const text = room.notes ? [...room.notes.list, ...(room.notes.other ? ['其他:' + room.notes.other] : [])].join('、') : '尚無';
-    document.getElementById('notesValue').textContent = text;
-    document.getElementById('notesEditLink').textContent = room.notes ? '編輯' : '新增';
-    document.getElementById('notesRow').classList.toggle('alert', !!room.notes);
-    document.getElementById('notesEditLink').onclick = () => {
-      const panel = document.getElementById('notesEditPanel');
-      panel.style.display = 'block';
-      const selected = room.notes ? room.notes.list : [];
-      panel.querySelectorAll('.chip-row[data-multigroup="recNotes"] .chip').forEach(c => c.classList.toggle('active', selected.includes(c.dataset.val)));
-      document.getElementById('recNotesOther').value = room.notes ? room.notes.other : '';
-    };
+    const badge = document.getElementById('notesBadge');
+    if (!room.notes){
+      badge.textContent = '';
+      badge.onclick = () => openNotesEdit(room);
+      return;
+    }
+    const d = room.notes.details || {};
+    const parts = room.notes.list.map(v => {
+      if (v === '慢性病史') return detailText(d, v, ['疾病','備註']);
+      if (v === '特殊飲食限制') return detailText(d, v, ['限制','原因']);
+      return v;
+    });
+    if (room.notes.other) parts.push(room.notes.other);
+    badge.innerHTML = '⚠ <span style="color:var(--danger);text-decoration:underline;">' + parts.join('、') + '</span>';
+    badge.onclick = () => openNotesEdit(room);
   }
 
-  function renderCameraCard(room){
-    document.getElementById('cameraValue').textContent = room.cameraUrl ? '已設定' : '尚未設定';
-    document.getElementById('cameraEditLink').textContent = room.cameraUrl ? '編輯' : '新增';
-    document.getElementById('cameraEditLink').onclick = () => {
-      document.getElementById('cameraEditPanel').style.display = 'block';
-      document.getElementById('recCameraUrl').value = room.cameraUrl || '';
-    };
+  function openNotesEdit(room){
+    const panel = document.getElementById('notesEditPanel');
+    panel.style.display = 'block';
+    const selected = room.notes ? room.notes.list : [];
+    const d = (room.notes && room.notes.details) || {};
+    panel.querySelectorAll('.chip-row[data-multigroup="recNotes"] .chip').forEach(c => c.classList.toggle('active', selected.includes(c.dataset.val)));
+    document.getElementById('recNotesOther').value = room.notes ? room.notes.other : '';
+    document.getElementById('recChronicDetail').style.display = selected.includes('慢性病史') ? 'block' : 'none';
+    document.getElementById('recChronicDisease').value = (d['慢性病史'] && d['慢性病史'].疾病) || '';
+    document.getElementById('recChronicNote').value = (d['慢性病史'] && d['慢性病史'].備註) || '';
+    document.getElementById('recDietDetail').style.display = selected.includes('特殊飲食限制') ? 'block' : 'none';
+    document.getElementById('recDietLimit').value = (d['特殊飲食限制'] && d['特殊飲食限制'].限制) || '';
+    document.getElementById('recDietReason').value = (d['特殊飲食限制'] && d['特殊飲食限制'].原因) || '';
   }
-
-  document.getElementById('cameraSaveBtn').addEventListener('click', async () => {
-    const url = document.getElementById('recCameraUrl').value.trim();
-    await updateDoc(doc(db, 'rooms', currentRoomId), { cameraUrl: url || null });
-    allRooms[currentRoomId].cameraUrl = url || null;
-    document.getElementById('cameraEditPanel').style.display = 'none';
-    renderCameraCard(allRooms[currentRoomId]);
-  });
 
   document.getElementById('itemsSaveBtn').addEventListener('click', async () => {
     const list = Array.from(document.querySelectorAll('.chip-row[data-multigroup="recItems"] .chip.active')).map(c => c.dataset.val);
     const other = document.getElementById('recItemsOther').value.trim();
-    const items = (list.length || other) ? {list, other} : null;
+    const details = {};
+    if (list.includes('飼料')) details['飼料'] = {
+      品牌: document.getElementById('recFoodBrand').value.trim(),
+      型態: Array.from(document.querySelectorAll('.chip-row[data-multigroup="recFoodType"] .chip.active')).map(c => c.dataset.val).join('、'),
+      其他: document.getElementById('recFoodOther').value.trim()
+    };
+    if (list.includes('零食')) details['零食'] = {
+      類型: Array.from(document.querySelectorAll('.chip-row[data-multigroup="recSnackType"] .chip.active')).map(c => c.dataset.val).join('、'),
+      量: document.getElementById('recSnackAmount').value.trim(),
+      其他: document.getElementById('recSnackOther').value.trim()
+    };
+    if (list.includes('藥品')){
+      const cat = document.querySelector('.chip-row[data-group="recMedCategory"] .chip.active');
+      const subType = cat && cat.dataset.val === '口服藥'
+        ? document.querySelector('.chip-row[data-group="recMedOralType"] .chip.active')
+        : document.querySelector('.chip-row[data-group="recMedTopicalType"] .chip.active');
+      details['藥品'] = {
+        項目: (cat ? cat.dataset.val : '') + (subType ? '・' + subType.dataset.val : ''),
+        劑量: document.getElementById('recMedDosage').value.trim(),
+        預定投藥時間: document.getElementById('recMedTime').value.trim(),
+        投藥小技巧: document.getElementById('recMedTips').value.trim()
+      };
+    }
+    if (list.includes('保健食品')) details['保健食品'] = {
+      名稱: document.getElementById('recSupName').value.trim(),
+      頻率: document.getElementById('recSupFreq').value.trim(),
+      隨餐: Array.from(document.querySelectorAll('.chip-row[data-multigroup="recSupMeal"] .chip.active')).map(c => c.dataset.val).join('、'),
+      劑型: Array.from(document.querySelectorAll('.chip-row[data-multigroup="recSupForm"] .chip.active')).map(c => c.dataset.val).join('、'),
+      其他: document.getElementById('recSupOther').value.trim()
+    };
+    const items = (list.length || other) ? {list, other, details} : null;
     await updateDoc(doc(db, 'rooms', currentRoomId), { items });
     allRooms[currentRoomId].items = items;
     document.getElementById('itemsEditPanel').style.display = 'none';
@@ -762,7 +1269,16 @@
   document.getElementById('notesSaveBtn').addEventListener('click', async () => {
     const list = Array.from(document.querySelectorAll('.chip-row[data-multigroup="recNotes"] .chip.active')).map(c => c.dataset.val);
     const other = document.getElementById('recNotesOther').value.trim();
-    const notes = (list.length || other) ? {list, other} : null;
+    const details = {};
+    if (list.includes('慢性病史')) details['慢性病史'] = {
+      疾病: document.getElementById('recChronicDisease').value.trim(),
+      備註: document.getElementById('recChronicNote').value.trim()
+    };
+    if (list.includes('特殊飲食限制')) details['特殊飲食限制'] = {
+      限制: document.getElementById('recDietLimit').value.trim(),
+      原因: document.getElementById('recDietReason').value.trim()
+    };
+    const notes = (list.length || other) ? {list, other, details} : null;
     await updateDoc(doc(db, 'rooms', currentRoomId), { notes });
     allRooms[currentRoomId].notes = notes;
     document.getElementById('notesEditPanel').style.display = 'none';
@@ -827,22 +1343,173 @@
     });
     await setDoc(doc(db, 'rooms', currentRoomId), {
       area: room.area, no: room.no, name: null, phone: null, stayId: null, items: null, notes: null,
-      avatarUrl: null, cameraUrl: null
+      avatarUrl: null
     });
     await loadRooms();
     showScreen('screenRooms');
     renderRooms();
   });
 
-  // category tabs
-  document.querySelectorAll('.cat-tab').forEach(tab => {
+  // ---------- session / sub-tab navigation ----------
+  let currentSession = 'morning';
+  let currentPanel = 'bodycheck';
+
+  function showPanel(panelId){
+    currentPanel = panelId;
+    document.querySelectorAll('.cat-panel').forEach(p => p.classList.remove('show'));
+    const p = document.querySelector('.cat-panel[data-panel="' + panelId + '"]');
+    if (p) p.classList.add('show');
+  }
+
+  document.querySelectorAll('#sessionTabs .cat-tab').forEach(tab => {
     tab.addEventListener('click', () => {
-      document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('#sessionTabs .cat-tab').forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
-      document.querySelectorAll('.cat-panel').forEach(p => p.classList.remove('show'));
-      document.querySelector('.cat-panel[data-panel="'+tab.dataset.cat+'"]').classList.add('show');
+      currentSession = tab.dataset.session;
+      if (currentSession === 'special'){
+        document.getElementById('sessionSubTabsWrap').style.display = 'none';
+        document.getElementById('specialSubTabsWrap').style.display = 'block';
+        document.querySelectorAll('#specialSubTabs .cat-tab').forEach(t => t.classList.remove('active'));
+        document.querySelector('#specialSubTabs .cat-tab[data-sub="spFood"]').classList.add('active');
+        showPanel('spFood');
+      } else {
+        document.getElementById('sessionSubTabsWrap').style.display = 'block';
+        document.getElementById('specialSubTabsWrap').style.display = 'none';
+        document.querySelectorAll('#sessionSubTabs .cat-tab').forEach(t => t.classList.remove('active'));
+        document.querySelector('#sessionSubTabs .cat-tab[data-sub="bodycheck"]').classList.add('active');
+        showPanel('bodycheck');
+      }
     });
   });
+
+  document.querySelectorAll('#sessionSubTabs .cat-tab, #specialSubTabs .cat-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      tab.parentElement.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      showPanel(tab.dataset.sub);
+    });
+  });
+
+  document.getElementById('continueToFeedtoiletBtn').addEventListener('click', async () => {
+    const ok = await submitCurrentEntry();
+    if (!ok) return;
+    document.querySelectorAll('#sessionSubTabs .cat-tab').forEach(t => t.classList.remove('active'));
+    document.querySelector('#sessionSubTabs .cat-tab[data-sub="feedtoilet"]').classList.add('active');
+    showPanel('feedtoilet');
+  });
+
+  // ---------- bodycheck field toggles ----------
+  ['bcSkin','bcSpirit'].forEach(group => {
+    document.querySelectorAll('.chip-row[data-group="'+group+'"] .chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        document.getElementById(group + 'Note').style.display = chip.dataset.val === '異常' ? 'block' : 'none';
+      });
+    });
+  });
+
+  document.querySelectorAll('.chip-row[data-multigroup="bcMood"] .chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      if (chip.dataset.val === '良好' && chip.classList.contains('active')){
+        document.querySelectorAll('.chip-row[data-multigroup="bcMood"] .chip.warn').forEach(c => c.classList.remove('active'));
+      } else if (chip.classList.contains('warn') && chip.classList.contains('active')){
+        const goodChip = document.querySelector('.chip-row[data-multigroup="bcMood"] .chip[data-val="良好"]');
+        if (goodChip) goodChip.classList.remove('active');
+      }
+      const anyWarn = document.querySelectorAll('.chip-row[data-multigroup="bcMood"] .chip.warn.active').length > 0;
+      document.getElementById('bcMoodFreqWrap').style.display = anyWarn ? 'block' : 'none';
+    });
+  });
+
+  document.querySelectorAll('.chip-row[data-multigroup="bcDischarge"] .chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      if (chip.dataset.val === '無' && chip.classList.contains('active')){
+        document.querySelectorAll('.chip-row[data-multigroup="bcDischarge"] .chip.warn').forEach(c => c.classList.remove('active'));
+      } else if (chip.classList.contains('warn') && chip.classList.contains('active')){
+        const noneChip = document.querySelector('.chip-row[data-multigroup="bcDischarge"] .chip[data-val="無"]');
+        if (noneChip) noneChip.classList.remove('active');
+      }
+      document.getElementById('bcEyeDetail').style.display = document.querySelector('.chip-row[data-multigroup="bcDischarge"] .chip[data-val="眼屎"]').classList.contains('active') ? 'block' : 'none';
+      document.getElementById('bcNoseDetail').style.display = document.querySelector('.chip-row[data-multigroup="bcDischarge"] .chip[data-val="鼻涕"]').classList.contains('active') ? 'block' : 'none';
+    });
+  });
+
+  let bcPhotoFile = null;
+  function bcPhotoChange(e){
+    const file = e.target.files[0];
+    if (!file) return;
+    bcPhotoFile = file;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      document.getElementById('bcPhotoPreview').src = ev.target.result;
+      document.getElementById('bcPhotoPreview').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  }
+  document.getElementById('bcPhotoInput').addEventListener('change', bcPhotoChange);
+  document.getElementById('bcCameraInput').addEventListener('change', bcPhotoChange);
+
+  // ---------- feed/toilet field toggles ----------
+  document.querySelectorAll('.chip-row[data-group="ftVomit"] .chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.getElementById('ftVomitNote').style.display = chip.dataset.val !== '無' ? 'block' : 'none';
+    });
+  });
+
+  const ftFoodDetailMap = { '乾糧':'ftDryDetail', '濕食':'ftWetDetail', '鮮食':'ftFreshDetail' };
+  Object.keys(ftFoodDetailMap).forEach(val => {
+    const chip = document.querySelector('.chip-row[data-multigroup="ftFood"] .chip[data-val="'+val+'"]');
+    if (chip) chip.addEventListener('click', () => {
+      document.getElementById(ftFoodDetailMap[val]).style.display = chip.classList.contains('active') ? 'block' : 'none';
+    });
+  });
+
+  document.querySelectorAll('.chip-row[data-group="ftDryStatus"] .chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.getElementById('ftDryLeftoverWrap').style.display = (chip.dataset.val === '更換' || chip.dataset.val === '增加') ? 'block' : 'none';
+    });
+  });
+
+  document.querySelectorAll('.chip-row[data-group="ftPeeDogType"] .chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.getElementById('ftPeeDogPadWrap').style.display = chip.dataset.val === '尿布墊' ? 'block' : 'none';
+      document.getElementById('ftPeeDogOutWrap').style.display = chip.dataset.val === '戶外' ? 'block' : 'none';
+    });
+  });
+
+  document.querySelectorAll('.chip-row[data-group="spMedResult"] .chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.getElementById('spMedFailReasonWrap').style.display = chip.dataset.val === '投藥失敗' ? 'block' : 'none';
+    });
+  });
+
+  function applyAreaVisibility(){
+    const area = allRooms[currentRoomId] ? allRooms[currentRoomId].area : 'cat';
+    document.getElementById('ftPeeCat').style.display = area === 'cat' ? 'block' : 'none';
+    document.getElementById('ftPeeDog').style.display = area === 'dog' ? 'block' : 'none';
+    document.getElementById('ftPoopCat').style.display = area === 'cat' ? 'block' : 'none';
+    document.getElementById('ftPoopDog').style.display = area === 'dog' ? 'block' : 'none';
+  }
+
+  function resetEntryForm(){
+    // reset tab state back to 早上 · 身心評估
+    document.querySelectorAll('#sessionTabs .cat-tab').forEach(t => t.classList.remove('active'));
+    document.querySelector('#sessionTabs .cat-tab[data-session="morning"]').classList.add('active');
+    document.getElementById('sessionSubTabsWrap').style.display = 'block';
+    document.getElementById('specialSubTabsWrap').style.display = 'none';
+    document.querySelectorAll('#sessionSubTabs .cat-tab').forEach(t => t.classList.remove('active'));
+    document.querySelector('#sessionSubTabs .cat-tab[data-sub="bodycheck"]').classList.add('active');
+    currentSession = 'morning';
+    showPanel('bodycheck');
+    document.querySelectorAll('#screenRecord .chip').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('#screenRecord input[type=text], #screenRecord input[type=number], #screenRecord textarea').forEach(i => i.value = '');
+    document.querySelectorAll('#screenRecord input[type=checkbox]').forEach(i => i.checked = false);
+    ['bcSkinNote','bcSpiritNote','bcMoodFreqWrap','bcEyeDetail','bcNoseDetail','ftVomitNote',
+     'ftDryDetail','ftWetDetail','ftFreshDetail','ftDryLeftoverWrap','ftPeeDogPadWrap','ftPeeDogOutWrap','spMedFailReasonWrap']
+      .forEach(id => { document.getElementById(id).style.display = 'none'; });
+    bcPhotoFile = null;
+    document.getElementById('bcPhotoPreview').style.display = 'none';
+    applyAreaVisibility();
+  }
 
   document.querySelectorAll('.chip-row[data-group] .chip').forEach(chip => {
     chip.addEventListener('click', () => {
@@ -853,6 +1520,58 @@
   document.querySelectorAll('.chip-row[data-multigroup] .chip').forEach(chip => {
     chip.addEventListener('click', () => chip.classList.toggle('active'));
   });
+
+  // ---------- check-in: item/notes detail panels + medication cross-link ----------
+  function ciChip(group, val){
+    return document.querySelector('.chip-row[data-multigroup="' + group + '"] .chip[data-val="' + val + '"]');
+  }
+  function ciIsActive(group, val){
+    const c = ciChip(group, val);
+    return c && c.classList.contains('active');
+  }
+  function ciSetActive(group, val, on){
+    const c = ciChip(group, val);
+    if (c) c.classList.toggle('active', on);
+  }
+
+  const ciItemDetailMap = { '飼料':'ciFoodDetail', '零食':'ciSnackDetail', '藥品':'ciMedDetail', '保健食品':'ciSupplementDetail' };
+  Object.keys(ciItemDetailMap).forEach(val => {
+    const chip = ciChip('ciItems', val);
+    if (!chip) return;
+    chip.addEventListener('click', () => {
+      const isOn = chip.classList.contains('active');
+      document.getElementById(ciItemDetailMap[val]).style.display = isOn ? 'block' : 'none';
+      if (val === '藥品') ciSetActive('ciNotes', '需按時服藥', isOn);
+    });
+  });
+
+  function wireMedCategory(prefix){
+    document.querySelectorAll('.chip-row[data-group="'+prefix+'MedCategory"] .chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        document.getElementById(prefix + 'MedOralTypeWrap').style.display = chip.dataset.val === '口服藥' ? 'flex' : 'none';
+        document.getElementById(prefix + 'MedTopicalTypeWrap').style.display = chip.dataset.val === '外用藥' ? 'flex' : 'none';
+      });
+    });
+  }
+  wireMedCategory('ci');
+  wireMedCategory('rec');
+
+  const ciNotesDetailMap = { '慢性病史':'ciChronicDetail', '特殊飲食限制':'ciDietDetail' };
+  Object.keys(ciNotesDetailMap).forEach(val => {
+    const chip = ciChip('ciNotes', val);
+    if (!chip) return;
+    chip.addEventListener('click', () => {
+      document.getElementById(ciNotesDetailMap[val]).style.display = chip.classList.contains('active') ? 'block' : 'none';
+    });
+  });
+  const ciMedNoteChip = ciChip('ciNotes', '需按時服藥');
+  if (ciMedNoteChip){
+    ciMedNoteChip.addEventListener('click', () => {
+      const isOn = ciMedNoteChip.classList.contains('active');
+      ciSetActive('ciItems', '藥品', isOn);
+      document.getElementById('ciMedDetail').style.display = isOn ? 'block' : 'none';
+    });
+  }
 
   // ---------- daily entries ----------
   function dateStrOf(d){
@@ -906,15 +1625,27 @@
   function renderSelectedDay(){
     const list = document.getElementById('logList');
     const dayEntries = (currentEntriesByDate[currentSelectedDate] || []).slice().sort((a,b) => (b.createdAtMs || 0) - (a.createdAtMs || 0));
+    const area = allRooms[currentRoomId] ? allRooms[currentRoomId].area : 'cat';
 
     const totalGrams = dayEntries.reduce((s,e) => s + (e.grams || 0), 0);
-    const totalPoop = dayEntries.reduce((s,e) => s + (e.poopCount || 0), 0);
-    const totalPee = dayEntries.reduce((s,e) => s + (e.peeCount || 0), 0);
-    document.getElementById('summaryStrip').innerHTML = `
-      <div class="summary-item"><div class="num">${totalGrams}g</div><div class="lbl">進食量</div></div>
-      <div class="summary-item"><div class="num">${totalPoop}</div><div class="lbl">大便次數</div></div>
-      <div class="summary-item"><div class="num">${totalPee}</div><div class="lbl">小便次數</div></div>
+    const totalWater = dayEntries.reduce((s,e) => s + (e.waterMl || 0), 0);
+    const totalPoop = dayEntries.reduce((s,e) => s + (e.poopGrams || 0), 0);
+
+    let summaryHtml = `
+      <div class="summary-item"><div class="num">${totalGrams}g</div><div class="lbl">今日進食量</div></div>
+      <div class="summary-item"><div class="num">${totalWater}ml</div><div class="lbl">今日飲水量</div></div>
+      <div class="summary-item"><div class="num">${totalPoop}g</div><div class="lbl">今日排便量</div></div>
     `;
+    if (area === 'cat'){
+      const totalPeeGrams = dayEntries.reduce((s,e) => s + (e.peeGrams || 0), 0);
+      summaryHtml += `<div class="summary-item"><div class="num">${totalPeeGrams}g</div><div class="lbl">今日排尿量</div></div>`;
+    } else {
+      const totalPeeDiaper = dayEntries.reduce((s,e) => s + (e.peeDiaperGrams || 0), 0);
+      const totalPeeCount = dayEntries.reduce((s,e) => s + (e.peeCount || 0), 0);
+      summaryHtml += `<div class="summary-item"><div class="num">${totalPeeDiaper}g</div><div class="lbl">尿布墊排尿</div></div>`;
+      summaryHtml += `<div class="summary-item"><div class="num">${totalPeeCount}次</div><div class="lbl">戶外排尿</div></div>`;
+    }
+    document.getElementById('summaryStrip').innerHTML = summaryHtml;
 
     if (dayEntries.length === 0){
       list.innerHTML = '<div class="empty-note">這天還沒有紀錄</div>';
@@ -941,47 +1672,192 @@
     reader.readAsDataURL(file);
   });
 
-  document.getElementById('submitBtn').addEventListener('click', async () => {
-    const activeTab = document.querySelector('.cat-tab.active').dataset.cat;
-    const panel = document.querySelector('.cat-panel[data-panel="'+activeTab+'"]');
-    const chosen = [];
-    let hasWarn = false;
-    panel.querySelectorAll('.chip-row[data-group] .chip.active').forEach(c => {
-      chosen.push(c.dataset.val);
-      if (c.classList.contains('warn')) hasWarn = true;
-    });
-    const note = document.getElementById('noteText').value.trim();
+  function chipVal(group){
+    const c = document.querySelector('.chip-row[data-group="'+group+'"] .chip.active');
+    return c ? c.dataset.val : null;
+  }
+  function chipVals(group){
+    return Array.from(document.querySelectorAll('.chip-row[data-multigroup="'+group+'"] .chip.active')).map(c => c.dataset.val);
+  }
+  function numVal(id){
+    const v = document.getElementById(id).value.trim();
+    return v ? Number(v) : null;
+  }
+  function txtVal(id){ return document.getElementById(id).value.trim(); }
 
-    let content = chosen.join('、');
-    let grams = null, poopCount = null, peeCount = null;
-    if (activeTab === 'food'){
-      const gramsVal = document.getElementById('foodGrams').value.trim();
-      if (gramsVal){
-        grams = Number(gramsVal);
-        content = content ? content + '、進食量約 ' + gramsVal + 'g' : '進食量約 ' + gramsVal + 'g';
+  const panelLabels = {
+    bodycheck:'身心評估', feedtoilet:'進食與排泄紀錄', spFood:'特殊-進食狀況', spToilet:'特殊-排泄狀況',
+    spActivity:'特殊-活動紀錄', spAbnormal:'特殊-異常狀況', spMed:'特殊-用藥紀錄', spMedObs:'特殊-用藥後觀察', spOther:'特殊-其他'
+  };
+
+  async function submitCurrentEntry(){
+    const area = allRooms[currentRoomId] ? allRooms[currentRoomId].area : 'cat';
+    let content = '';
+    let warn = false;
+    let grams = null, waterMl = null, peeGrams = null, peeCount = null, peeDiaperGrams = null, poopGrams = null;
+    const parts = [];
+
+    if (currentPanel === 'bodycheck'){
+      const skin = chipVal('bcSkin'), spirit = chipVal('bcSpirit');
+      if (skin){ parts.push('皮膚' + skin + (skin === '異常' ? '(' + txtVal('bcSkinNote') + ')' : '')); if (skin === '異常') warn = true; }
+      if (spirit){ parts.push('精神' + spirit + (spirit === '異常' ? '(' + txtVal('bcSpiritNote') + ')' : '')); if (spirit === '異常') warn = true; }
+      const moods = chipVals('bcMood');
+      if (moods.length){
+        let m = '情緒:' + moods.join('、');
+        if (moods.some(v => v !== '良好')){
+          warn = true;
+          const freq = chipVal('bcMoodFreq');
+          if (freq) m += '(' + freq + ')';
+          const mn = txtVal('bcMoodNote');
+          if (mn) m += ' ' + mn;
+        }
+        parts.push(m);
+      }
+      const discharge = chipVals('bcDischarge');
+      if (discharge.length){
+        let d = [];
+        if (discharge.includes('眼屎')){ warn = true; d.push('眼屎' + (txtVal('bcEyeQuality') ? '(' + txtVal('bcEyeQuality') + ')' : '') + (document.getElementById('bcEyeHandled').checked ? '已處理' : '')); }
+        if (discharge.includes('鼻涕')){ warn = true; d.push('鼻涕' + (txtVal('bcNoseQuality') ? '(' + txtVal('bcNoseQuality') + ')' : '') + (document.getElementById('bcNoseHandled').checked ? '已處理' : '')); }
+        if (discharge.includes('無')) d.push('無分泌物');
+        parts.push('眼鼻分泌物:' + d.join('、'));
+      }
+      content = parts.join('。');
+    }
+
+    if (currentPanel === 'feedtoilet'){
+      const vomit = chipVal('ftVomit');
+      if (vomit){ parts.push('嘔吐:' + vomit + (vomit !== '無' ? '(' + txtVal('ftVomitNote') + ')' : '')); if (vomit !== '無') warn = true; }
+
+      const foods = chipVals('ftFood');
+      let foodTotal = 0;
+      let dryPendingUpdate = null;
+      if (foods.includes('乾糧')){
+        const status = chipVal('ftDryStatus');
+        const servedNow = numVal('ftDryGrams') || 0;
+        const leftover = numVal('ftDryLeftover');
+        const prevPending = (allRooms[currentRoomId] && allRooms[currentRoomId].pendingDryGrams) || 0;
+        let consumed = 0;
+        if (status === '首次餵食'){
+          consumed = 0;
+        } else {
+          consumed = Math.max(prevPending - (leftover || 0), 0);
+        }
+        foodTotal += consumed;
+        dryPendingUpdate = servedNow;
+        if (status === '首次餵食'){
+          parts.push('乾糧首次餵食 ' + servedNow + 'g(先不計入今日進食量,待下次更換/增加時回推實際吃掉的量)');
+        } else {
+          parts.push('乾糧' + status + ' ' + servedNow + 'g' + (leftover !== null ? '(原剩餘' + leftover + 'g,回推吃掉 ' + consumed + 'g)' : ''));
+        }
+      }
+      if (foods.includes('濕食')){
+        const g = numVal('ftWetGrams') || 0, left = numVal('ftWetLeftover') || 0;
+        foodTotal += Math.max(g - left, 0);
+        parts.push('濕食餵食' + g + 'g' + (left ? '、剩餘棄置' + left + 'g' : ''));
+      }
+      if (foods.includes('鮮食')){
+        const g = numVal('ftFreshGrams') || 0, left = numVal('ftFreshLeftover') || 0;
+        foodTotal += Math.max(g - left, 0);
+        parts.push('鮮食餵食' + g + 'g' + (left ? '、剩餘棄置' + left + 'g' : ''));
+      }
+      if (foods.length) grams = foodTotal;
+
+      const water = numVal('ftWaterMl');
+      if (water !== null){ waterMl = water; parts.push('飲水' + water + 'ML'); }
+
+      if (area === 'cat'){
+        const pg = numVal('ftPeeCatGrams');
+        if (pg !== null){ peeGrams = pg; parts.push('排尿' + pg + 'g' + (document.getElementById('ftPeeCatMulti').checked ? '(多貓同住,無法精準判斷)' : '')); }
+        const bg = numVal('ftPoopCatGrams');
+        if (bg !== null){ poopGrams = bg; parts.push('排便' + bg + 'g' + (document.getElementById('ftPoopCatMulti').checked ? '(多貓同住,無法精準判斷)' : '')); }
+      } else {
+        const peeType = chipVal('ftPeeDogType');
+        if (peeType === '尿布墊'){ peeDiaperGrams = numVal('ftPeeDogPadGrams'); if (peeDiaperGrams !== null) parts.push('排尿(尿布墊)' + peeDiaperGrams + 'g'); }
+        if (peeType === '戶外'){ peeCount = numVal('ftPeeDogOutCount'); if (peeCount !== null) parts.push('排尿(戶外)' + peeCount + '次'); }
+        const padPoop = numVal('ftPoopDogPadGrams') || 0, outPoop = numVal('ftPoopDogOutGrams') || 0;
+        if (padPoop || outPoop){ poopGrams = padPoop + outPoop; parts.push('排便 尿布墊' + padPoop + 'g、戶外' + outPoop + 'g'); }
+      }
+      content = parts.join('。');
+      if (dryPendingUpdate !== null){
+        await updateDoc(doc(db, 'rooms', currentRoomId), { pendingDryGrams: dryPendingUpdate });
+        if (allRooms[currentRoomId]) allRooms[currentRoomId].pendingDryGrams = dryPendingUpdate;
       }
     }
-    if (activeTab === 'toilet'){
-      const poopVal = document.getElementById('poopCount').value.trim();
-      const peeVal = document.getElementById('peeCount').value.trim();
-      if (poopVal){ poopCount = Number(poopVal); content = '排便 ' + poopVal + ' 次、' + content; }
-      if (peeVal){ peeCount = Number(peeVal); content = content + '、排尿 ' + peeVal + ' 次'; }
+
+    if (currentPanel === 'spFood'){
+      const types = chipVals('spFoodType');
+      if (types.length) parts.push('項目:' + types.join('、'));
+      const add = numVal('spFoodGrams'), discard = numVal('spFoodDiscard');
+      if (add !== null || discard !== null) grams = (add || 0) - (discard || 0);
+      if (add !== null) parts.push('本次餵食' + add + 'g');
+      if (discard !== null) parts.push('棄置' + discard + 'g');
+      const other = txtVal('spFoodOther');
+      if (other) parts.push(other);
+      content = parts.join('、');
     }
+
+    if (currentPanel === 'spToilet'){
+      const pg = numVal('spToiletPoopGrams'), pc = numVal('spToiletPeeCount');
+      if (pg !== null){ poopGrams = pg; parts.push('戶外大便' + pg + 'g'); }
+      if (pc !== null){ peeCount = pc; parts.push('小便' + pc + '次'); }
+      const other = txtVal('spToiletOther');
+      if (other) parts.push(other);
+      content = parts.join('、');
+    }
+
+    if (currentPanel === 'spActivity'){
+      const mins = numVal('spActivityMinutes'), state = chipVal('spActivityState');
+      if (mins !== null) parts.push('放風' + mins + '分鐘');
+      if (state){ parts.push(state); if (state === '憂鬱' || state === '緊張防衛') warn = true; }
+      content = parts.join('、');
+    }
+
+    if (currentPanel === 'spAbnormal'){
+      const types = chipVals('spAbnormalType');
+      if (types.length){ parts.push(types.join('、')); if (types.some(v => v !== '無')) warn = true; }
+      const note = txtVal('spAbnormalNote');
+      if (note) parts.push(note);
+      content = parts.join('。');
+    }
+
+    if (currentPanel === 'spMed'){
+      const result = chipVal('spMedResult');
+      if (result){ parts.push(result); if (result !== '已成功投藥') warn = true; }
+      if (result === '投藥失敗'){
+        const reason = chipVal('spMedFailReason');
+        if (reason) parts.push('原因:' + reason);
+      }
+      content = parts.join('、');
+    }
+
+    if (currentPanel === 'spMedObs'){
+      const types = chipVals('spMedObsType');
+      if (types.length){ parts.push(types.join('、')); if (types.some(v => v !== '無異常')) warn = true; }
+      content = parts.join('、');
+    }
+
+    if (currentPanel === 'spOther'){
+      content = '';
+    }
+
+    const note = txtVal('noteText');
     if (note) content = content ? content + '。' + note : note;
-    if (!content && !entryPhotoFile){ alert('請至少選擇一項狀況、填寫備註或新增照片'); return; }
+
+    const usingBcPhoto = currentPanel === 'bodycheck';
+    const photoFile = usingBcPhoto ? bcPhotoFile : entryPhotoFile;
+    if (!content && !photoFile){ alert('請至少填寫一項狀況、備註或新增照片'); return false; }
     if (!content) content = '（僅上傳照片）';
 
-    let photoUrl = null;
-    let photoPath = null;
-    if (entryPhotoFile){
+    let photoUrl = null, photoPath = null;
+    if (photoFile){
       try {
         photoPath = 'entries/' + currentRoomId + '/' + Date.now() + '.jpg';
         const photoRef = ref(storage, photoPath);
-        await uploadBytes(photoRef, entryPhotoFile);
+        await uploadBytes(photoRef, photoFile);
         photoUrl = await getDownloadURL(photoRef);
       } catch (err) {
-        alert('照片上傳失敗(可能是 Storage 尚未設定完成)。可以先移除照片、只送出文字紀錄,之後 Storage 設定好再補拍。');
-        return;
+        alert('照片上傳失敗(可能是 Storage 尚未設定完成)。可以先移除照片、只送出文字紀錄。');
+        return false;
       }
     }
 
@@ -989,10 +1865,10 @@
     const chosenTime = timeVal ? new Date(timeVal) : new Date();
     await addDoc(collection(db, 'rooms', currentRoomId, 'entries'), {
       stayId: allRooms[currentRoomId].stayId,
-      cat: catLabels[activeTab],
-      content,
-      warn: hasWarn,
-      grams, poopCount, peeCount,
+      session: currentSession,
+      cat: panelLabels[currentPanel],
+      content, warn,
+      grams, waterMl, peeGrams, peeCount, peeDiaperGrams, poopGrams,
       photoUrl, photoPath,
       staff: currentStaffName || '未填寫',
       timeStr: chosenTime.getHours().toString().padStart(2,'0') + ':' + chosenTime.getMinutes().toString().padStart(2,'0'),
@@ -1003,11 +1879,14 @@
     document.getElementById('noteText').value = '';
     document.getElementById('entryTime').value = toDatetimeLocalValue(new Date());
     entryPhotoFile = null;
+    bcPhotoFile = null;
     document.getElementById('entryPhotoPreview').style.display = 'none';
-    panel.querySelectorAll('.chip.active').forEach(c => c.classList.remove('active'));
-    panel.querySelectorAll('input[type=number]').forEach(i => i.value = '');
+    document.getElementById('bcPhotoPreview').style.display = 'none';
     await renderLog();
-  });
+    return true;
+  }
+
+  document.getElementById('submitBtn').addEventListener('click', submitCurrentEntry);
 
   // ---------- member search ----------
   let currentMemberPhone = null;
@@ -1113,7 +1992,7 @@
     showScreen('screenMemberHistory');
   });
 
-  document.getElementById('mhBackBtn').addEventListener('click', () => showScreen('screenRooms'));
+  document.getElementById('mhBackBtn').addEventListener('click', () => showScreen('screenMenu'));
 
   document.getElementById('mhNameSaveBtn').addEventListener('click', async () => {
     if (!currentMemberPhone) return;
@@ -1173,11 +2052,83 @@
       await ensureRoomsSeeded();
       await loadRooms();
       document.getElementById('loadingMsg').style.display = 'none';
-      showScreen('screenRooms');
+      showScreen('screenMenu');
       renderRooms();
     } catch (err) {
       document.getElementById('loadingMsg').textContent = '連線失敗:' + err.message;
     }
+  }
+
+  document.getElementById('menuCareBtn').addEventListener('click', () => { showScreen('screenRooms'); renderRooms(); });
+  document.getElementById('menuHistoryBtn').addEventListener('click', () => showScreen('screenHistorySearch'));
+  document.getElementById('menuMembersBtn').addEventListener('click', () => { showScreen('screenMemberManage'); renderMemberManageList(); });
+  document.getElementById('cameraSettingLink').addEventListener('click', async () => {
+    const snap = await getDoc(doc(db, 'settings', 'global'));
+    const current = snap.exists() ? (snap.data().mihomeUrl || '') : '';
+    const val = prompt('設定小米 App 的連結(家長端會統一使用這組連結開啟監視器畫面):', current);
+    if (val === null) return;
+    await setDoc(doc(db, 'settings', 'global'), { mihomeUrl: val.trim() }, { merge: true });
+    alert('已儲存。');
+  });
+  document.getElementById('roomsBackBtn').addEventListener('click', () => showScreen('screenMenu'));
+  document.getElementById('historyBackBtn').addEventListener('click', () => showScreen('screenMenu'));
+  document.getElementById('manageBackBtn').addEventListener('click', () => showScreen('screenMenu'));
+
+  async function renderMemberManageList(){
+    const listEl = document.getElementById('memberManageList');
+    listEl.innerHTML = '讀取中...';
+
+    const [membersSnap, bindingsSnap] = await Promise.all([
+      getDocs(collection(db, 'members')),
+      getDocs(collection(db, 'lineBindings'))
+    ]);
+
+    const lineByPhone = {};
+    bindingsSnap.forEach(d => { lineByPhone[d.data().phone] = d.id; });
+
+    if (membersSnap.empty){
+      listEl.innerHTML = '<div class="status-msg">目前還沒有任何會員資料</div>';
+      return;
+    }
+
+    let html = '';
+    membersSnap.forEach(d => {
+      const phone = d.id;
+      const m = d.data();
+      const petNames = new Set();
+      (m.history || []).forEach(h => { if (h.petName) petNames.add(h.petName); });
+      Object.values(allRooms).forEach(r => { if (r.phone === phone && r.name) petNames.add(r.name); });
+      const petText = petNames.size ? Array.from(petNames).join('、') : '（尚無寶貝紀錄）';
+      const lineId = lineByPhone[phone];
+
+      html += `
+        <div class="member-row" data-phone="${phone}">
+          <div class="mline">LINE 綁定:<b>${lineId ? lineId : '尚未綁定'}</b></div>
+          <div class="mline">姓名:<b>${m.name || '（尚未填寫）'}</b></div>
+          <div class="mline">寶貝:<b>${petText}</b></div>
+          <div class="mline">手機:<b>${phone}</b></div>
+          <div class="mactions">
+            <button class="m-edit" style="background:var(--ochre);color:#2A2A2C;">編輯</button>
+            <button class="m-delete" style="background:var(--danger-soft);color:var(--danger);">刪除</button>
+          </div>
+        </div>`;
+    });
+    listEl.innerHTML = html;
+
+    listEl.querySelectorAll('.member-row').forEach(row => {
+      const phone = row.dataset.phone;
+      row.querySelector('.m-edit').addEventListener('click', () => {
+        document.getElementById('memberSearchInput').value = phone;
+        document.getElementById('memberSearchBtn').click();
+      });
+      row.querySelector('.m-delete').addEventListener('click', async () => {
+        if (!confirm('確定要刪除「' + phone + '」的會員資料嗎?如果這位家長目前有寶貝在住,房間資料不會一併刪除,建議先確認沒有進行中的入住。')) return;
+        if (!confirm('這個動作無法復原,真的要刪除嗎?')) return;
+        await deleteDoc(doc(db, 'members', phone));
+        if (lineByPhone[phone]) await deleteDoc(doc(db, 'lineBindings', lineByPhone[phone]));
+        await renderMemberManageList();
+      });
+    });
   }
 
   onAuthStateChanged(auth, async (user) => {
