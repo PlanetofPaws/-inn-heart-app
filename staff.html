@@ -76,6 +76,12 @@
   .sub-group{padding:14px 22px 0;}
   .sub-group .glabel{font-size:12.5px;color:var(--ink-soft);margin-bottom:6px;display:block;}
   .glabel{font-size:12.5px;color:var(--ink-soft);margin-bottom:6px;display:block;}
+  .detail-card{border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:10px;background:rgba(255,255,255,0.03);}
+  .detail-card-title{font-size:12px;font-weight:700;color:var(--ochre);margin-bottom:8px;}
+  .glabel-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+  .photo-mini{flex-shrink:0;width:26px;height:26px;border-radius:8px;border:1px solid var(--line);background:var(--card);display:flex;align-items:center;justify-content:center;font-size:13px;cursor:pointer;}
+  .photo-mini input{display:none;}
+  .photo-count{font-size:11px;color:var(--ochre);margin-left:4px;}
   .two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 22px 0;}
 
   .submit-btn{width:100%;background:var(--pine);color:#F4F1E9;border:none;border-radius:14px;padding:15px;font-family:'Noto Sans TC',sans-serif;font-weight:600;font-size:15px;cursor:pointer;}
@@ -186,6 +192,30 @@
       <div class="sub">(inn)heart · 工作人員後台</div>
       <h1>會員資料管理</h1>
     </div>
+
+    <div class="member-search">
+      <div class="row">
+        <input type="text" id="manageSearchInput" placeholder="輸入手機、家長姓名或寶貝名字查詢">
+        <button id="manageSearchBtn">查詢</button>
+      </div>
+    </div>
+
+    <div class="field" id="manageEditPanel" style="display:none;">
+      <div class="loc" id="manageEditPhone" style="margin-bottom:10px;"></div>
+      <label>家長姓名</label>
+      <div style="display:flex;gap:8px;">
+        <input type="text" id="mhNameInput" placeholder="尚未填寫">
+        <button id="mhNameSaveBtn" style="background:var(--pine);color:#F4F1E9;border:none;border-radius:12px;padding:0 16px;font-size:13.5px;cursor:pointer;">儲存</button>
+      </div>
+      <label style="margin-top:12px;">變更手機號碼</label>
+      <div style="display:flex;gap:8px;">
+        <input type="text" id="mhNewPhoneInput" placeholder="輸入新的手機號碼">
+        <button id="mhPhoneChangeBtn" style="background:var(--ochre);color:#2A2A2C;border:none;border-radius:12px;padding:0 16px;font-size:13.5px;cursor:pointer;white-space:nowrap;">搬移資料</button>
+      </div>
+      <div style="font-size:11.5px;color:var(--ink-soft);margin-top:6px;">會把姓名、歷史紀錄搬到新號碼底下,並自動更新目前入住中的房間對應,原號碼會被刪除。</div>
+    </div>
+
+    <div class="divider" style="margin:20px 22px 0;">或從下方清單直接編輯</div>
     <div id="memberManageList" style="padding:16px 22px 0;"></div>
   </div>
 
@@ -235,7 +265,7 @@
       </div>
     </div>
 
-    <div class="field" id="ciFoodDetail" style="display:none;">
+    <div class="detail-card" id="ciFoodDetail" style="display:none;">
       <label class="glabel">飼料資訊</label>
       <input type="text" id="ciFoodBrand" placeholder="品牌" style="margin-bottom:8px;">
       <div class="chip-row" data-multigroup="ciFoodType">
@@ -246,7 +276,7 @@
       <input type="text" id="ciFoodOther" placeholder="其他" style="margin-top:8px;">
     </div>
 
-    <div class="field" id="ciSnackDetail" style="display:none;">
+    <div class="detail-card" id="ciSnackDetail" style="display:none;">
       <label class="glabel">零食資訊</label>
       <div class="chip-row" data-multigroup="ciSnackType">
         <div class="chip" data-val="肉泥">肉泥</div>
@@ -256,7 +286,7 @@
       <input type="text" id="ciSnackOther" placeholder="其他">
     </div>
 
-    <div class="field" id="ciMedDetail" style="display:none;">
+    <div class="detail-card" id="ciMedDetail" style="display:none;">
       <label class="glabel">項目</label>
       <div class="chip-row" data-group="ciMedCategory">
         <div class="chip" data-val="口服藥">口服藥</div>
@@ -277,7 +307,7 @@
       <input type="text" id="ciMedTips" placeholder="投藥小技巧">
     </div>
 
-    <div class="field" id="ciSupplementDetail" style="display:none;">
+    <div class="detail-card" id="ciSupplementDetail" style="display:none;">
       <label class="glabel">保健食品資訊</label>
       <input type="text" id="ciSupName" placeholder="名稱" style="margin-bottom:8px;">
       <input type="text" id="ciSupFreq" placeholder="頻率" style="margin-bottom:8px;">
@@ -311,13 +341,13 @@
       </div>
     </div>
 
-    <div class="field" id="ciChronicDetail" style="display:none;">
+    <div class="detail-card" id="ciChronicDetail" style="display:none;">
       <label class="glabel">慢性病史資訊</label>
       <input type="text" id="ciChronicDisease" placeholder="疾病" style="margin-bottom:8px;">
       <input type="text" id="ciChronicNote" placeholder="備註">
     </div>
 
-    <div class="field" id="ciDietDetail" style="display:none;">
+    <div class="detail-card" id="ciDietDetail" style="display:none;">
       <label class="glabel">特殊飲食限制資訊</label>
       <input type="text" id="ciDietLimit" placeholder="限制" style="margin-bottom:8px;">
       <input type="text" id="ciDietReason" placeholder="原因">
@@ -368,7 +398,7 @@
         <div class="chip" data-val="外出籠">外出籠</div>
       </div>
 
-      <div class="field" id="recFoodDetail" style="display:none;padding:14px 0 0;">
+      <div class="detail-card" id="recFoodDetail" style="display:none;padding:14px 0 0;">
         <label class="glabel">飼料資訊</label>
         <input type="text" id="recFoodBrand" placeholder="品牌" style="margin-bottom:8px;">
         <div class="chip-row" data-multigroup="recFoodType">
@@ -379,7 +409,7 @@
         <input type="text" id="recFoodOther" placeholder="其他" style="margin-top:8px;">
       </div>
 
-      <div class="field" id="recSnackDetail" style="display:none;padding:14px 0 0;">
+      <div class="detail-card" id="recSnackDetail" style="display:none;padding:14px 0 0;">
         <label class="glabel">零食資訊</label>
         <div class="chip-row" data-multigroup="recSnackType">
           <div class="chip" data-val="肉泥">肉泥</div>
@@ -389,7 +419,7 @@
         <input type="text" id="recSnackOther" placeholder="其他">
       </div>
 
-      <div class="field" id="recMedDetail" style="display:none;padding:14px 0 0;">
+      <div class="detail-card" id="recMedDetail" style="display:none;padding:14px 0 0;">
         <label class="glabel">項目</label>
         <div class="chip-row" data-group="recMedCategory">
           <div class="chip" data-val="口服藥">口服藥</div>
@@ -410,7 +440,7 @@
         <input type="text" id="recMedTips" placeholder="投藥小技巧">
       </div>
 
-      <div class="field" id="recSupplementDetail" style="display:none;padding:14px 0 0;">
+      <div class="detail-card" id="recSupplementDetail" style="display:none;padding:14px 0 0;">
         <label class="glabel">保健食品資訊</label>
         <input type="text" id="recSupName" placeholder="名稱" style="margin-bottom:8px;">
         <input type="text" id="recSupFreq" placeholder="頻率" style="margin-bottom:8px;">
@@ -442,13 +472,13 @@
         <div class="chip warn" data-val="特殊飲食限制">特殊飲食限制</div>
       </div>
 
-      <div class="field" id="recChronicDetail" style="display:none;padding:14px 0 0;">
+      <div class="detail-card" id="recChronicDetail" style="display:none;padding:14px 0 0;">
         <label class="glabel">慢性病史資訊</label>
         <input type="text" id="recChronicDisease" placeholder="疾病" style="margin-bottom:8px;">
         <input type="text" id="recChronicNote" placeholder="備註">
       </div>
 
-      <div class="field" id="recDietDetail" style="display:none;padding:14px 0 0;">
+      <div class="detail-card" id="recDietDetail" style="display:none;padding:14px 0 0;">
         <label class="glabel">特殊飲食限制資訊</label>
         <input type="text" id="recDietLimit" placeholder="限制" style="margin-bottom:8px;">
         <input type="text" id="recDietReason" placeholder="原因">
@@ -467,10 +497,9 @@
     </div>
 
     <div class="field">
-      <label>登打時段</label>
+      <label>登打類型</label>
       <div class="cat-tabs" id="sessionTabs">
-        <div class="cat-tab active" data-session="morning">早上</div>
-        <div class="cat-tab" data-session="evening">晚上</div>
+        <div class="cat-tab active" data-session="regular">常規時段紀錄</div>
         <div class="cat-tab" data-session="special">特殊紀錄</div>
       </div>
     </div>
@@ -484,9 +513,7 @@
 
     <div class="field" id="specialSubTabsWrap" style="display:none;">
       <div class="cat-tabs" id="specialSubTabs">
-        <div class="cat-tab active" data-sub="spFood">進食狀況</div>
-        <div class="cat-tab" data-sub="spToilet">排泄狀況</div>
-        <div class="cat-tab" data-sub="spActivity">活動紀錄</div>
+        <div class="cat-tab active" data-sub="spActivity">活動紀錄</div>
         <div class="cat-tab" data-sub="spAbnormal">異常狀況</div>
         <div class="cat-tab" data-sub="spMed">用藥紀錄</div>
         <div class="cat-tab" data-sub="spMedObs">用藥後觀察</div>
@@ -497,7 +524,7 @@
     <!-- 身心評估 -->
     <div class="cat-panel show" data-panel="bodycheck">
       <div class="sub-group">
-        <span class="glabel">皮膚</span>
+        <div class="glabel-row"><span class="glabel" style="margin:0;">皮膚</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
         <div class="chip-row" data-group="bcSkin">
           <div class="chip" data-val="正常">正常</div>
           <div class="chip warn" data-val="異常">異常</div>
@@ -505,7 +532,7 @@
         <input type="text" id="bcSkinNote" placeholder="說明" style="margin-top:8px;display:none;">
       </div>
       <div class="sub-group">
-        <span class="glabel">精神</span>
+        <div class="glabel-row"><span class="glabel" style="margin:0;">精神</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
         <div class="chip-row" data-group="bcSpirit">
           <div class="chip" data-val="正常">正常</div>
           <div class="chip warn" data-val="異常">異常</div>
@@ -513,7 +540,7 @@
         <input type="text" id="bcSpiritNote" placeholder="說明" style="margin-top:8px;display:none;">
       </div>
       <div class="sub-group">
-        <span class="glabel">情緒(異常可複選)</span>
+        <div class="glabel-row"><span class="glabel" style="margin:0;">情緒(異常可複選)</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
         <div class="chip-row" data-multigroup="bcMood">
           <div class="chip" data-val="良好">良好</div>
           <div class="chip warn" data-val="沈鬱">沈鬱</div>
@@ -529,7 +556,7 @@
         </div>
       </div>
       <div class="sub-group">
-        <span class="glabel">眼鼻分泌物</span>
+        <div class="glabel-row"><span class="glabel" style="margin:0;">眼鼻分泌物</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
         <div class="chip-row" data-multigroup="bcDischarge">
           <div class="chip" data-val="無">無</div>
           <div class="chip warn" data-val="眼屎">眼屎</div>
@@ -544,17 +571,13 @@
           <label style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:13px;color:var(--ink-soft);"><input type="checkbox" id="bcNoseHandled"> 已處理</label>
         </div>
       </div>
-      <div class="field" style="padding:14px 0 0;">
-        <label>圖片補充說明</label>
-        <img id="bcPhotoPreview" style="display:none;width:100%;max-height:200px;object-fit:cover;border-radius:12px;margin-bottom:8px;">
-        <label style="display:inline-block;border:1px dashed var(--line);background:var(--card);border-radius:12px;padding:10px 16px;font-size:13px;color:var(--ink-soft);cursor:pointer;margin-right:8px;">
-          選擇照片
-          <input type="file" accept="image/*" id="bcPhotoInput" style="display:none;">
-        </label>
-        <label style="display:inline-block;border:1px dashed var(--line);background:var(--card);border-radius:12px;padding:10px 16px;font-size:13px;color:var(--ink-soft);cursor:pointer;">
-          拍照
-          <input type="file" accept="image/*" capture="environment" id="bcCameraInput" style="display:none;">
-        </label>
+      <div class="field">
+        <label>備註說明</label>
+        <textarea id="bcNoteText"></textarea>
+      </div>
+      <div class="field">
+        <label>紀錄時間</label>
+        <input type="datetime-local" id="bcEntryTime">
       </div>
       <div class="submit-row">
         <button class="small-btn" id="continueToFeedtoiletBtn" style="background:var(--pine);color:#F4F1E9;width:100%;">送出身心評估,並繼續填寫進食與排泄紀錄</button>
@@ -564,8 +587,8 @@
     <!-- 進食與排泄紀錄 -->
     <div class="cat-panel" data-panel="feedtoilet">
       <div class="sub-group">
-        <span class="glabel">嘔吐</span>
-        <div class="chip-row" data-group="ftVomit">
+        <div class="glabel-row"><span class="glabel" style="margin:0;">嘔吐(異常可複選)</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
+        <div class="chip-row" data-multigroup="ftVomit">
           <div class="chip" data-val="無">無</div>
           <div class="chip warn" data-val="吐毛">吐毛</div>
           <div class="chip warn" data-val="吐食物">吐食物</div>
@@ -576,15 +599,15 @@
       </div>
 
       <div class="sub-group">
-        <span class="glabel">進食紀錄(可複選)</span>
+        <div class="glabel-row"><span class="glabel" style="margin:0;">進食紀錄(可複選)</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
         <div class="chip-row" data-multigroup="ftFood">
           <div class="chip" data-val="乾糧">乾糧</div>
           <div class="chip" data-val="濕食">濕食</div>
           <div class="chip" data-val="鮮食">鮮食</div>
         </div>
       </div>
-      <div id="ftDryDetail" style="display:none;padding:10px 0 0;">
-        <span class="glabel">乾糧</span>
+      <div class="detail-card" id="ftDryDetail" style="display:none;">
+        <div class="detail-card-title">乾糧</div>
         <div class="chip-row" data-group="ftDryStatus">
           <div class="chip" data-val="首次餵食">首次餵食</div>
           <div class="chip" data-val="更換">更換</div>
@@ -594,36 +617,48 @@
           <div><label class="glabel" style="margin-top:8px;">餵食量(g)</label><input type="number" min="0" id="ftDryGrams"></div>
           <div id="ftDryLeftoverWrap" style="display:none;"><label class="glabel" style="margin-top:8px;">原本剩餘(g)</label><input type="number" min="0" id="ftDryLeftover"></div>
         </div>
+        <div style="font-size:11.5px;color:var(--ink-soft);margin-top:6px;">首次餵食先不計入今日進食量;更換 = 餵食量−剩餘量,增加 = 餵食量+剩餘量</div>
       </div>
-      <div id="ftWetDetail" style="display:none;padding:10px 0 0;">
-        <span class="glabel">濕食</span>
+      <div class="detail-card" id="ftWetDetail" style="display:none;">
+        <div class="detail-card-title">濕食</div>
         <div class="two-col">
           <div><label class="glabel">餵食(g)</label><input type="number" min="0" id="ftWetGrams"></div>
           <div><label class="glabel">剩餘棄置(g)</label><input type="number" min="0" id="ftWetLeftover"></div>
         </div>
-        <div style="font-size:11.5px;color:var(--ink-soft);margin-top:4px;">若還有剩餘,約 1 小時後記得回來「特殊紀錄→進食狀況」補登棄置量</div>
       </div>
-      <div id="ftFreshDetail" style="display:none;padding:10px 0 0;">
-        <span class="glabel">鮮食</span>
+      <div class="detail-card" id="ftFreshDetail" style="display:none;">
+        <div class="detail-card-title">鮮食</div>
         <div class="two-col">
           <div><label class="glabel">餵食(g)</label><input type="number" min="0" id="ftFreshGrams"></div>
           <div><label class="glabel">剩餘棄置(g)</label><input type="number" min="0" id="ftFreshLeftover"></div>
         </div>
-        <div style="font-size:11.5px;color:var(--ink-soft);margin-top:4px;">若還有剩餘,約 1 小時後記得回來「特殊紀錄→進食狀況」補登棄置量</div>
       </div>
 
       <div class="sub-group">
-        <span class="glabel">飲水紀錄 · 首次補水(ML)</span>
-        <input type="number" min="0" id="ftWaterMl">
+        <div class="glabel-row"><span class="glabel" style="margin:0;">飲水紀錄</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
+        <div class="chip-row" data-group="ftWaterStatus">
+          <div class="chip" data-val="首次給水">首次給水</div>
+          <div class="chip" data-val="更換水">更換水</div>
+        </div>
+        <div id="ftWaterFirstWrap" style="display:none;margin-top:8px;">
+          <input type="number" min="0" id="ftWaterFirstMl" placeholder="補水量(ML)">
+        </div>
+        <div id="ftWaterRefillWrap" style="display:none;margin-top:8px;">
+          <div class="two-col">
+            <div><label class="glabel">補多少水(ML)</label><input type="number" min="0" id="ftWaterRefillMl"></div>
+            <div><label class="glabel">棄置多少水(ML)</label><input type="number" min="0" id="ftWaterDiscardMl"></div>
+          </div>
+          <div style="font-size:11.5px;color:var(--ink-soft);margin-top:6px;">今日飲水量 = 補水量 − 棄置量</div>
+        </div>
       </div>
 
       <div class="sub-group" id="ftPeeCat" style="display:none;">
-        <span class="glabel">排尿紀錄(貓貓區)</span>
+        <div class="glabel-row"><span class="glabel" style="margin:0;">排尿紀錄(貓貓區)</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
         <input type="number" min="0" id="ftPeeCatGrams" placeholder="重量(含貓砂,g)">
         <label style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:13px;color:var(--ink-soft);"><input type="checkbox" id="ftPeeCatMulti"> 多貓同住,無法精準判斷</label>
       </div>
       <div class="sub-group" id="ftPeeDog" style="display:none;">
-        <span class="glabel">排尿紀錄(狗狗區)</span>
+        <div class="glabel-row"><span class="glabel" style="margin:0;">排尿紀錄(狗狗區)</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
         <div class="chip-row" data-group="ftPeeDogType">
           <div class="chip" data-val="尿布墊">尿布墊</div>
           <div class="chip" data-val="戶外">戶外</div>
@@ -631,58 +666,32 @@
         <div id="ftPeeDogPadWrap" style="display:none;margin-top:8px;"><input type="number" min="0" id="ftPeeDogPadGrams" placeholder="重量(已扣除尿布墊,g)"></div>
         <div id="ftPeeDogOutWrap" style="display:none;margin-top:8px;">
           <input type="number" min="0" id="ftPeeDogOutCount" placeholder="次數">
-          <div style="font-size:11.5px;color:var(--ink-soft);margin-top:4px;">戶外如廁也可以之後在「特殊紀錄→排泄狀況」補登</div>
         </div>
       </div>
 
       <div class="sub-group" id="ftPoopCat" style="display:none;">
-        <span class="glabel">排便紀錄(貓貓區)</span>
+        <div class="glabel-row"><span class="glabel" style="margin:0;">排便紀錄(貓貓區)</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
         <input type="number" min="0" id="ftPoopCatGrams" placeholder="重量(含貓砂,g)">
         <label style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:13px;color:var(--ink-soft);"><input type="checkbox" id="ftPoopCatMulti"> 多貓同住,無法精準判斷</label>
       </div>
       <div class="sub-group" id="ftPoopDog" style="display:none;">
-        <span class="glabel">排便紀錄(狗狗區)</span>
+        <div class="glabel-row"><span class="glabel" style="margin:0;">排便紀錄(狗狗區)</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
         <div class="two-col">
           <div><label class="glabel">尿布墊(已扣除,g)</label><input type="number" min="0" id="ftPoopDogPadGrams"></div>
           <div><label class="glabel">戶外(g)</label><input type="number" min="0" id="ftPoopDogOutGrams"></div>
         </div>
       </div>
-    </div>
 
-    <!-- 特殊紀錄:進食狀況 -->
-    <div class="cat-panel" data-panel="spFood">
-      <div class="sub-group">
-        <span class="glabel">項目(可複選)</span>
-        <div class="chip-row" data-multigroup="spFoodType">
-          <div class="chip" data-val="乾糧">乾糧</div>
-          <div class="chip" data-val="濕食">濕食</div>
-          <div class="chip" data-val="鮮食">鮮食</div>
-          <div class="chip" data-val="加餐/宵夜">加餐/宵夜</div>
-        </div>
-      </div>
-      <div class="sub-group">
-        <span class="glabel">棄置量(g)(關閉先前濕食/鮮食剩餘時使用)</span>
-        <input type="number" min="0" id="spFoodDiscard">
-      </div>
-      <div class="sub-group">
-        <span class="glabel">本次餵食量(g)(若為加餐/宵夜或需另外計入份量時填寫)</span>
-        <input type="number" min="0" id="spFoodGrams">
+      <div class="field">
+        <label>備註說明</label>
+        <textarea id="ftNoteText"></textarea>
       </div>
       <div class="field">
-        <label>其他</label>
-        <input type="text" id="spFoodOther">
+        <label>紀錄時間</label>
+        <input type="datetime-local" id="ftEntryTime">
       </div>
-    </div>
-
-    <!-- 特殊紀錄:排泄狀況 -->
-    <div class="cat-panel" data-panel="spToilet">
-      <div class="two-col">
-        <div><label class="glabel">戶外大便(g)</label><input type="number" min="0" id="spToiletPoopGrams"></div>
-        <div><label class="glabel">小便次數</label><input type="number" min="0" id="spToiletPeeCount"></div>
-      </div>
-      <div class="field">
-        <label>其他</label>
-        <input type="text" id="spToiletOther">
+      <div class="submit-row">
+        <button class="submit-btn" id="ftSubmitBtn">送出進食與排泄紀錄</button>
       </div>
     </div>
 
@@ -763,23 +772,15 @@
       <div class="status-msg">直接在下方「備註說明」填寫即可。</div>
     </div>
 
-    <div class="field">
+    <div class="field" id="specialNoteWrap" style="display:none;">
       <label>備註說明</label>
       <textarea id="noteText"></textarea>
     </div>
-    <div class="field">
+    <div class="field" id="specialTimeWrap" style="display:none;">
       <label>紀錄時間</label>
       <input type="datetime-local" id="entryTime">
     </div>
-    <div class="field">
-      <label>照片(選填)</label>
-      <img id="entryPhotoPreview" style="display:none;width:100%;max-height:200px;object-fit:cover;border-radius:12px;margin-bottom:8px;">
-      <label style="display:inline-block;border:1px dashed var(--line);background:var(--card);border-radius:12px;padding:10px 16px;font-size:13px;color:var(--ink-soft);cursor:pointer;">
-        新增照片
-        <input type="file" accept="image/*" id="entryPhotoInput" style="display:none;">
-      </label>
-    </div>
-    <div class="submit-row">
+    <div class="submit-row" id="specialSubmitWrap" style="display:none;">
       <button class="submit-btn" id="submitBtn">送出這筆紀錄</button>
     </div>
 
@@ -793,27 +794,10 @@
 
   <!-- SCREEN 3: member history -->
   <div class="screen" id="screenMemberHistory">
-    <div class="back-row" id="mhBackBtn">← 返回房間列表</div>
+    <div class="back-row" id="mhBackBtn">← 返回選單</div>
     <div class="record-head">
-      <div class="loc">家長資料</div>
+      <div class="loc">家長資料(僅供查詢)</div>
       <h1 id="mhName">查詢結果</h1>
-    </div>
-
-    <div class="field">
-      <label>家長姓名</label>
-      <div style="display:flex;gap:8px;">
-        <input type="text" id="mhNameInput" placeholder="尚未填寫">
-        <button id="mhNameSaveBtn" style="background:var(--pine);color:#F4F1E9;border:none;border-radius:12px;padding:0 16px;font-size:13.5px;cursor:pointer;">儲存</button>
-      </div>
-    </div>
-
-    <div class="field">
-      <label>變更手機號碼</label>
-      <div style="display:flex;gap:8px;">
-        <input type="text" id="mhNewPhoneInput" placeholder="輸入新的手機號碼">
-        <button id="mhPhoneChangeBtn" style="background:var(--ochre);color:#2A2A2C;border:none;border-radius:12px;padding:0 16px;font-size:13.5px;cursor:pointer;white-space:nowrap;">搬移資料</button>
-      </div>
-      <div style="font-size:11.5px;color:var(--ink-soft);margin-top:6px;">會把姓名、歷史紀錄搬到新號碼底下,並自動更新目前入住中的房間對應,原號碼會被刪除。</div>
     </div>
 
     <div id="mhStays"></div>
@@ -855,7 +839,6 @@
   let currentRoomId = null;
   let allRooms = {};
   let currentStaffName = '';
-  let entryPhotoFile = null;
 
   function roomId(area, no){ return area + '-' + no; }
 
@@ -1093,8 +1076,6 @@
     ['recFoodDetail','recSnackDetail','recMedDetail','recSupplementDetail','recChronicDetail','recDietDetail']
       .forEach(elId => { document.getElementById(elId).style.display = 'none'; });
     document.getElementById('entryTime').value = toDatetimeLocalValue(new Date());
-    entryPhotoFile = null;
-    document.getElementById('entryPhotoPreview').style.display = 'none';
     resetEntryForm();
     renderItemsCard(room);
     renderNotesCard(room);
@@ -1327,9 +1308,14 @@
     const entriesSnap = await getDocs(collection(db, 'rooms', currentRoomId, 'entries'));
     for (const d of entriesSnap.docs){
       const data = d.data();
-      if (data.stayId === room.stayId && data.photoPath){
-        try { await deleteObject(ref(storage, data.photoPath)); } catch (err) { /* file may already be gone, ignore */ }
-        await updateDoc(d.ref, { photoUrl: null, photoPath: null });
+      if (data.stayId === room.stayId){
+        const paths = (data.photoPaths && data.photoPaths.length) ? data.photoPaths : (data.photoPath ? [data.photoPath] : []);
+        if (paths.length){
+          for (const p of paths){
+            try { await deleteObject(ref(storage, p)); } catch (err) { /* file may already be gone, ignore */ }
+          }
+          await updateDoc(d.ref, { photoUrl: null, photoPath: null, photoUrls: [], photoPaths: [] });
+        }
       }
     }
 
@@ -1351,14 +1337,20 @@
   });
 
   // ---------- session / sub-tab navigation ----------
-  let currentSession = 'morning';
+  let currentSession = 'regular';
   let currentPanel = 'bodycheck';
+  let entryPhotos = [];
 
   function showPanel(panelId){
     currentPanel = panelId;
     document.querySelectorAll('.cat-panel').forEach(p => p.classList.remove('show'));
     const p = document.querySelector('.cat-panel[data-panel="' + panelId + '"]');
     if (p) p.classList.add('show');
+    const isSpecial = ['spActivity','spAbnormal','spMed','spMedObs','spOther'].includes(panelId);
+    document.getElementById('specialNoteWrap').style.display = isSpecial ? 'block' : 'none';
+    document.getElementById('specialTimeWrap').style.display = isSpecial ? 'block' : 'none';
+    document.getElementById('specialSubmitWrap').style.display = isSpecial ? 'block' : 'none';
+    if (isSpecial) document.getElementById('entryTime').value = toDatetimeLocalValue(new Date());
   }
 
   document.querySelectorAll('#sessionTabs .cat-tab').forEach(tab => {
@@ -1370,8 +1362,8 @@
         document.getElementById('sessionSubTabsWrap').style.display = 'none';
         document.getElementById('specialSubTabsWrap').style.display = 'block';
         document.querySelectorAll('#specialSubTabs .cat-tab').forEach(t => t.classList.remove('active'));
-        document.querySelector('#specialSubTabs .cat-tab[data-sub="spFood"]').classList.add('active');
-        showPanel('spFood');
+        document.querySelector('#specialSubTabs .cat-tab[data-sub="spActivity"]').classList.add('active');
+        showPanel('spActivity');
       } else {
         document.getElementById('sessionSubTabsWrap').style.display = 'block';
         document.getElementById('specialSubTabsWrap').style.display = 'none';
@@ -1391,14 +1383,20 @@
   });
 
   document.getElementById('continueToFeedtoiletBtn').addEventListener('click', async () => {
-    const ok = await submitCurrentEntry();
+    const ok = await submitCurrentEntry('bodycheck');
     if (!ok) return;
     document.querySelectorAll('#sessionSubTabs .cat-tab').forEach(t => t.classList.remove('active'));
     document.querySelector('#sessionSubTabs .cat-tab[data-sub="feedtoilet"]').classList.add('active');
     showPanel('feedtoilet');
   });
 
-  // ---------- bodycheck field toggles ----------
+  document.getElementById('ftSubmitBtn').addEventListener('click', () => submitCurrentEntry('feedtoilet'));
+  document.getElementById('submitBtn').addEventListener('click', () => submitCurrentEntry(currentPanel));
+
+  // ---------- shared: inline photo mini-buttons ----------
+  document.querySelectorAll('.mini-photo-input').forEach(inp => wirePhotoInput(inp));
+
+  // ---------- bodycheck field toggles (fixed: react on the click itself, not one click late) ----------
   ['bcSkin','bcSpirit'].forEach(group => {
     document.querySelectorAll('.chip-row[data-group="'+group+'"] .chip').forEach(chip => {
       chip.addEventListener('click', () => {
@@ -1407,65 +1405,57 @@
     });
   });
 
-  document.querySelectorAll('.chip-row[data-multigroup="bcMood"] .chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      if (chip.dataset.val === '良好' && chip.classList.contains('active')){
-        document.querySelectorAll('.chip-row[data-multigroup="bcMood"] .chip.warn').forEach(c => c.classList.remove('active'));
-      } else if (chip.classList.contains('warn') && chip.classList.contains('active')){
-        const goodChip = document.querySelector('.chip-row[data-multigroup="bcMood"] .chip[data-val="良好"]');
-        if (goodChip) goodChip.classList.remove('active');
-      }
-      const anyWarn = document.querySelectorAll('.chip-row[data-multigroup="bcMood"] .chip.warn.active').length > 0;
-      document.getElementById('bcMoodFreqWrap').style.display = anyWarn ? 'block' : 'none';
+  function wireExclusiveMultigroup(groupName, noneVal, onUpdate){
+    document.querySelectorAll('.chip-row[data-multigroup="'+groupName+'"] .chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const willBeActive = !chip.classList.contains('active');
+        if (chip.dataset.val === noneVal){
+          if (willBeActive) document.querySelectorAll('.chip-row[data-multigroup="'+groupName+'"] .chip').forEach(c => { if (c !== chip) c.classList.remove('active'); });
+        } else {
+          if (willBeActive){
+            const noneChip = document.querySelector('.chip-row[data-multigroup="'+groupName+'"] .chip[data-val="'+noneVal+'"]');
+            if (noneChip) noneChip.classList.remove('active');
+          }
+        }
+        chip.classList.toggle('active');
+        onUpdate();
+      }, true); // capture: run before the generic toggle listener so we control the toggle ourselves
     });
-  });
-
-  document.querySelectorAll('.chip-row[data-multigroup="bcDischarge"] .chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      if (chip.dataset.val === '無' && chip.classList.contains('active')){
-        document.querySelectorAll('.chip-row[data-multigroup="bcDischarge"] .chip.warn').forEach(c => c.classList.remove('active'));
-      } else if (chip.classList.contains('warn') && chip.classList.contains('active')){
-        const noneChip = document.querySelector('.chip-row[data-multigroup="bcDischarge"] .chip[data-val="無"]');
-        if (noneChip) noneChip.classList.remove('active');
-      }
-      document.getElementById('bcEyeDetail').style.display = document.querySelector('.chip-row[data-multigroup="bcDischarge"] .chip[data-val="眼屎"]').classList.contains('active') ? 'block' : 'none';
-      document.getElementById('bcNoseDetail').style.display = document.querySelector('.chip-row[data-multigroup="bcDischarge"] .chip[data-val="鼻涕"]').classList.contains('active') ? 'block' : 'none';
-    });
-  });
-
-  let bcPhotoFile = null;
-  function bcPhotoChange(e){
-    const file = e.target.files[0];
-    if (!file) return;
-    bcPhotoFile = file;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      document.getElementById('bcPhotoPreview').src = ev.target.result;
-      document.getElementById('bcPhotoPreview').style.display = 'block';
-    };
-    reader.readAsDataURL(file);
   }
-  document.getElementById('bcPhotoInput').addEventListener('change', bcPhotoChange);
-  document.getElementById('bcCameraInput').addEventListener('change', bcPhotoChange);
 
-  // ---------- feed/toilet field toggles ----------
-  document.querySelectorAll('.chip-row[data-group="ftVomit"] .chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      document.getElementById('ftVomitNote').style.display = chip.dataset.val !== '無' ? 'block' : 'none';
-    });
+  wireExclusiveMultigroup('bcMood', '良好', () => {
+    const anyWarn = document.querySelectorAll('.chip-row[data-multigroup="bcMood"] .chip.warn.active').length > 0;
+    document.getElementById('bcMoodFreqWrap').style.display = anyWarn ? 'block' : 'none';
+  });
+
+  wireExclusiveMultigroup('bcDischarge', '無', () => {
+    document.getElementById('bcEyeDetail').style.display = document.querySelector('.chip-row[data-multigroup="bcDischarge"] .chip[data-val="眼屎"]').classList.contains('active') ? 'block' : 'none';
+    document.getElementById('bcNoseDetail').style.display = document.querySelector('.chip-row[data-multigroup="bcDischarge"] .chip[data-val="鼻涕"]').classList.contains('active') ? 'block' : 'none';
+  });
+
+  wireExclusiveMultigroup('ftVomit', '無', () => {
+    const anyWarn = document.querySelectorAll('.chip-row[data-multigroup="ftVomit"] .chip.warn.active').length > 0;
+    document.getElementById('ftVomitNote').style.display = anyWarn ? 'block' : 'none';
   });
 
   const ftFoodDetailMap = { '乾糧':'ftDryDetail', '濕食':'ftWetDetail', '鮮食':'ftFreshDetail' };
-  Object.keys(ftFoodDetailMap).forEach(val => {
-    const chip = document.querySelector('.chip-row[data-multigroup="ftFood"] .chip[data-val="'+val+'"]');
-    if (chip) chip.addEventListener('click', () => {
-      document.getElementById(ftFoodDetailMap[val]).style.display = chip.classList.contains('active') ? 'block' : 'none';
-    });
+  document.querySelectorAll('.chip-row[data-multigroup="ftFood"] .chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const willBeActive = !chip.classList.contains('active');
+      document.getElementById(ftFoodDetailMap[chip.dataset.val]).style.display = willBeActive ? 'block' : 'none';
+    }, true);
   });
 
   document.querySelectorAll('.chip-row[data-group="ftDryStatus"] .chip').forEach(chip => {
     chip.addEventListener('click', () => {
       document.getElementById('ftDryLeftoverWrap').style.display = (chip.dataset.val === '更換' || chip.dataset.val === '增加') ? 'block' : 'none';
+    });
+  });
+
+  document.querySelectorAll('.chip-row[data-group="ftWaterStatus"] .chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.getElementById('ftWaterFirstWrap').style.display = chip.dataset.val === '首次給水' ? 'block' : 'none';
+      document.getElementById('ftWaterRefillWrap').style.display = chip.dataset.val === '更換水' ? 'block' : 'none';
     });
   });
 
@@ -1490,24 +1480,53 @@
     document.getElementById('ftPoopDog').style.display = area === 'dog' ? 'block' : 'none';
   }
 
+  function resetPanelFields(panelId){
+    const scopeIds = {
+      bodycheck: ['#screenRecord .cat-panel[data-panel="bodycheck"]'],
+      feedtoilet: ['#screenRecord .cat-panel[data-panel="feedtoilet"]'],
+    };
+    const scope = scopeIds[panelId] ? document.querySelector(scopeIds[panelId][0]) : document.querySelector('.cat-panel[data-panel="'+panelId+'"]');
+    if (!scope) return;
+    scope.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    scope.querySelectorAll('input[type=text], input[type=number], textarea').forEach(i => i.value = '');
+    scope.querySelectorAll('input[type=checkbox]').forEach(i => i.checked = false);
+    scope.querySelectorAll('.detail-card, [id$="Wrap"], [id$="Detail"]').forEach(el => { if (el.style) el.style.display = 'none'; });
+    scope.querySelectorAll('.photo-mini').forEach(pm => {
+      pm.innerHTML = '';
+      pm.appendChild(document.createTextNode('📷'));
+      const inp = document.createElement('input');
+      inp.type = 'file'; inp.accept = 'image/*'; inp.className = 'mini-photo-input'; inp.style.display = 'none';
+      pm.appendChild(inp);
+      wirePhotoInput(inp);
+    });
+    if (panelId === 'feedtoilet') applyAreaVisibility();
+  }
+
+  function wirePhotoInput(inp){
+    inp.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      entryPhotos.push(file);
+      inp.closest('.photo-mini').firstChild.textContent = '✅';
+    });
+  }
+
   function resetEntryForm(){
-    // reset tab state back to 早上 · 身心評估
     document.querySelectorAll('#sessionTabs .cat-tab').forEach(t => t.classList.remove('active'));
-    document.querySelector('#sessionTabs .cat-tab[data-session="morning"]').classList.add('active');
+    document.querySelector('#sessionTabs .cat-tab[data-session="regular"]').classList.add('active');
     document.getElementById('sessionSubTabsWrap').style.display = 'block';
     document.getElementById('specialSubTabsWrap').style.display = 'none';
     document.querySelectorAll('#sessionSubTabs .cat-tab').forEach(t => t.classList.remove('active'));
     document.querySelector('#sessionSubTabs .cat-tab[data-sub="bodycheck"]').classList.add('active');
-    currentSession = 'morning';
+    currentSession = 'regular';
     showPanel('bodycheck');
-    document.querySelectorAll('#screenRecord .chip').forEach(c => c.classList.remove('active'));
-    document.querySelectorAll('#screenRecord input[type=text], #screenRecord input[type=number], #screenRecord textarea').forEach(i => i.value = '');
-    document.querySelectorAll('#screenRecord input[type=checkbox]').forEach(i => i.checked = false);
-    ['bcSkinNote','bcSpiritNote','bcMoodFreqWrap','bcEyeDetail','bcNoseDetail','ftVomitNote',
-     'ftDryDetail','ftWetDetail','ftFreshDetail','ftDryLeftoverWrap','ftPeeDogPadWrap','ftPeeDogOutWrap','spMedFailReasonWrap']
-      .forEach(id => { document.getElementById(id).style.display = 'none'; });
-    bcPhotoFile = null;
-    document.getElementById('bcPhotoPreview').style.display = 'none';
+    resetPanelFields('bodycheck');
+    resetPanelFields('feedtoilet');
+    ['spActivity','spAbnormal','spMed','spMedObs','spOther'].forEach(resetPanelFields);
+    document.getElementById('noteText').value = '';
+    entryPhotos = [];
+    document.getElementById('bcEntryTime').value = toDatetimeLocalValue(new Date());
+    document.getElementById('ftEntryTime').value = toDatetimeLocalValue(new Date());
     applyAreaVisibility();
   }
 
@@ -1655,22 +1674,10 @@
       <div class="log-entry ${e.warn ? 'warn' : ''}">
         <div class="meta"><span>${e.timeStr} · ${e.cat}${e.staff ? '｜' + e.staff : ''}</span></div>
         <p>${e.content}</p>
-        ${e.photoUrl ? '<img src="'+e.photoUrl+'" style="width:100%;max-height:220px;object-fit:cover;border-radius:10px;margin-top:8px;">' : ''}
+        ${(e.photoUrls && e.photoUrls.length) ? e.photoUrls.map(u => '<img src="'+u+'" style="width:100%;max-height:220px;object-fit:cover;border-radius:10px;margin-top:8px;">').join('') : (e.photoUrl ? '<img src="'+e.photoUrl+'" style="width:100%;max-height:220px;object-fit:cover;border-radius:10px;margin-top:8px;">' : '')}
       </div>
     `).join('');
   }
-
-  document.getElementById('entryPhotoInput').addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    entryPhotoFile = file;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      document.getElementById('entryPhotoPreview').src = ev.target.result;
-      document.getElementById('entryPhotoPreview').style.display = 'block';
-    };
-    reader.readAsDataURL(file);
-  });
 
   function chipVal(group){
     const c = document.querySelector('.chip-row[data-group="'+group+'"] .chip.active');
@@ -1686,18 +1693,20 @@
   function txtVal(id){ return document.getElementById(id).value.trim(); }
 
   const panelLabels = {
-    bodycheck:'身心評估', feedtoilet:'進食與排泄紀錄', spFood:'特殊-進食狀況', spToilet:'特殊-排泄狀況',
+    bodycheck:'身心評估', feedtoilet:'進食與排泄紀錄',
     spActivity:'特殊-活動紀錄', spAbnormal:'特殊-異常狀況', spMed:'特殊-用藥紀錄', spMedObs:'特殊-用藥後觀察', spOther:'特殊-其他'
   };
 
-  async function submitCurrentEntry(){
+  async function submitCurrentEntry(panelId){
     const area = allRooms[currentRoomId] ? allRooms[currentRoomId].area : 'cat';
     let content = '';
     let warn = false;
     let grams = null, waterMl = null, peeGrams = null, peeCount = null, peeDiaperGrams = null, poopGrams = null;
     const parts = [];
+    let noteFieldId = 'noteText', timeFieldId = 'entryTime';
 
-    if (currentPanel === 'bodycheck'){
+    if (panelId === 'bodycheck'){
+      noteFieldId = 'bcNoteText'; timeFieldId = 'bcEntryTime';
       const skin = chipVal('bcSkin'), spirit = chipVal('bcSpirit');
       if (skin){ parts.push('皮膚' + skin + (skin === '異常' ? '(' + txtVal('bcSkinNote') + ')' : '')); if (skin === '異常') warn = true; }
       if (spirit){ parts.push('精神' + spirit + (spirit === '異常' ? '(' + txtVal('bcSpiritNote') + ')' : '')); if (spirit === '異常') warn = true; }
@@ -1724,31 +1733,32 @@
       content = parts.join('。');
     }
 
-    if (currentPanel === 'feedtoilet'){
-      const vomit = chipVal('ftVomit');
-      if (vomit){ parts.push('嘔吐:' + vomit + (vomit !== '無' ? '(' + txtVal('ftVomitNote') + ')' : '')); if (vomit !== '無') warn = true; }
+    if (panelId === 'feedtoilet'){
+      noteFieldId = 'ftNoteText'; timeFieldId = 'ftEntryTime';
+      const vomits = chipVals('ftVomit');
+      if (vomits.length){
+        parts.push('嘔吐:' + vomits.join('、') + (vomits.some(v => v !== '無') ? '(' + txtVal('ftVomitNote') + ')' : ''));
+        if (vomits.some(v => v !== '無')) warn = true;
+      }
 
       const foods = chipVals('ftFood');
       let foodTotal = 0;
-      let dryPendingUpdate = null;
       if (foods.includes('乾糧')){
         const status = chipVal('ftDryStatus');
-        const servedNow = numVal('ftDryGrams') || 0;
-        const leftover = numVal('ftDryLeftover');
-        const prevPending = (allRooms[currentRoomId] && allRooms[currentRoomId].pendingDryGrams) || 0;
+        const fed = numVal('ftDryGrams') || 0;
+        const leftover = numVal('ftDryLeftover') || 0;
         let consumed = 0;
         if (status === '首次餵食'){
           consumed = 0;
-        } else {
-          consumed = Math.max(prevPending - (leftover || 0), 0);
+          parts.push('乾糧首次餵食 ' + fed + 'g(先不計入今日進食量)');
+        } else if (status === '更換'){
+          consumed = Math.max(fed - leftover, 0);
+          parts.push('乾糧更換,餵食' + fed + 'g−剩餘' + leftover + 'g,計入' + consumed + 'g');
+        } else if (status === '增加'){
+          consumed = fed + leftover;
+          parts.push('乾糧增加,餵食' + fed + 'g+剩餘' + leftover + 'g,計入' + consumed + 'g');
         }
         foodTotal += consumed;
-        dryPendingUpdate = servedNow;
-        if (status === '首次餵食'){
-          parts.push('乾糧首次餵食 ' + servedNow + 'g(先不計入今日進食量,待下次更換/增加時回推實際吃掉的量)');
-        } else {
-          parts.push('乾糧' + status + ' ' + servedNow + 'g' + (leftover !== null ? '(原剩餘' + leftover + 'g,回推吃掉 ' + consumed + 'g)' : ''));
-        }
       }
       if (foods.includes('濕食')){
         const g = numVal('ftWetGrams') || 0, left = numVal('ftWetLeftover') || 0;
@@ -1762,8 +1772,15 @@
       }
       if (foods.length) grams = foodTotal;
 
-      const water = numVal('ftWaterMl');
-      if (water !== null){ waterMl = water; parts.push('飲水' + water + 'ML'); }
+      const waterStatus = chipVal('ftWaterStatus');
+      if (waterStatus === '首次給水'){
+        const w = numVal('ftWaterFirstMl');
+        if (w !== null) parts.push('首次給水' + w + 'ML(先不計入今日飲水量)');
+      } else if (waterStatus === '更換水'){
+        const refill = numVal('ftWaterRefillMl') || 0, discard = numVal('ftWaterDiscardMl') || 0;
+        waterMl = Math.max(refill - discard, 0);
+        parts.push('更換水,補' + refill + 'ML−棄置' + discard + 'ML,計入' + waterMl + 'ML');
+      }
 
       if (area === 'cat'){
         const pg = numVal('ftPeeCatGrams');
@@ -1778,41 +1795,16 @@
         if (padPoop || outPoop){ poopGrams = padPoop + outPoop; parts.push('排便 尿布墊' + padPoop + 'g、戶外' + outPoop + 'g'); }
       }
       content = parts.join('。');
-      if (dryPendingUpdate !== null){
-        await updateDoc(doc(db, 'rooms', currentRoomId), { pendingDryGrams: dryPendingUpdate });
-        if (allRooms[currentRoomId]) allRooms[currentRoomId].pendingDryGrams = dryPendingUpdate;
-      }
     }
 
-    if (currentPanel === 'spFood'){
-      const types = chipVals('spFoodType');
-      if (types.length) parts.push('項目:' + types.join('、'));
-      const add = numVal('spFoodGrams'), discard = numVal('spFoodDiscard');
-      if (add !== null || discard !== null) grams = (add || 0) - (discard || 0);
-      if (add !== null) parts.push('本次餵食' + add + 'g');
-      if (discard !== null) parts.push('棄置' + discard + 'g');
-      const other = txtVal('spFoodOther');
-      if (other) parts.push(other);
-      content = parts.join('、');
-    }
-
-    if (currentPanel === 'spToilet'){
-      const pg = numVal('spToiletPoopGrams'), pc = numVal('spToiletPeeCount');
-      if (pg !== null){ poopGrams = pg; parts.push('戶外大便' + pg + 'g'); }
-      if (pc !== null){ peeCount = pc; parts.push('小便' + pc + '次'); }
-      const other = txtVal('spToiletOther');
-      if (other) parts.push(other);
-      content = parts.join('、');
-    }
-
-    if (currentPanel === 'spActivity'){
+    if (panelId === 'spActivity'){
       const mins = numVal('spActivityMinutes'), state = chipVal('spActivityState');
       if (mins !== null) parts.push('放風' + mins + '分鐘');
       if (state){ parts.push(state); if (state === '憂鬱' || state === '緊張防衛') warn = true; }
       content = parts.join('、');
     }
 
-    if (currentPanel === 'spAbnormal'){
+    if (panelId === 'spAbnormal'){
       const types = chipVals('spAbnormalType');
       if (types.length){ parts.push(types.join('、')); if (types.some(v => v !== '無')) warn = true; }
       const note = txtVal('spAbnormalNote');
@@ -1820,7 +1812,7 @@
       content = parts.join('。');
     }
 
-    if (currentPanel === 'spMed'){
+    if (panelId === 'spMed'){
       const result = chipVal('spMedResult');
       if (result){ parts.push(result); if (result !== '已成功投藥') warn = true; }
       if (result === '投藥失敗'){
@@ -1830,63 +1822,61 @@
       content = parts.join('、');
     }
 
-    if (currentPanel === 'spMedObs'){
+    if (panelId === 'spMedObs'){
       const types = chipVals('spMedObsType');
       if (types.length){ parts.push(types.join('、')); if (types.some(v => v !== '無異常')) warn = true; }
       content = parts.join('、');
     }
 
-    if (currentPanel === 'spOther'){
+    if (panelId === 'spOther'){
       content = '';
     }
 
-    const note = txtVal('noteText');
+    const note = txtVal(noteFieldId);
     if (note) content = content ? content + '。' + note : note;
 
-    const usingBcPhoto = currentPanel === 'bodycheck';
-    const photoFile = usingBcPhoto ? bcPhotoFile : entryPhotoFile;
-    if (!content && !photoFile){ alert('請至少填寫一項狀況、備註或新增照片'); return false; }
+    if (!content && entryPhotos.length === 0){ alert('請至少填寫一項狀況、備註或新增照片'); return false; }
     if (!content) content = '（僅上傳照片）';
 
-    let photoUrl = null, photoPath = null;
-    if (photoFile){
+    let photoUrls = [];
+    if (entryPhotos.length){
       try {
-        photoPath = 'entries/' + currentRoomId + '/' + Date.now() + '.jpg';
-        const photoRef = ref(storage, photoPath);
-        await uploadBytes(photoRef, photoFile);
-        photoUrl = await getDownloadURL(photoRef);
+        for (const file of entryPhotos){
+          const photoPath = 'entries/' + currentRoomId + '/' + Date.now() + '-' + Math.random().toString(36).slice(2,7) + '.jpg';
+          const photoRef = ref(storage, photoPath);
+          await uploadBytes(photoRef, file);
+          const url = await getDownloadURL(photoRef);
+          photoUrls.push({ url, path: photoPath });
+        }
       } catch (err) {
         alert('照片上傳失敗(可能是 Storage 尚未設定完成)。可以先移除照片、只送出文字紀錄。');
         return false;
       }
     }
 
-    const timeVal = document.getElementById('entryTime').value;
+    const timeVal = document.getElementById(timeFieldId).value;
     const chosenTime = timeVal ? new Date(timeVal) : new Date();
     await addDoc(collection(db, 'rooms', currentRoomId, 'entries'), {
       stayId: allRooms[currentRoomId].stayId,
-      session: currentSession,
-      cat: panelLabels[currentPanel],
+      cat: panelLabels[panelId],
       content, warn,
       grams, waterMl, peeGrams, peeCount, peeDiaperGrams, poopGrams,
-      photoUrl, photoPath,
+      photoUrl: photoUrls[0] ? photoUrls[0].url : null,
+      photoPath: photoUrls[0] ? photoUrls[0].path : null,
+      photoUrls: photoUrls.map(p => p.url),
+      photoPaths: photoUrls.map(p => p.path),
       staff: currentStaffName || '未填寫',
       timeStr: chosenTime.getHours().toString().padStart(2,'0') + ':' + chosenTime.getMinutes().toString().padStart(2,'0'),
       dateStr: dateStrOf(chosenTime),
       createdAtMs: chosenTime.getTime()
     });
 
-    document.getElementById('noteText').value = '';
-    document.getElementById('entryTime').value = toDatetimeLocalValue(new Date());
-    entryPhotoFile = null;
-    bcPhotoFile = null;
-    document.getElementById('entryPhotoPreview').style.display = 'none';
-    document.getElementById('bcPhotoPreview').style.display = 'none';
+    resetPanelFields(panelId);
+    document.getElementById(timeFieldId).value = toDatetimeLocalValue(new Date());
+    entryPhotos = [];
     await renderLog();
     return true;
   }
-
-  document.getElementById('submitBtn').addEventListener('click', submitCurrentEntry);
 
   // ---------- member search ----------
   let currentMemberPhone = null;
@@ -1932,10 +1922,7 @@
     }
     const phone = found.phone;
     const member = found.member;
-    currentMemberPhone = phone;
     document.getElementById('mhName').textContent = phone;
-    document.getElementById('mhNameInput').value = member.name || '';
-    document.getElementById('mhNewPhoneInput').value = '';
     const history = member.history || [];
     const stayHtml = history.length === 0
       ? '<div class="status-msg">目前沒有已退房的歷史紀錄</div>'
@@ -1994,11 +1981,31 @@
 
   document.getElementById('mhBackBtn').addEventListener('click', () => showScreen('screenMenu'));
 
+  function openManageEdit(phone, member){
+    currentMemberPhone = phone;
+    document.getElementById('manageEditPanel').style.display = 'block';
+    document.getElementById('manageEditPhone').textContent = '編輯中:' + phone;
+    document.getElementById('mhNameInput').value = (member && member.name) || '';
+    document.getElementById('mhNewPhoneInput').value = '';
+  }
+
+  document.getElementById('manageSearchBtn').addEventListener('click', async () => {
+    const query = document.getElementById('manageSearchInput').value.trim();
+    if (!query) return;
+    const found = await findMemberByAnything(query);
+    if (!found){
+      alert('查無符合的會員(可輸入手機號碼、家長姓名或寶貝名字查詢)');
+      return;
+    }
+    openManageEdit(found.phone, found.member);
+  });
+
   document.getElementById('mhNameSaveBtn').addEventListener('click', async () => {
     if (!currentMemberPhone) return;
     const name = document.getElementById('mhNameInput').value.trim();
     await updateDoc(doc(db, 'members', currentMemberPhone), { name });
     alert('已儲存姓名。');
+    await renderMemberManageList();
   });
 
   document.getElementById('mhPhoneChangeBtn').addEventListener('click', async () => {
@@ -2023,11 +2030,10 @@
       }
     }
 
-    alert('已搬移完成,現在改用新號碼「' + newPhone + '」查詢。');
-    currentMemberPhone = newPhone;
-    document.getElementById('memberSearchInput').value = newPhone;
-    document.getElementById('memberSearchBtn').click();
+    alert('已搬移完成。');
+    openManageEdit(newPhone, memberData);
     await loadRooms();
+    await renderMemberManageList();
   });
 
   // ---------- auth ----------
@@ -2061,7 +2067,13 @@
 
   document.getElementById('menuCareBtn').addEventListener('click', () => { showScreen('screenRooms'); renderRooms(); });
   document.getElementById('menuHistoryBtn').addEventListener('click', () => showScreen('screenHistorySearch'));
-  document.getElementById('menuMembersBtn').addEventListener('click', () => { showScreen('screenMemberManage'); renderMemberManageList(); });
+  document.getElementById('menuMembersBtn').addEventListener('click', () => {
+    showScreen('screenMemberManage');
+    document.getElementById('manageEditPanel').style.display = 'none';
+    document.getElementById('manageSearchInput').value = '';
+    currentMemberPhone = null;
+    renderMemberManageList();
+  });
   document.getElementById('cameraSettingLink').addEventListener('click', async () => {
     const snap = await getDoc(doc(db, 'settings', 'global'));
     const current = snap.exists() ? (snap.data().mihomeUrl || '') : '';
@@ -2092,9 +2104,11 @@
     }
 
     let html = '';
+    const membersByPhone = {};
     membersSnap.forEach(d => {
       const phone = d.id;
       const m = d.data();
+      membersByPhone[phone] = m;
       const petNames = new Set();
       (m.history || []).forEach(h => { if (h.petName) petNames.add(h.petName); });
       Object.values(allRooms).forEach(r => { if (r.phone === phone && r.name) petNames.add(r.name); });
@@ -2118,8 +2132,7 @@
     listEl.querySelectorAll('.member-row').forEach(row => {
       const phone = row.dataset.phone;
       row.querySelector('.m-edit').addEventListener('click', () => {
-        document.getElementById('memberSearchInput').value = phone;
-        document.getElementById('memberSearchBtn').click();
+        openManageEdit(phone, membersByPhone[phone]);
       });
       row.querySelector('.m-delete').addEventListener('click', async () => {
         if (!confirm('確定要刪除「' + phone + '」的會員資料嗎?如果這位家長目前有寶貝在住,房間資料不會一併刪除,建議先確認沒有進行中的入住。')) return;
