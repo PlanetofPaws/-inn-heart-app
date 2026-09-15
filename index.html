@@ -49,6 +49,9 @@
   .cam-card .title{font-weight:900;font-size:16px;margin:0;}
   .cam-card .sub{font-size:12px;opacity:.8;margin:4px 0 0;}
   .cam-btn{background:#F4F1E9;color:var(--pine);border:none;padding:9px 16px;border-radius:12px;font-weight:600;font-size:13.5px;cursor:pointer;text-decoration:none;display:inline-block;}
+  .snack-card{margin:0 22px 20px;padding:11px 14px;border-radius:12px;background:var(--card);border:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .snack-card span{font-size:12.5px;color:var(--ink-soft);}
+  .snack-card a{font-size:12px;color:var(--ochre);font-weight:600;text-decoration:none;white-space:nowrap;}
 
   .timeline{padding:0 22px;position:relative;}
   .timeline::before{content:"";position:absolute;left:44px;top:6px;bottom:20px;width:1px;background:var(--line);}
@@ -67,6 +70,7 @@
   .day-tab{flex-shrink:0;padding:8px 14px;border-radius:20px;border:1px solid var(--line);background:var(--card);font-size:13px;color:var(--ink-soft);cursor:pointer;}
   .day-tab.active{background:var(--deep);border-color:var(--deep);color:#F4F1E9;}
 </style>
+<script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>
 <body>
 <div class="phone">
@@ -84,8 +88,16 @@
     </div>
   </div>
 
+  <div class="screen" id="screenMenu">
+    <div class="topbar"><span>(inn)heart</span><span id="phoneEcho2"></span></div>
+    <div style="padding:20px 22px 0;display:flex;flex-direction:column;gap:12px;">
+      <button class="login-btn" id="menuCurrentBtn" style="margin-top:0;">照護紀錄(現在住房中)</button>
+      <button class="login-btn" id="menuHistoryBtn" style="margin-top:0;background:var(--ochre);">照護紀錄(歷史住房紀錄)</button>
+    </div>
+  </div>
+
   <div class="screen" id="screenMain">
-    <div class="topbar"><span>(inn)heart</span><span id="phoneEcho"></span></div>
+    <div class="topbar"><span id="menuBackLink" style="text-decoration:underline;cursor:pointer;">← 返回選單</span><span id="phoneEcho"></span></div>
     <div class="pet-tabs" id="petTabs"></div>
 
     <div class="hero">
@@ -98,6 +110,7 @@
 
     <div id="notesArea"></div>
     <div id="cameraArea"></div>
+    <div id="snackArea"></div>
 
     <div class="summary-strip" id="summaryStrip"></div>
 
@@ -109,7 +122,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-  import { getFirestore, collection, doc, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+  import { getFirestore, collection, doc, getDoc, getDocs, setDoc } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDF0t4WRcgRVGOApUdLn8Oj8VbHy6vMZp8",
@@ -124,14 +137,35 @@
   const db = getFirestore(app);
 
   let myStays = [];
+  let globalMihomeUrl = null;
+
+  (async function loadGlobalSettings(){
+    try {
+      const snap = await getDoc(doc(db, 'settings', 'global'));
+      if (snap.exists()) globalMihomeUrl = snap.data().mihomeUrl || null;
+    } catch (err) { /* no settings yet, camera card simply won't show */ }
+  })();
+
+  function openMihomeApp(){
+    if (!globalMihomeUrl) return;
+    // if it's already a plain https link (e.g. an app-store link), just open it directly
+    if (globalMihomeUrl.startsWith('http')){
+      window.open(globalMihomeUrl, '_blank');
+      return;
+    }
+    // otherwise treat it as a custom app URL scheme: try to open the app, fall back to the store after a short delay
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const storeUrl = isIOS
+      ? 'https://apps.apple.com/app/mi-home/id957323480'
+      : 'https://play.google.com/store/apps/details?id=com.xiaomi.smarthome';
+    const fallbackTimer = setTimeout(() => { window.location.href = storeUrl; }, 1200);
+    window.addEventListener('blur', () => clearTimeout(fallbackTimer), { once: true });
+    window.location.href = globalMihomeUrl;
+  }
   let currentIdx = 0;
+  let pendingLineUserId = null;
 
-  document.getElementById('loginBtn').addEventListener('click', async () => {
-    const phone = document.getElementById('phoneInput').value.trim();
-    const note = document.getElementById('loginNote');
-    if (!phone){ note.textContent = '請輸入手機號碼'; return; }
-    note.textContent = '查詢中...';
-
+  async function enterWithPhone(phone){
     const snap = await getDocs(collection(db, 'rooms'));
     myStays = [];
     snap.forEach(d => {
@@ -154,23 +188,82 @@
     }
     myStays.forEach(s => { if (s.isActive && !s.avatarUrl) s.avatarUrl = memberAvatarUrl; });
 
-    if (myStays.length === 0){
-      note.textContent = '目前查不到這支手機號碼的任何入住紀錄,請確認號碼是否正確,或洽詢櫃檯。';
-      return;
+    if (myStays.length === 0) return false;
+
+    // first time binding via LINE: remember this LINE account so next visit skips the phone screen
+    if (pendingLineUserId){
+      await setDoc(doc(db, 'lineBindings', pendingLineUserId), { phone });
+      pendingLineUserId = null;
     }
 
     document.getElementById('phoneEcho').textContent = '家長 ' + phone;
+    document.getElementById('phoneEcho2').textContent = '家長 ' + phone;
     document.getElementById('screenLogin').classList.remove('active');
+    document.getElementById('screenMenu').classList.add('active');
+    return true;
+  }
+
+  document.getElementById('loginBtn').addEventListener('click', async () => {
+    const phone = document.getElementById('phoneInput').value.trim();
+    const note = document.getElementById('loginNote');
+    if (!phone){ note.textContent = '請輸入手機號碼'; return; }
+    note.textContent = '查詢中...';
+    const ok = await enterWithPhone(phone);
+    if (!ok) note.textContent = '目前查不到這支手機號碼的任何入住紀錄,請確認號碼是否正確,或洽詢櫃檯。';
+  });
+
+  // ---------- LINE LIFF auto-login ----------
+  (async function tryLineAutoLogin(){
+    if (typeof liff === 'undefined') return; // not loaded (e.g. offline), fall back to manual login
+    try {
+      await liff.init({ liffId: '2011605439-ZiNr1cLk' });
+      if (!liff.isLoggedIn()){
+        liff.login();
+        return; // page will redirect through LINE login and reload
+      }
+      const profile = await liff.getProfile();
+      const lineUserId = profile.userId;
+      const bindingSnap = await getDoc(doc(db, 'lineBindings', lineUserId));
+      if (bindingSnap.exists()){
+        document.getElementById('loginNote').textContent = '';
+        await enterWithPhone(bindingSnap.data().phone);
+      } else {
+        pendingLineUserId = lineUserId;
+        document.getElementById('loginNote').textContent = '第一次使用,請輸入手機號碼完成綁定,之後就不用再輸入了。';
+      }
+    } catch (err) {
+      // LIFF unavailable (e.g. testing outside LINE) — manual phone login still works below
+    }
+  })();
+
+  let viewMode = 'current';
+  let visibleStays = [];
+
+  function enterMenuView(mode){
+    viewMode = mode;
+    visibleStays = myStays.filter(s => mode === 'current' ? s.isActive : !s.isActive);
+    if (visibleStays.length === 0){
+      alert(mode === 'current' ? '目前沒有寶貝入住中' : '目前沒有已退房的歷史紀錄');
+      return;
+    }
+    document.getElementById('screenMenu').classList.remove('active');
     document.getElementById('screenMain').classList.add('active');
     currentIdx = 0;
     renderPetTabs();
-    await renderPet();
+    renderPet();
+  }
+
+  document.getElementById('menuCurrentBtn').addEventListener('click', () => enterMenuView('current'));
+  document.getElementById('menuHistoryBtn').addEventListener('click', () => enterMenuView('history'));
+  document.getElementById('menuBackLink').addEventListener('click', () => {
+    document.getElementById('screenMain').classList.remove('active');
+    document.getElementById('screenMenu').classList.add('active');
   });
 
   function renderPetTabs(){
     const wrap = document.getElementById('petTabs');
-    if (myStays.length <= 1){ wrap.innerHTML = ''; return; }
-    wrap.innerHTML = myStays.map((r, i) => {
+    if (visibleStays.length <= 1){ wrap.innerHTML = ''; return; }
+    wrap.innerHTML = visibleStays.map((r, i) => {
       const label = r.isActive ? r.name : r.name + '・已退房';
       return `<div class="pet-tab ${i === currentIdx ? 'active' : ''}" data-idx="${i}">${label}</div>`;
     }).join('');
@@ -197,7 +290,7 @@
   let currentSelectedDate = null;
 
   async function renderPet(){
-    const room = myStays[currentIdx];
+    const room = visibleStays[currentIdx];
     document.getElementById('mainName').textContent = room.name;
     document.getElementById('mainLoc').textContent = (room.area === 'cat' ? '貓貓區' : '狗狗區') + ' · ' + room.no + ' 號房' +
       (room.isActive ? '' : '(已退房・' + room.checkedOutAt + ')');
@@ -219,17 +312,29 @@
     }
 
     const cameraArea = document.getElementById('cameraArea');
-    if (room.isActive && room.cameraUrl){
+    if (room.isActive && globalMihomeUrl){
       cameraArea.innerHTML = `
         <div class="cam-card">
           <div>
             <p class="title">房內即時畫面</p>
             <p class="sub">透過小米智慧家庭 App 觀看</p>
           </div>
-          <a class="cam-btn" href="${room.cameraUrl}" target="_blank" rel="noopener">開啟</a>
+          <button class="cam-btn" id="camOpenBtn">開啟</button>
         </div>`;
+      document.getElementById('camOpenBtn').addEventListener('click', openMihomeApp);
     } else {
       cameraArea.innerHTML = '';
+    }
+
+    const snackArea = document.getElementById('snackArea');
+    if (viewMode === 'current'){
+      snackArea.innerHTML = `
+        <div class="snack-card">
+          <span>想幫牠加點什麼嗎?</span>
+          <a href="https://example.com/hakuke-shop-placeholder" target="_blank" rel="noopener">給寶貝加點小零食</a>
+        </div>`;
+    } else {
+      snackArea.innerHTML = '';
     }
 
     if (!room.id || !room.stayId){
@@ -272,15 +377,28 @@
 
   function renderSelectedDay(){
     const dayEntries = (currentEntriesByDate[currentSelectedDate] || []).slice().sort((a,b) => (b.createdAtMs || 0) - (a.createdAtMs || 0));
+    const room = visibleStays[currentIdx];
+    const area = room ? room.area : 'cat';
 
     const totalGrams = dayEntries.reduce((s,e) => s + (e.grams || 0), 0);
-    const totalPoop = dayEntries.reduce((s,e) => s + (e.poopCount || 0), 0);
-    const totalPee = dayEntries.reduce((s,e) => s + (e.peeCount || 0), 0);
-    document.getElementById('summaryStrip').innerHTML = `
-      <div class="summary-item"><div class="num">${totalGrams}g</div><div class="lbl">進食量</div></div>
-      <div class="summary-item"><div class="num">${totalPoop}</div><div class="lbl">大便次數</div></div>
-      <div class="summary-item"><div class="num">${totalPee}</div><div class="lbl">小便次數</div></div>
+    const totalWater = dayEntries.reduce((s,e) => s + (e.waterMl || 0), 0);
+    const totalPoop = dayEntries.reduce((s,e) => s + (e.poopGrams || 0), 0);
+
+    let summaryHtml = `
+      <div class="summary-item"><div class="num">${totalGrams}g</div><div class="lbl">今日進食量</div></div>
+      <div class="summary-item"><div class="num">${totalWater}ml</div><div class="lbl">今日飲水量</div></div>
+      <div class="summary-item"><div class="num">${totalPoop}g</div><div class="lbl">今日排便量</div></div>
     `;
+    if (area === 'cat'){
+      const totalPeeGrams = dayEntries.reduce((s,e) => s + (e.peeGrams || 0), 0);
+      summaryHtml += `<div class="summary-item"><div class="num">${totalPeeGrams}g</div><div class="lbl">今日排尿量</div></div>`;
+    } else {
+      const totalPeeDiaper = dayEntries.reduce((s,e) => s + (e.peeDiaperGrams || 0), 0);
+      const totalPeeCount = dayEntries.reduce((s,e) => s + (e.peeCount || 0), 0);
+      summaryHtml += `<div class="summary-item"><div class="num">${totalPeeDiaper}g</div><div class="lbl">尿布墊排尿</div></div>`;
+      summaryHtml += `<div class="summary-item"><div class="num">${totalPeeCount}次</div><div class="lbl">戶外排尿</div></div>`;
+    }
+    document.getElementById('summaryStrip').innerHTML = summaryHtml;
 
     const tl = document.getElementById('timeline');
     if (dayEntries.length === 0){
