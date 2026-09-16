@@ -826,6 +826,28 @@
   const storage = getStorage(app);
   const googleProvider = new GoogleAuthProvider();
 
+  // resize + re-encode an image before upload, to keep Storage usage small
+  function compressImage(file, maxDim, quality){
+    return new Promise((resolve) => {
+      const img = new Image();
+      const reader = new FileReader();
+      reader.onload = (e) => { img.src = e.target.result; };
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > height && width > maxDim){ height = Math.round(height * (maxDim / width)); width = maxDim; }
+        else if (height > maxDim){ width = Math.round(width * (maxDim / height)); height = maxDim; }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        canvas.toBlob((blob) => {
+          resolve(blob || file); // fall back to original if compression somehow fails
+        }, 'image/jpeg', quality);
+      };
+      img.onerror = () => resolve(file); // fall back to original if it's not a readable image
+      reader.readAsDataURL(file);
+    });
+  }
+
   let currentArea = 'cat';
   let currentRoomId = null;
   let allRooms = {};
@@ -1020,8 +1042,9 @@
     let avatarUrl = ciExistingAvatarUrl;
     if (ciNewAvatarFile){
       try {
+        const compressed = await compressImage(ciNewAvatarFile, 800, 0.8);
         const avatarRef = ref(storage, 'avatars/' + phone + '-' + Date.now() + '.jpg');
-        await uploadBytes(avatarRef, ciNewAvatarFile);
+        await uploadBytes(avatarRef, compressed);
         avatarUrl = await getDownloadURL(avatarRef);
       } catch (err) {
         alert('照片上傳失敗(可能是 Storage 尚未設定完成)。可以先不上傳照片直接建立入住,之後 Storage 設定好再補上。');
@@ -1936,9 +1959,10 @@
     if (entryPhotos.length){
       try {
         for (const file of entryPhotos){
+          const compressed = await compressImage(file, 1200, 0.75);
           const photoPath = 'entries/' + currentRoomId + '/' + Date.now() + '-' + Math.random().toString(36).slice(2,7) + '.jpg';
           const photoRef = ref(storage, photoPath);
-          await uploadBytes(photoRef, file);
+          await uploadBytes(photoRef, compressed);
           const url = await getDownloadURL(photoRef);
           photoUrls.push({ url, path: photoPath });
         }
