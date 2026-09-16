@@ -636,20 +636,11 @@
 
       <div class="sub-group">
         <div class="glabel-row"><span class="glabel" style="margin:0;">飲水紀錄</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
-        <div class="chip-row" data-group="ftWaterStatus">
-          <div class="chip" data-val="首次給水">首次給水</div>
-          <div class="chip" data-val="更換水">更換水</div>
+        <div class="two-col">
+          <div><label class="glabel">給水量(ML)</label><input type="number" min="0" id="ftWaterGiveMl"></div>
+          <div><label class="glabel">棄置剩餘水量(ML)</label><input type="number" min="0" id="ftWaterDiscardMl"></div>
         </div>
-        <div id="ftWaterFirstWrap" style="display:none;margin-top:8px;">
-          <input type="number" min="0" id="ftWaterFirstMl" placeholder="補水量(ML)">
-        </div>
-        <div id="ftWaterRefillWrap" style="display:none;margin-top:8px;">
-          <div class="two-col">
-            <div><label class="glabel">補多少水(ML)</label><input type="number" min="0" id="ftWaterRefillMl"></div>
-            <div><label class="glabel">棄置多少水(ML)</label><input type="number" min="0" id="ftWaterDiscardMl"></div>
-          </div>
-          <div style="font-size:11.5px;color:var(--ink-soft);margin-top:6px;">今日飲水量 = 補水量 − 棄置量</div>
-        </div>
+        <div style="font-size:11.5px;color:var(--ink-soft);margin-top:6px;">今日飲水量 = 上次給水量 − 這次棄置剩餘量,自動累計</div>
       </div>
 
       <div class="sub-group" id="ftPeeCat" style="display:none;">
@@ -1050,7 +1041,8 @@
       avatarUrl: avatarUrl || null,
       pendingDryGrams: 0,
       pendingWetGrams: 0,
-      pendingFreshGrams: 0
+      pendingFreshGrams: 0,
+      pendingWaterMl: 0
     });
 
     await setDoc(doc(db, 'members', phone), {
@@ -1304,38 +1296,42 @@
 
   document.getElementById('checkoutBtn').addEventListener('click', async () => {
     if (!confirm('確定要辦理退房嗎?退房後這次住宿的照片會自動刪除以節省空間,文字紀錄會保留。')) return;
-    const room = allRooms[currentRoomId];
+    try {
+      const room = allRooms[currentRoomId];
 
-    // clean up this stay's photos to save Storage space, keep the text records
-    const entriesSnap = await getDocs(collection(db, 'rooms', currentRoomId, 'entries'));
-    for (const d of entriesSnap.docs){
-      const data = d.data();
-      if (data.stayId === room.stayId){
-        const paths = (data.photoPaths && data.photoPaths.length) ? data.photoPaths : (data.photoPath ? [data.photoPath] : []);
-        if (paths.length){
-          for (const p of paths){
-            try { await deleteObject(ref(storage, p)); } catch (err) { /* file may already be gone, ignore */ }
+      // clean up this stay's photos to save Storage space, keep the text records
+      const entriesSnap = await getDocs(collection(db, 'rooms', currentRoomId, 'entries'));
+      for (const d of entriesSnap.docs){
+        const data = d.data();
+        if (data.stayId === room.stayId){
+          const paths = (data.photoPaths && data.photoPaths.length) ? data.photoPaths : (data.photoPath ? [data.photoPath] : []);
+          if (paths.length){
+            for (const p of paths){
+              try { await deleteObject(ref(storage, p)); } catch (err) { /* file may already be gone, ignore */ }
+            }
+            await updateDoc(d.ref, { photoUrl: null, photoPath: null, photoUrls: [], photoPaths: [] });
           }
-          await updateDoc(d.ref, { photoUrl: null, photoPath: null, photoUrls: [], photoPaths: [] });
         }
       }
-    }
 
-    await updateDoc(doc(db, 'members', room.phone), {
-      history: arrayUnion({
-        petName: room.name, area: room.area, no: room.no,
-        roomId: currentRoomId, stayId: room.stayId,
-        checkinDate: room.checkinDate || '',
-        checkedOutAt: new Date().toLocaleString('zh-TW')
-      })
-    });
-    await setDoc(doc(db, 'rooms', currentRoomId), {
-      area: room.area, no: room.no, name: null, phone: null, stayId: null, items: null, notes: null,
-      avatarUrl: null
-    });
-    await loadRooms();
-    showScreen('screenRooms');
-    renderRooms();
+      await updateDoc(doc(db, 'members', room.phone), {
+        history: arrayUnion({
+          petName: room.name, area: room.area, no: room.no,
+          roomId: currentRoomId, stayId: room.stayId,
+          checkinDate: room.checkinDate || '',
+          checkedOutAt: new Date().toLocaleString('zh-TW')
+        })
+      });
+      await setDoc(doc(db, 'rooms', currentRoomId), {
+        area: room.area, no: room.no, name: null, phone: null, stayId: null, items: null, notes: null,
+        avatarUrl: null
+      });
+      await loadRooms();
+      showScreen('screenRooms');
+      renderRooms();
+    } catch (err) {
+      alert('退房時發生錯誤:' + err.message + '\n請把這則訊息截圖回報。');
+    }
   });
 
   // ---------- session / sub-tab navigation ----------
@@ -1402,7 +1398,8 @@
   ['bcSkin','bcSpirit'].forEach(group => {
     document.querySelectorAll('.chip-row[data-group="'+group+'"] .chip').forEach(chip => {
       chip.addEventListener('click', () => {
-        document.getElementById(group + 'Note').style.display = chip.dataset.val === '異常' ? 'block' : 'none';
+        const willBeActive = !chip.classList.contains('active');
+        document.getElementById(group + 'Note').style.display = (willBeActive && chip.dataset.val === '異常') ? 'block' : 'none';
       });
     });
   });
@@ -1451,27 +1448,23 @@
 
   document.querySelectorAll('.chip-row[data-group="ftDryStatus"] .chip').forEach(chip => {
     chip.addEventListener('click', () => {
-      document.getElementById('ftDryLeftoverWrap').style.display = (chip.dataset.val === '更換' || chip.dataset.val === '增加') ? 'block' : 'none';
-    });
-  });
-
-  document.querySelectorAll('.chip-row[data-group="ftWaterStatus"] .chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      document.getElementById('ftWaterFirstWrap').style.display = chip.dataset.val === '首次給水' ? 'block' : 'none';
-      document.getElementById('ftWaterRefillWrap').style.display = chip.dataset.val === '更換水' ? 'block' : 'none';
+      const willBeActive = !chip.classList.contains('active');
+      document.getElementById('ftDryLeftoverWrap').style.display = (willBeActive && (chip.dataset.val === '更換' || chip.dataset.val === '增加')) ? 'block' : 'none';
     });
   });
 
   document.querySelectorAll('.chip-row[data-group="ftPeeDogType"] .chip').forEach(chip => {
     chip.addEventListener('click', () => {
-      document.getElementById('ftPeeDogPadWrap').style.display = chip.dataset.val === '尿布墊' ? 'block' : 'none';
-      document.getElementById('ftPeeDogOutWrap').style.display = chip.dataset.val === '戶外' ? 'block' : 'none';
+      const willBeActive = !chip.classList.contains('active');
+      document.getElementById('ftPeeDogPadWrap').style.display = (willBeActive && chip.dataset.val === '尿布墊') ? 'block' : 'none';
+      document.getElementById('ftPeeDogOutWrap').style.display = (willBeActive && chip.dataset.val === '戶外') ? 'block' : 'none';
     });
   });
 
   document.querySelectorAll('.chip-row[data-group="spMedResult"] .chip').forEach(chip => {
     chip.addEventListener('click', () => {
-      document.getElementById('spMedFailReasonWrap').style.display = chip.dataset.val === '投藥失敗' ? 'block' : 'none';
+      const willBeActive = !chip.classList.contains('active');
+      document.getElementById('spMedFailReasonWrap').style.display = (willBeActive && chip.dataset.val === '投藥失敗') ? 'block' : 'none';
     });
   });
 
@@ -1535,8 +1528,10 @@
 
   document.querySelectorAll('.chip-row[data-group] .chip').forEach(chip => {
     chip.addEventListener('click', () => {
+      const wasActive = chip.classList.contains('active');
       chip.parentElement.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-      chip.classList.add('active');
+      if (!wasActive) chip.classList.add('active');
+      chip.dispatchEvent(new Event('chipchange', { bubbles: true }));
     });
   });
   document.querySelectorAll('.chip-row[data-multigroup] .chip').forEach(chip => {
@@ -1572,8 +1567,9 @@
   function wireMedCategory(prefix){
     document.querySelectorAll('.chip-row[data-group="'+prefix+'MedCategory"] .chip').forEach(chip => {
       chip.addEventListener('click', () => {
-        document.getElementById(prefix + 'MedOralTypeWrap').style.display = chip.dataset.val === '口服藥' ? 'flex' : 'none';
-        document.getElementById(prefix + 'MedTopicalTypeWrap').style.display = chip.dataset.val === '外用藥' ? 'flex' : 'none';
+        const willBeActive = !chip.classList.contains('active');
+        document.getElementById(prefix + 'MedOralTypeWrap').style.display = (willBeActive && chip.dataset.val === '口服藥') ? 'flex' : 'none';
+        document.getElementById(prefix + 'MedTopicalTypeWrap').style.display = (willBeActive && chip.dataset.val === '外用藥') ? 'flex' : 'none';
       });
     });
   }
@@ -1614,36 +1610,41 @@
   async function renderLog(){
     const list = document.getElementById('logList');
     list.innerHTML = '讀取中...';
-    const stayId = allRooms[currentRoomId].stayId;
-    const entriesSnap = await getDocs(collection(db, 'rooms', currentRoomId, 'entries'));
-    const entries = [];
-    entriesSnap.forEach(d => { const data = d.data(); if (data.stayId === stayId) entries.push({ ...data, id: d.id }); });
+    try {
+      const stayId = allRooms[currentRoomId].stayId;
+      const entriesSnap = await getDocs(collection(db, 'rooms', currentRoomId, 'entries'));
+      const entries = [];
+      entriesSnap.forEach(d => { const data = d.data(); if (data.stayId === stayId) entries.push({ ...data, id: d.id }); });
 
-    currentEntriesByDate = {};
-    entries.forEach(e => {
-      const ds = e.dateStr || dateStrOf(new Date(e.createdAtMs || Date.now()));
-      if (!currentEntriesByDate[ds]) currentEntriesByDate[ds] = [];
-      currentEntriesByDate[ds].push(e);
-    });
-
-    const today = dateStrOf(new Date());
-    if (!currentEntriesByDate[today]) currentEntriesByDate[today] = [];
-    const dates = Object.keys(currentEntriesByDate).sort().reverse();
-    currentSelectedDate = today;
-
-    const dayTabs = document.getElementById('dayTabs');
-    dayTabs.innerHTML = dates.map(ds =>
-      `<div class="day-tab ${ds === currentSelectedDate ? 'active' : ''}" data-date="${ds}">${dateLabelOf(ds)}</div>`
-    ).join('');
-    dayTabs.querySelectorAll('.day-tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        currentSelectedDate = tab.dataset.date;
-        dayTabs.querySelectorAll('.day-tab').forEach(t => t.classList.toggle('active', t.dataset.date === currentSelectedDate));
-        renderSelectedDay();
+      currentEntriesByDate = {};
+      entries.forEach(e => {
+        const ds = e.dateStr || dateStrOf(new Date(e.createdAtMs || Date.now()));
+        if (!currentEntriesByDate[ds]) currentEntriesByDate[ds] = [];
+        currentEntriesByDate[ds].push(e);
       });
-    });
 
-    renderSelectedDay();
+      const today = dateStrOf(new Date());
+      if (!currentEntriesByDate[today]) currentEntriesByDate[today] = [];
+      const dates = Object.keys(currentEntriesByDate).sort().reverse();
+      currentSelectedDate = today;
+
+      const dayTabs = document.getElementById('dayTabs');
+      dayTabs.innerHTML = dates.map(ds =>
+        `<div class="day-tab ${ds === currentSelectedDate ? 'active' : ''}" data-date="${ds}">${dateLabelOf(ds)}</div>`
+      ).join('');
+      dayTabs.querySelectorAll('.day-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          currentSelectedDate = tab.dataset.date;
+          dayTabs.querySelectorAll('.day-tab').forEach(t => t.classList.toggle('active', t.dataset.date === currentSelectedDate));
+          renderSelectedDay();
+        });
+      });
+
+      renderSelectedDay();
+    } catch (err) {
+      list.innerHTML = '<div class="status-msg" style="color:var(--danger);">讀取失敗:' + err.message + '</div><div class="submit-row"><button class="small-btn" id="retryRenderLogBtn" style="background:var(--ochre);color:#2A2A2C;width:100%;">重試</button></div>';
+      document.getElementById('retryRenderLogBtn').addEventListener('click', renderLog);
+    }
   }
 
   function renderSelectedDay(){
@@ -1691,6 +1692,8 @@
         </div>
         <div class="entry-edit" style="display:none;">
           <textarea class="entry-edit-text" style="width:100%;min-height:80px;margin-top:6px;">${lines.join('\\n')}</textarea>
+          <label class="glabel" style="margin-top:8px;">紀錄時間</label>
+          <input type="datetime-local" class="entry-edit-time" value="${toDatetimeLocalValue(new Date(e.createdAtMs || Date.now()))}">
           <div class="mactions" style="margin-top:8px;">
             <button class="entry-save-btn small-btn" style="background:var(--pine);color:#F4F1E9;flex:1;">儲存</button>
             <button class="entry-cancel-btn small-btn" style="background:var(--card);color:var(--ink-soft);border:1px solid var(--line);flex:1;">取消</button>
@@ -1712,14 +1715,41 @@
       row.querySelector('.entry-save-btn').addEventListener('click', async () => {
         const text = row.querySelector('.entry-edit-text').value;
         const newParts = text.split('\n').map(s => s.trim()).filter(Boolean);
+        const timeVal = row.querySelector('.entry-edit-time').value;
+        const newTime = timeVal ? new Date(timeVal) : new Date();
         await updateDoc(doc(db, 'rooms', currentRoomId, 'entries', entryId), {
           content: newParts.join('。'),
-          contentParts: newParts
+          contentParts: newParts,
+          timeStr: newTime.getHours().toString().padStart(2,'0') + ':' + newTime.getMinutes().toString().padStart(2,'0'),
+          dateStr: dateStrOf(newTime),
+          createdAtMs: newTime.getTime()
         });
         await renderLog();
       });
       row.querySelector('.entry-delete-btn').addEventListener('click', async () => {
-        if (!confirm('確定要刪除這筆紀錄嗎?如果這筆有影響今日總計(進食量/飲水量等),刪除後總計會重新計算,但不會回推更早的乾糧/濕食/鮮食累計狀態。')) return;
+        if (!confirm('確定要刪除這筆紀錄嗎?')) return;
+        const snap = await getDoc(doc(db, 'rooms', currentRoomId, 'entries', entryId));
+        const data = snap.exists() ? snap.data() : null;
+        if (data && data.pendingSnapshot && Object.keys(data.pendingSnapshot).length){
+          // only safe to auto-revert a pending field if this is the MOST RECENT entry that touched it
+          const allEntriesSnap = await getDocs(collection(db, 'rooms', currentRoomId, 'entries'));
+          const stayEntries = [];
+          allEntriesSnap.forEach(d => { if (d.data().stayId === allRooms[currentRoomId].stayId) stayEntries.push({ id: d.id, ...d.data() }); });
+          const revertFields = {};
+          const skippedFields = [];
+          Object.keys(data.pendingSnapshot).forEach(field => {
+            const later = stayEntries.some(e2 => e2.id !== entryId && e2.pendingSnapshot && (field in e2.pendingSnapshot) && (e2.createdAtMs || 0) > (data.createdAtMs || 0));
+            if (!later) revertFields[field] = data.pendingSnapshot[field];
+            else skippedFields.push(field);
+          });
+          if (Object.keys(revertFields).length){
+            await updateDoc(doc(db, 'rooms', currentRoomId), revertFields);
+            Object.assign(allRooms[currentRoomId], revertFields);
+          }
+          if (skippedFields.length){
+            alert('提醒:這筆紀錄不是最新一筆影響「' + skippedFields.join('、') + '」的紀錄,系統不會自動回推記憶值,以免影響後面已經登打的紀錄。如果需要,建議直接補登一筆更正的紀錄。');
+          }
+        }
         await deleteDoc(doc(db, 'rooms', currentRoomId, 'entries', entryId));
         await renderLog();
       });
@@ -1749,6 +1779,7 @@
     let content = '';
     let warn = false;
     let grams = null, waterMl = null, peeGrams = null, peeCount = null, peeDiaperGrams = null, poopGrams = null;
+    let pendingSnapshot = {};
     const parts = [];
     let noteFieldId = 'noteText', timeFieldId = 'entryTime';
 
@@ -1814,6 +1845,7 @@
         const consumed = Math.max(prevPending - left, 0);
         foodTotal += consumed;
         roomUpdates.pendingWetGrams = served;
+        pendingSnapshot.pendingWetGrams = prevPending;
         parts.push('濕食餵食' + served + 'g' + (left ? '、關閉前次剩餘' + left + 'g(計入' + consumed + 'g)' : '(先不計入,待下次登記剩餘量時回推)'));
       }
       if (foods.includes('鮮食')){
@@ -1822,22 +1854,24 @@
         const consumed = Math.max(prevPending - left, 0);
         foodTotal += consumed;
         roomUpdates.pendingFreshGrams = served;
+        pendingSnapshot.pendingFreshGrams = prevPending;
         parts.push('鮮食餵食' + served + 'g' + (left ? '、關閉前次剩餘' + left + 'g(計入' + consumed + 'g)' : '(先不計入,待下次登記剩餘量時回推)'));
       }
       if (foods.length) grams = foodTotal;
+
+      const waterGive = numVal('ftWaterGiveMl');
+      const waterDiscard = numVal('ftWaterDiscardMl');
+      if (waterGive !== null || waterDiscard !== null){
+        const prevPendingWater = (allRooms[currentRoomId] && allRooms[currentRoomId].pendingWaterMl) || 0;
+        const consumedWater = Math.max(prevPendingWater - (waterDiscard || 0), 0);
+        waterMl = consumedWater;
+        roomUpdates.pendingWaterMl = waterGive || 0;
+        pendingSnapshot.pendingWaterMl = prevPendingWater;
+        parts.push('給水' + (waterGive || 0) + 'ML' + (waterDiscard ? '、關閉前次剩餘' + waterDiscard + 'ML(計入' + consumedWater + 'ML)' : '(先不計入,待下次登記剩餘量時回推)'));
+      }
       if (Object.keys(roomUpdates).length){
         await updateDoc(doc(db, 'rooms', currentRoomId), roomUpdates);
         Object.assign(allRooms[currentRoomId], roomUpdates);
-      }
-
-      const waterStatus = chipVal('ftWaterStatus');
-      if (waterStatus === '首次給水'){
-        const w = numVal('ftWaterFirstMl');
-        if (w !== null) parts.push('首次給水' + w + 'ML(先不計入今日飲水量)');
-      } else if (waterStatus === '更換水'){
-        const refill = numVal('ftWaterRefillMl') || 0, discard = numVal('ftWaterDiscardMl') || 0;
-        waterMl = Math.max(refill - discard, 0);
-        parts.push('更換水,補' + refill + 'ML−棄置' + discard + 'ML,計入' + waterMl + 'ML');
       }
 
       if (area === 'cat'){
@@ -1921,6 +1955,7 @@
       cat: panelLabels[panelId],
       content, contentParts, warn,
       grams, waterMl, peeGrams, peeCount, peeDiaperGrams, poopGrams,
+      pendingSnapshot,
       photoUrl: photoUrls[0] ? photoUrls[0].url : null,
       photoPath: photoUrls[0] ? photoUrls[0].path : null,
       photoUrls: photoUrls.map(p => p.url),
@@ -2007,10 +2042,16 @@
         }
         detailEl.innerHTML = '<div class="status-msg">讀取中...</div>';
         detailEl.style.display = 'block';
-        const entriesSnap = await getDocs(collection(db, 'rooms', h.roomId, 'entries'));
-        const entries = [];
-        entriesSnap.forEach(d => { const data = d.data(); if (data.stayId === h.stayId) entries.push(data); });
-        entries.sort((a,b) => (a.createdAtMs || 0) - (b.createdAtMs || 0));
+        let entries;
+        try {
+          const entriesSnap = await getDocs(collection(db, 'rooms', h.roomId, 'entries'));
+          entries = [];
+          entriesSnap.forEach(d => { const data = d.data(); if (data.stayId === h.stayId) entries.push(data); });
+          entries.sort((a,b) => (a.createdAtMs || 0) - (b.createdAtMs || 0));
+        } catch (err) {
+          detailEl.innerHTML = '<div class="status-msg" style="color:var(--danger);">讀取失敗:' + err.message + '</div>';
+          return;
+        }
         if (entries.length === 0){
           detailEl.innerHTML = '<div class="status-msg">這次住宿沒有留下紀錄</div>';
           return;
@@ -2149,60 +2190,69 @@
   async function renderMemberManageList(){
     const listEl = document.getElementById('memberManageList');
     listEl.innerHTML = '讀取中...';
+    try {
+      const [membersSnap, bindingsSnap] = await Promise.all([
+        getDocs(collection(db, 'members')),
+        getDocs(collection(db, 'lineBindings'))
+      ]);
 
-    const [membersSnap, bindingsSnap] = await Promise.all([
-      getDocs(collection(db, 'members')),
-      getDocs(collection(db, 'lineBindings'))
-    ]);
+      const lineByPhone = {};
+      bindingsSnap.forEach(d => { lineByPhone[d.data().phone] = d.id; });
 
-    const lineByPhone = {};
-    bindingsSnap.forEach(d => { lineByPhone[d.data().phone] = d.id; });
+      if (membersSnap.empty){
+        listEl.innerHTML = '<div class="status-msg">目前還沒有任何會員資料</div>';
+        return;
+      }
 
-    if (membersSnap.empty){
-      listEl.innerHTML = '<div class="status-msg">目前還沒有任何會員資料</div>';
-      return;
+      let html = '';
+      const membersByPhone = {};
+      membersSnap.forEach(d => {
+        const phone = d.id;
+        const m = d.data();
+        membersByPhone[phone] = m;
+        const petNames = new Set();
+        (m.history || []).forEach(h => { if (h.petName) petNames.add(h.petName); });
+        Object.values(allRooms).forEach(r => { if (r.phone === phone && r.name) petNames.add(r.name); });
+        const petText = petNames.size ? Array.from(petNames).join('、') : '（尚無寶貝紀錄）';
+        const lineId = lineByPhone[phone];
+
+        html += `
+          <div class="member-row" data-phone="${phone}">
+            <div class="mline">LINE 綁定:<b>${lineId ? lineId : '尚未綁定'}</b></div>
+            <div class="mline">姓名:<b>${m.name || '（尚未填寫）'}</b></div>
+            <div class="mline">寶貝:<b>${petText}</b></div>
+            <div class="mline">手機:<b>${phone}</b></div>
+            <div class="mactions">
+              <button class="m-edit" style="background:var(--ochre);color:#2A2A2C;">編輯</button>
+              <button class="m-delete" style="background:var(--danger-soft);color:var(--danger);">刪除</button>
+            </div>
+          </div>`;
+      });
+      listEl.innerHTML = html;
+
+      listEl.querySelectorAll('.member-row').forEach(row => {
+        const phone = row.dataset.phone;
+        row.querySelector('.m-edit').addEventListener('click', () => {
+          openManageEdit(phone, membersByPhone[phone]);
+        });
+        row.querySelector('.m-delete').addEventListener('click', async () => {
+          if (!confirm('確定要刪除「' + phone + '」的會員資料嗎?如果這位家長目前有寶貝在住,房間資料不會一併刪除,建議先確認沒有進行中的入住。')) return;
+          if (!confirm('這個動作無法復原,真的要刪除嗎?')) return;
+          await deleteDoc(doc(db, 'members', phone));
+          if (lineByPhone[phone]) await deleteDoc(doc(db, 'lineBindings', lineByPhone[phone]));
+          await renderMemberManageList();
+        });
+      });
+    } catch (err) {
+      listEl.innerHTML = '<div class="status-msg" style="color:var(--danger);">讀取失敗:' + err.message + '</div><div class="submit-row"><button class="small-btn" id="retryManageListBtn" style="background:var(--ochre);color:#2A2A2C;width:100%;">重試</button></div>';
+      document.getElementById('retryManageListBtn').addEventListener('click', renderMemberManageList);
     }
-
-    let html = '';
-    const membersByPhone = {};
-    membersSnap.forEach(d => {
-      const phone = d.id;
-      const m = d.data();
-      membersByPhone[phone] = m;
-      const petNames = new Set();
-      (m.history || []).forEach(h => { if (h.petName) petNames.add(h.petName); });
-      Object.values(allRooms).forEach(r => { if (r.phone === phone && r.name) petNames.add(r.name); });
-      const petText = petNames.size ? Array.from(petNames).join('、') : '（尚無寶貝紀錄）';
-      const lineId = lineByPhone[phone];
-
-      html += `
-        <div class="member-row" data-phone="${phone}">
-          <div class="mline">LINE 綁定:<b>${lineId ? lineId : '尚未綁定'}</b></div>
-          <div class="mline">姓名:<b>${m.name || '（尚未填寫）'}</b></div>
-          <div class="mline">寶貝:<b>${petText}</b></div>
-          <div class="mline">手機:<b>${phone}</b></div>
-          <div class="mactions">
-            <button class="m-edit" style="background:var(--ochre);color:#2A2A2C;">編輯</button>
-            <button class="m-delete" style="background:var(--danger-soft);color:var(--danger);">刪除</button>
-          </div>
-        </div>`;
-    });
-    listEl.innerHTML = html;
-
-    listEl.querySelectorAll('.member-row').forEach(row => {
-      const phone = row.dataset.phone;
-      row.querySelector('.m-edit').addEventListener('click', () => {
-        openManageEdit(phone, membersByPhone[phone]);
-      });
-      row.querySelector('.m-delete').addEventListener('click', async () => {
-        if (!confirm('確定要刪除「' + phone + '」的會員資料嗎?如果這位家長目前有寶貝在住,房間資料不會一併刪除,建議先確認沒有進行中的入住。')) return;
-        if (!confirm('這個動作無法復原,真的要刪除嗎?')) return;
-        await deleteDoc(doc(db, 'members', phone));
-        if (lineByPhone[phone]) await deleteDoc(doc(db, 'lineBindings', lineByPhone[phone]));
-        await renderMemberManageList();
-      });
-    });
   }
+
+  window.addEventListener('unhandledrejection', (event) => {
+    console.error('未預期的錯誤:', event.reason);
+    alert('發生未預期的錯誤,畫面可能沒有正常更新,建議重新整理頁面再試一次。\n錯誤內容:' + (event.reason && event.reason.message ? event.reason.message : event.reason));
+  });
 
   onAuthStateChanged(auth, async (user) => {
     if (!user){
