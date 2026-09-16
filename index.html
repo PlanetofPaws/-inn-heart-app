@@ -405,16 +405,19 @@
       tl.innerHTML = '<div class="status-msg">這天還沒有紀錄</div>';
       return;
     }
-    tl.innerHTML = dayEntries.map(e => `
+    tl.innerHTML = dayEntries.map(e => {
+      const lines = (e.contentParts && e.contentParts.length) ? e.contentParts : [e.content];
+      const photos = (e.photoUrls && e.photoUrls.length) ? e.photoUrls : (e.photoUrl ? [e.photoUrl] : []);
+      return `
       <div class="entry ${e.warn ? 'warn' : ''}">
         <div class="time">${e.timeStr}</div>
         <div class="body">
           <p class="cat">${e.cat}</p>
-          <p>${e.content}</p>
-          ${e.photoUrl ? '<img src="'+e.photoUrl+'" style="width:100%;max-height:220px;object-fit:cover;border-radius:10px;margin-top:8px;">' : ''}
+          ${lines.map(l => '<p style="margin-bottom:2px;">'+l+'</p>').join('')}
+          ${photos.map(u => '<img src="'+u+'" style="width:100%;max-height:220px;object-fit:cover;border-radius:10px;margin-top:8px;">').join('')}
         </div>
-      </div>
-    `).join('');
+      </div>`;
+    }).join('');
   }
 </script>
 </body>
