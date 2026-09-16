@@ -1048,7 +1048,9 @@
       notes: (notesList.length || notesOther) ? {list: notesList, other: notesOther, details: notesDetails} : null,
       checkinDate: checkinDisplay,
       avatarUrl: avatarUrl || null,
-      pendingDryGrams: 0
+      pendingDryGrams: 0,
+      pendingWetGrams: 0,
+      pendingFreshGrams: 0
     });
 
     await setDoc(doc(db, 'members', phone), {
@@ -1419,7 +1421,7 @@
         }
         chip.classList.toggle('active');
         onUpdate();
-      }, true); // capture: run before the generic toggle listener so we control the toggle ourselves
+      });
     });
   }
 
@@ -1442,8 +1444,9 @@
   document.querySelectorAll('.chip-row[data-multigroup="ftFood"] .chip').forEach(chip => {
     chip.addEventListener('click', () => {
       const willBeActive = !chip.classList.contains('active');
+      chip.classList.toggle('active');
       document.getElementById(ftFoodDetailMap[chip.dataset.val]).style.display = willBeActive ? 'block' : 'none';
-    }, true);
+    });
   });
 
   document.querySelectorAll('.chip-row[data-group="ftDryStatus"] .chip').forEach(chip => {
@@ -1537,6 +1540,8 @@
     });
   });
   document.querySelectorAll('.chip-row[data-multigroup] .chip').forEach(chip => {
+    const grp = chip.parentElement.dataset.multigroup;
+    if (['bcMood','bcDischarge','ftVomit','ftFood'].includes(grp)) return;
     chip.addEventListener('click', () => chip.classList.toggle('active'));
   });
 
@@ -1612,7 +1617,7 @@
     const stayId = allRooms[currentRoomId].stayId;
     const entriesSnap = await getDocs(collection(db, 'rooms', currentRoomId, 'entries'));
     const entries = [];
-    entriesSnap.forEach(d => { const data = d.data(); if (data.stayId === stayId) entries.push(data); });
+    entriesSnap.forEach(d => { const data = d.data(); if (data.stayId === stayId) entries.push({ ...data, id: d.id }); });
 
     currentEntriesByDate = {};
     entries.forEach(e => {
@@ -1670,13 +1675,55 @@
       list.innerHTML = '<div class="empty-note">這天還沒有紀錄</div>';
       return;
     }
-    list.innerHTML = dayEntries.map(e => `
-      <div class="log-entry ${e.warn ? 'warn' : ''}">
+    list.innerHTML = dayEntries.map(e => {
+      const lines = (e.contentParts && e.contentParts.length) ? e.contentParts : [e.content];
+      const photos = (e.photoUrls && e.photoUrls.length) ? e.photoUrls : (e.photoUrl ? [e.photoUrl] : []);
+      return `
+      <div class="log-entry ${e.warn ? 'warn' : ''}" data-entry-id="${e.id}">
         <div class="meta"><span>${e.timeStr} · ${e.cat}${e.staff ? '｜' + e.staff : ''}</span></div>
-        <p>${e.content}</p>
-        ${(e.photoUrls && e.photoUrls.length) ? e.photoUrls.map(u => '<img src="'+u+'" style="width:100%;max-height:220px;object-fit:cover;border-radius:10px;margin-top:8px;">').join('') : (e.photoUrl ? '<img src="'+e.photoUrl+'" style="width:100%;max-height:220px;object-fit:cover;border-radius:10px;margin-top:8px;">' : '')}
-      </div>
-    `).join('');
+        <div class="entry-view">
+          ${lines.map(l => '<div style="margin-bottom:2px;">'+l+'</div>').join('')}
+          ${photos.map(u => '<img src="'+u+'" style="width:100%;max-height:220px;object-fit:cover;border-radius:10px;margin-top:8px;">').join('')}
+          <div class="mactions" style="margin-top:8px;">
+            <button class="entry-edit-btn small-btn" style="background:var(--ochre);color:#2A2A2C;flex:1;">編輯</button>
+            <button class="entry-delete-btn small-btn" style="background:var(--danger-soft);color:var(--danger);flex:1;">刪除</button>
+          </div>
+        </div>
+        <div class="entry-edit" style="display:none;">
+          <textarea class="entry-edit-text" style="width:100%;min-height:80px;margin-top:6px;">${lines.join('\\n')}</textarea>
+          <div class="mactions" style="margin-top:8px;">
+            <button class="entry-save-btn small-btn" style="background:var(--pine);color:#F4F1E9;flex:1;">儲存</button>
+            <button class="entry-cancel-btn small-btn" style="background:var(--card);color:var(--ink-soft);border:1px solid var(--line);flex:1;">取消</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+
+    list.querySelectorAll('.log-entry').forEach(row => {
+      const entryId = row.dataset.entryId;
+      row.querySelector('.entry-edit-btn').addEventListener('click', () => {
+        row.querySelector('.entry-view').style.display = 'none';
+        row.querySelector('.entry-edit').style.display = 'block';
+      });
+      row.querySelector('.entry-cancel-btn').addEventListener('click', () => {
+        row.querySelector('.entry-edit').style.display = 'none';
+        row.querySelector('.entry-view').style.display = 'block';
+      });
+      row.querySelector('.entry-save-btn').addEventListener('click', async () => {
+        const text = row.querySelector('.entry-edit-text').value;
+        const newParts = text.split('\n').map(s => s.trim()).filter(Boolean);
+        await updateDoc(doc(db, 'rooms', currentRoomId, 'entries', entryId), {
+          content: newParts.join('。'),
+          contentParts: newParts
+        });
+        await renderLog();
+      });
+      row.querySelector('.entry-delete-btn').addEventListener('click', async () => {
+        if (!confirm('確定要刪除這筆紀錄嗎?如果這筆有影響今日總計(進食量/飲水量等),刪除後總計會重新計算,但不會回推更早的乾糧/濕食/鮮食累計狀態。')) return;
+        await deleteDoc(doc(db, 'rooms', currentRoomId, 'entries', entryId));
+        await renderLog();
+      });
+    });
   }
 
   function chipVal(group){
@@ -1760,17 +1807,28 @@
         }
         foodTotal += consumed;
       }
+      let roomUpdates = {};
       if (foods.includes('濕食')){
-        const g = numVal('ftWetGrams') || 0, left = numVal('ftWetLeftover') || 0;
-        foodTotal += Math.max(g - left, 0);
-        parts.push('濕食餵食' + g + 'g' + (left ? '、剩餘棄置' + left + 'g' : ''));
+        const served = numVal('ftWetGrams') || 0, left = numVal('ftWetLeftover') || 0;
+        const prevPending = (allRooms[currentRoomId] && allRooms[currentRoomId].pendingWetGrams) || 0;
+        const consumed = Math.max(prevPending - left, 0);
+        foodTotal += consumed;
+        roomUpdates.pendingWetGrams = served;
+        parts.push('濕食餵食' + served + 'g' + (left ? '、關閉前次剩餘' + left + 'g(計入' + consumed + 'g)' : '(先不計入,待下次登記剩餘量時回推)'));
       }
       if (foods.includes('鮮食')){
-        const g = numVal('ftFreshGrams') || 0, left = numVal('ftFreshLeftover') || 0;
-        foodTotal += Math.max(g - left, 0);
-        parts.push('鮮食餵食' + g + 'g' + (left ? '、剩餘棄置' + left + 'g' : ''));
+        const served = numVal('ftFreshGrams') || 0, left = numVal('ftFreshLeftover') || 0;
+        const prevPending = (allRooms[currentRoomId] && allRooms[currentRoomId].pendingFreshGrams) || 0;
+        const consumed = Math.max(prevPending - left, 0);
+        foodTotal += consumed;
+        roomUpdates.pendingFreshGrams = served;
+        parts.push('鮮食餵食' + served + 'g' + (left ? '、關閉前次剩餘' + left + 'g(計入' + consumed + 'g)' : '(先不計入,待下次登記剩餘量時回推)'));
       }
       if (foods.length) grams = foodTotal;
+      if (Object.keys(roomUpdates).length){
+        await updateDoc(doc(db, 'rooms', currentRoomId), roomUpdates);
+        Object.assign(allRooms[currentRoomId], roomUpdates);
+      }
 
       const waterStatus = chipVal('ftWaterStatus');
       if (waterStatus === '首次給水'){
@@ -1833,10 +1891,12 @@
     }
 
     const note = txtVal(noteFieldId);
-    if (note) content = content ? content + '。' + note : note;
+    if (note) parts.push('備註:' + note);
+    content = parts.join('。');
+    const contentParts = parts.slice();
 
     if (!content && entryPhotos.length === 0){ alert('請至少填寫一項狀況、備註或新增照片'); return false; }
-    if (!content) content = '（僅上傳照片）';
+    if (!content){ content = '（僅上傳照片）'; contentParts.push(content); }
 
     let photoUrls = [];
     if (entryPhotos.length){
@@ -1859,7 +1919,7 @@
     await addDoc(collection(db, 'rooms', currentRoomId, 'entries'), {
       stayId: allRooms[currentRoomId].stayId,
       cat: panelLabels[panelId],
-      content, warn,
+      content, contentParts, warn,
       grams, waterMl, peeGrams, peeCount, peeDiaperGrams, poopGrams,
       photoUrl: photoUrls[0] ? photoUrls[0].url : null,
       photoPath: photoUrls[0] ? photoUrls[0].path : null,
