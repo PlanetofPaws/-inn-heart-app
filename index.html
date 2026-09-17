@@ -94,6 +94,7 @@
     <div style="padding:20px 22px 0;display:flex;flex-direction:column;gap:12px;">
       <button class="login-btn" id="menuCurrentBtn" style="margin-top:0;">照護紀錄(現在住房中)</button>
       <button class="login-btn" id="menuHistoryBtn" style="margin-top:0;background:var(--ochre);">照護紀錄(歷史住房紀錄)</button>
+      <div id="menuLogoutLink" style="text-align:center;font-size:12px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:6px;">不是我的寶貝?換一支電話號碼</div>
     </div>
   </div>
 
@@ -124,7 +125,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-  import { getFirestore, collection, doc, getDoc, getDocs, setDoc } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+  import { getFirestore, collection, doc, getDoc, getDocs, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDF0t4WRcgRVGOApUdLn8Oj8VbHy6vMZp8",
@@ -166,6 +167,7 @@
   }
   let currentIdx = 0;
   let pendingLineUserId = null;
+  let myLineUserId = null;
 
   async function enterWithPhone(phone){
     const snap = await getDocs(collection(db, 'rooms'));
@@ -225,6 +227,7 @@
       }
       const profile = await liff.getProfile();
       const lineUserId = profile.userId;
+      myLineUserId = lineUserId;
       const bindingSnap = await getDoc(doc(db, 'lineBindings', lineUserId));
       if (bindingSnap.exists()){
         document.getElementById('loginNote').textContent = '';
@@ -257,6 +260,18 @@
 
   document.getElementById('menuCurrentBtn').addEventListener('click', () => enterMenuView('current'));
   document.getElementById('menuHistoryBtn').addEventListener('click', () => enterMenuView('history'));
+
+  document.getElementById('menuLogoutLink').addEventListener('click', async () => {
+    if (!confirm('確定要解除目前這支 LINE 帳號的綁定嗎?下次打開會需要重新輸入電話號碼。')) return;
+    if (myLineUserId){
+      try { await deleteDoc(doc(db, 'lineBindings', myLineUserId)); } catch (err) { /* ignore if already gone */ }
+    }
+    document.getElementById('phoneInput').value = '';
+    document.getElementById('loginNote').textContent = '請輸入正確的手機號碼重新綁定。';
+    document.getElementById('screenMenu').classList.remove('active');
+    document.getElementById('screenMain').classList.remove('active');
+    document.getElementById('screenLogin').classList.add('active');
+  });
   document.getElementById('menuBackLink').addEventListener('click', () => {
     document.getElementById('screenMain').classList.remove('active');
     document.getElementById('screenMenu').classList.add('active');
