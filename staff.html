@@ -812,7 +812,7 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
   import {
     getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc,
-    addDoc, query, orderBy, serverTimestamp, arrayUnion, writeBatch
+    addDoc, query, where, orderBy, serverTimestamp, arrayUnion, writeBatch
   } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
   import {
     getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut
@@ -1333,10 +1333,10 @@
       const room = allRooms[currentRoomId];
 
       // clean up this stay's photos to save Storage space, keep the text records
-      const entriesSnap = await getDocs(collection(db, 'rooms', currentRoomId, 'entries'));
+      const entriesSnap = await getDocs(query(collection(db, 'rooms', currentRoomId, 'entries'), where('stayId', '==', room.stayId)));
       for (const d of entriesSnap.docs){
         const data = d.data();
-        if (data.stayId === room.stayId){
+        {
           const paths = (data.photoPaths && data.photoPaths.length) ? data.photoPaths : (data.photoPath ? [data.photoPath] : []);
           if (paths.length){
             for (const p of paths){
@@ -1788,9 +1788,9 @@
     list.innerHTML = '讀取中...';
     try {
       const stayId = allRooms[currentRoomId].stayId;
-      const entriesSnap = await getDocs(collection(db, 'rooms', currentRoomId, 'entries'));
+      const entriesSnap = await getDocs(query(collection(db, 'rooms', currentRoomId, 'entries'), where('stayId', '==', stayId)));
       const entries = [];
-      entriesSnap.forEach(d => { const data = d.data(); if (data.stayId === stayId) entries.push({ ...data, id: d.id }); });
+      entriesSnap.forEach(d => { entries.push({ ...d.data(), id: d.id }); });
 
       currentEntriesByDate = {};
       entries.forEach(e => {
@@ -1879,9 +1879,9 @@
         const data = snap.exists() ? snap.data() : null;
         if (data && data.pendingSnapshot && Object.keys(data.pendingSnapshot).length){
           // only safe to auto-revert a pending field if this is the MOST RECENT entry that touched it
-          const allEntriesSnap = await getDocs(collection(db, 'rooms', currentRoomId, 'entries'));
+          const allEntriesSnap = await getDocs(query(collection(db, 'rooms', currentRoomId, 'entries'), where('stayId', '==', allRooms[currentRoomId].stayId)));
           const stayEntries = [];
-          allEntriesSnap.forEach(d => { if (d.data().stayId === allRooms[currentRoomId].stayId) stayEntries.push({ id: d.id, ...d.data() }); });
+          allEntriesSnap.forEach(d => { stayEntries.push({ id: d.id, ...d.data() }); });
           const revertFields = {};
           const skippedFields = [];
           Object.keys(data.pendingSnapshot).forEach(field => {
@@ -2163,9 +2163,9 @@
     // entry that touched each of those fields — otherwise leave the room state untouched
     let pendingWasSkipped = false;
     if (Object.keys(fields.roomUpdates).length || (oldData.pendingSnapshot && Object.keys(oldData.pendingSnapshot).length)){
-      const allEntriesSnap = await getDocs(collection(db, 'rooms', currentRoomId, 'entries'));
+      const allEntriesSnap = await getDocs(query(collection(db, 'rooms', currentRoomId, 'entries'), where('stayId', '==', allRooms[currentRoomId].stayId)));
       const stayEntries = [];
-      allEntriesSnap.forEach(d => { if (d.data().stayId === allRooms[currentRoomId].stayId) stayEntries.push({ id: d.id, ...d.data() }); });
+      allEntriesSnap.forEach(d => { stayEntries.push({ id: d.id, ...d.data() }); });
       const oldFields = Object.keys(oldData.pendingSnapshot || {});
       const newFields = Object.keys(fields.roomUpdates || {});
       const allTouchedFields = Array.from(new Set([...oldFields, ...newFields]));
@@ -2301,9 +2301,9 @@
         detailEl.style.display = 'block';
         let entries;
         try {
-          const entriesSnap = await getDocs(collection(db, 'rooms', h.roomId, 'entries'));
+          const entriesSnap = await getDocs(query(collection(db, 'rooms', h.roomId, 'entries'), where('stayId', '==', h.stayId)));
           entries = [];
-          entriesSnap.forEach(d => { const data = d.data(); if (data.stayId === h.stayId) entries.push(data); });
+          entriesSnap.forEach(d => { entries.push(d.data()); });
           entries.sort((a,b) => (a.createdAtMs || 0) - (b.createdAtMs || 0));
         } catch (err) {
           detailEl.innerHTML = '<div class="status-msg" style="color:var(--danger);">讀取失敗:' + err.message + '</div>';
