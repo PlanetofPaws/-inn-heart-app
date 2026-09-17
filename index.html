@@ -208,16 +208,17 @@
   }
 
   document.getElementById('loginBtn').addEventListener('click', async () => {
-    const phone = document.getElementById('phoneInput').value.trim();
     const note = document.getElementById('loginNote');
+    const phone = document.getElementById('phoneInput').value.trim();
     if (!phone){ note.textContent = '請輸入手機號碼'; return; }
     note.textContent = '查詢中...';
+    await liffReadyPromise; // make sure we know the LINE identity (if any) before binding, so fast typers don't lose the binding
     const ok = await enterWithPhone(phone);
     if (!ok) note.textContent = '目前查不到這支手機號碼的任何入住紀錄,請確認號碼是否正確,或洽詢櫃檯。';
   });
 
   // ---------- LINE LIFF auto-login ----------
-  (async function tryLineAutoLogin(){
+  let liffReadyPromise = (async function tryLineAutoLogin(){
     if (typeof liff === 'undefined') return; // not loaded (e.g. offline), fall back to manual login
     try {
       await liff.init({ liffId: '2011605439-ZiNr1cLk' });
