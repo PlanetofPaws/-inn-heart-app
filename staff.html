@@ -621,10 +621,10 @@
         <div class="detail-card-title">乾糧</div>
         <div class="three-col">
           <div><label class="glabel">餵食(g)</label><input type="number" min="0" id="ftDryFed" placeholder="這次加了多少"></div>
-          <div><label class="glabel">棄置(g)</label><input type="number" min="0" id="ftDryDiscard" placeholder="倒掉多少"></div>
-          <div><label class="glabel">剩餘(g)</label><input type="number" min="0" id="ftDryRemaining" placeholder="現在還有多少"></div>
+          <div><label class="glabel">剩餘棄置(g)</label><input type="number" min="0" id="ftDryDiscard" placeholder="倒掉的剩餘量"></div>
+          <div><label class="glabel">剩餘保留(g)</label><input type="number" min="0" id="ftDryKeep" placeholder="留著的剩餘量"></div>
         </div>
-        <div style="font-size:11.5px;color:var(--ink-soft);margin-top:6px;">三格互相獨立,想填哪個就填哪個,系統會自動算出這段時間吃了多少。</div>
+        <div style="font-size:11.5px;color:var(--ink-soft);margin-top:6px;">剩餘棄置 = 這次把之前留下的量倒掉不要了;剩餘保留 = 留著繼續給,會自動跟這次的餵食量加在一起。兩者擇一填寫即可,系統會自動算出這段時間吃了多少。</div>
       </div>
       <div class="detail-card" id="ftWetDetail" style="display:none;">
         <div class="detail-card-title">濕食</div>
@@ -696,7 +696,7 @@
     <!-- 特殊紀錄:活動紀錄 -->
     <div class="cat-panel" data-panel="spActivity">
       <div class="sub-group">
-        <span class="glabel">放風時間(分鐘)</span>
+        <div class="glabel-row"><span class="glabel" style="margin:0;">放風時間(分鐘)</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
         <input type="number" min="0" id="spActivityMinutes">
       </div>
       <div class="sub-group">
@@ -713,7 +713,7 @@
     <!-- 特殊紀錄:異常狀況 -->
     <div class="cat-panel" data-panel="spAbnormal">
       <div class="sub-group">
-        <span class="glabel">狀況(可複選)</span>
+        <div class="glabel-row"><span class="glabel" style="margin:0;">狀況(可複選)</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
         <div class="chip-row" data-multigroup="spAbnormalType">
           <div class="chip" data-val="無">無</div>
           <div class="chip warn" data-val="持續踱步">持續踱步</div>
@@ -735,7 +735,7 @@
     <!-- 特殊紀錄:用藥紀錄 -->
     <div class="cat-panel" data-panel="spMed">
       <div class="sub-group">
-        <span class="glabel">投藥結果</span>
+        <div class="glabel-row"><span class="glabel" style="margin:0;">投藥結果</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
         <div class="chip-row" data-group="spMedResult">
           <div class="chip" data-val="已成功投藥">已成功投藥</div>
           <div class="chip warn" data-val="投藥失敗">投藥失敗</div>
@@ -756,7 +756,7 @@
     <!-- 特殊紀錄:用藥後觀察 -->
     <div class="cat-panel" data-panel="spMedObs">
       <div class="sub-group">
-        <span class="glabel">觀察(可複選)</span>
+        <div class="glabel-row"><span class="glabel" style="margin:0;">觀察(可複選)</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
         <div class="chip-row" data-multigroup="spMedObsType">
           <div class="chip" data-val="無異常">無異常</div>
           <div class="chip warn" data-val="有吐藥流涎(流口水)">有吐藥流涎(流口水)</div>
@@ -767,7 +767,10 @@
 
     <!-- 特殊紀錄:其他 -->
     <div class="cat-panel" data-panel="spOther">
-      <div class="status-msg">直接在下方「備註說明」填寫即可。</div>
+      <div class="sub-group">
+        <div class="glabel-row"><span class="glabel" style="margin:0;">其他</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
+        <div class="status-msg" style="padding:0;text-align:left;">直接在下方「備註說明」填寫即可。</div>
+      </div>
     </div>
 
     <div class="field" id="specialNoteWrap" style="display:none;">
@@ -1410,22 +1413,51 @@
     });
   });
 
+  function withTimeout(promise, ms, label){
+    let timer;
+    const timeout = new Promise((_, reject) => {
+      timer = setTimeout(() => reject(new Error(label + ' 逾時(超過 ' + Math.round(ms/1000) + ' 秒沒有回應),請檢查網路連線,或重新整理頁面再試一次。')), ms);
+    });
+    return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+  }
+
+  async function guardedSubmit(btn, label, fn){
+    if (btn.disabled) return; // already in progress, ignore extra taps
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.style.opacity = '0.6';
+    btn.textContent = label + '中...';
+    try {
+      await withTimeout(fn(), 20000, label);
+    } catch (err) {
+      alert(label + '失敗:' + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      // restore the label the way the surrounding logic expects (e.g. "儲存修改" during edit mode)
+      btn.textContent = editingEntryId ? '儲存修改' : originalText;
+    }
+  }
+
   document.getElementById('continueToFeedtoiletBtn').addEventListener('click', async () => {
-    if (editingEntryId){ await saveEditedEntry('bodycheck'); return; }
-    const ok = await createEntry('bodycheck');
-    if (!ok) return;
-    document.querySelectorAll('#sessionSubTabs .cat-tab').forEach(t => t.classList.remove('active'));
-    document.querySelector('#sessionSubTabs .cat-tab[data-sub="feedtoilet"]').classList.add('active');
-    showPanel('feedtoilet');
+    const btn = document.getElementById('continueToFeedtoiletBtn');
+    await guardedSubmit(btn, '送出', async () => {
+      if (editingEntryId){ await saveEditedEntry('bodycheck'); return; }
+      const ok = await createEntry('bodycheck');
+      if (!ok) return;
+      document.querySelectorAll('#sessionSubTabs .cat-tab').forEach(t => t.classList.remove('active'));
+      document.querySelector('#sessionSubTabs .cat-tab[data-sub="feedtoilet"]').classList.add('active');
+      showPanel('feedtoilet');
+    });
   });
 
   document.getElementById('ftSubmitBtn').addEventListener('click', () => {
-    if (editingEntryId) return saveEditedEntry('feedtoilet');
-    return createEntry('feedtoilet');
+    const btn = document.getElementById('ftSubmitBtn');
+    return guardedSubmit(btn, '送出', () => editingEntryId ? saveEditedEntry('feedtoilet') : createEntry('feedtoilet'));
   });
   document.getElementById('submitBtn').addEventListener('click', () => {
-    if (editingEntryId) return saveEditedEntry(currentPanel);
-    return createEntry(currentPanel);
+    const btn = document.getElementById('submitBtn');
+    return guardedSubmit(btn, '送出', () => editingEntryId ? saveEditedEntry(currentPanel) : createEntry(currentPanel));
   });
 
   // ---------- shared: inline photo mini-buttons ----------
@@ -1434,9 +1466,9 @@
   // ---------- bodycheck field toggles (fixed: react on the click itself, not one click late) ----------
   ['bcSkin','bcSpirit'].forEach(group => {
     document.querySelectorAll('.chip-row[data-group="'+group+'"] .chip').forEach(chip => {
-      chip.addEventListener('click', () => {
-        const willBeActive = !chip.classList.contains('active');
-        document.getElementById(group + 'Note').style.display = (willBeActive && chip.dataset.val === '異常') ? 'block' : 'none';
+      chip.addEventListener('chipchange', () => {
+        const isActive = chip.classList.contains('active');
+        document.getElementById(group + 'Note').style.display = (isActive && chip.dataset.val === '異常') ? 'block' : 'none';
       });
     });
   });
@@ -1484,17 +1516,17 @@
   });
 
   document.querySelectorAll('.chip-row[data-group="ftPeeDogType"] .chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      const willBeActive = !chip.classList.contains('active');
-      document.getElementById('ftPeeDogPadWrap').style.display = (willBeActive && chip.dataset.val === '尿布墊') ? 'block' : 'none';
-      document.getElementById('ftPeeDogOutWrap').style.display = (willBeActive && chip.dataset.val === '戶外') ? 'block' : 'none';
+    chip.addEventListener('chipchange', () => {
+      const isActive = chip.classList.contains('active');
+      document.getElementById('ftPeeDogPadWrap').style.display = (isActive && chip.dataset.val === '尿布墊') ? 'block' : 'none';
+      document.getElementById('ftPeeDogOutWrap').style.display = (isActive && chip.dataset.val === '戶外') ? 'block' : 'none';
     });
   });
 
   document.querySelectorAll('.chip-row[data-group="spMedResult"] .chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      const willBeActive = !chip.classList.contains('active');
-      document.getElementById('spMedFailReasonWrap').style.display = (willBeActive && chip.dataset.val === '投藥失敗') ? 'block' : 'none';
+    chip.addEventListener('chipchange', () => {
+      const isActive = chip.classList.contains('active');
+      document.getElementById('spMedFailReasonWrap').style.display = (isActive && chip.dataset.val === '投藥失敗') ? 'block' : 'none';
     });
   });
 
@@ -1710,10 +1742,10 @@
 
   function wireMedCategory(prefix){
     document.querySelectorAll('.chip-row[data-group="'+prefix+'MedCategory"] .chip').forEach(chip => {
-      chip.addEventListener('click', () => {
-        const willBeActive = !chip.classList.contains('active');
-        document.getElementById(prefix + 'MedOralTypeWrap').style.display = (willBeActive && chip.dataset.val === '口服藥') ? 'flex' : 'none';
-        document.getElementById(prefix + 'MedTopicalTypeWrap').style.display = (willBeActive && chip.dataset.val === '外用藥') ? 'flex' : 'none';
+      chip.addEventListener('chipchange', () => {
+        const isActive = chip.classList.contains('active');
+        document.getElementById(prefix + 'MedOralTypeWrap').style.display = (isActive && chip.dataset.val === '口服藥') ? 'flex' : 'none';
+        document.getElementById(prefix + 'MedTopicalTypeWrap').style.display = (isActive && chip.dataset.val === '外用藥') ? 'flex' : 'none';
       });
     });
   }
@@ -1938,18 +1970,25 @@
       const foods = chipVals('ftFood');
       let foodTotal = 0;
       if (foods.includes('乾糧')){
-        const fed = numVal('ftDryFed');
+        const fed = numVal('ftDryFed') || 0;
         const discard = numVal('ftDryDiscard');
-        const remaining = numVal('ftDryRemaining');
+        const keep = numVal('ftDryKeep');
         const prevPending = (allRooms[currentRoomId] && allRooms[currentRoomId].pendingDryGrams) || 0;
-        const consumed = (remaining !== null) ? Math.max(prevPending - remaining, 0) : 0;
-        const newPending = (remaining !== null ? remaining : prevPending) - (discard || 0) + (fed || 0);
+        let consumed = 0;
+        let newPending = prevPending + fed;
+        if (keep !== null){
+          consumed = Math.max(prevPending - keep, 0);
+          newPending = keep + fed;
+        } else if (discard !== null){
+          consumed = Math.max(prevPending - discard, 0);
+          newPending = fed;
+        }
         foodTotal += consumed;
         roomUpdates.pendingDryGrams = Math.max(newPending, 0);
         pendingSnapshot.pendingDryGrams = prevPending;
-        if (fed !== null) parts.push('乾糧 餵食' + fed + 'g');
-        if (discard !== null) parts.push('乾糧 棄置' + discard + 'g');
-        if (remaining !== null) parts.push('乾糧 剩餘' + remaining + 'g');
+        if (fed) parts.push('乾糧 餵食' + fed + 'g');
+        if (discard !== null) parts.push('乾糧 剩餘棄置' + discard + 'g');
+        if (keep !== null) parts.push('乾糧 剩餘保留' + keep + 'g');
       }
       if (foods.includes('濕食')){
         const served = numVal('ftWetGrams') || 0, left = numVal('ftWetLeftover') || 0;
