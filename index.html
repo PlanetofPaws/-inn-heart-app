@@ -169,7 +169,7 @@
   let pendingLineUserId = null;
   let myLineUserId = null;
 
-  async function enterWithPhone(phone){
+  async function fetchStaysForPhone(phone){
     const snap = await getDocs(collection(db, 'rooms'));
     myStays = [];
     snap.forEach(d => {
@@ -191,8 +191,19 @@
       });
     }
     myStays.forEach(s => { if (s.isActive && !s.avatarUrl) s.avatarUrl = memberAvatarUrl; });
+    return myStays.length > 0;
+  }
 
-    if (myStays.length === 0) return false;
+  function finalizeEntry(phone){
+    document.getElementById('phoneEcho').textContent = '家長 ' + phone;
+    document.getElementById('phoneEcho2').textContent = '家長 ' + phone;
+    document.getElementById('screenLogin').classList.remove('active');
+    document.getElementById('screenMenu').classList.add('active');
+  }
+
+  async function enterWithPhone(phone){
+    const found = await fetchStaysForPhone(phone);
+    if (!found) return false;
 
     // first time binding via LINE: remember this LINE account so next visit skips the phone screen
     if (pendingLineUserId){
@@ -200,10 +211,7 @@
       pendingLineUserId = null;
     }
 
-    document.getElementById('phoneEcho').textContent = '家長 ' + phone;
-    document.getElementById('phoneEcho2').textContent = '家長 ' + phone;
-    document.getElementById('screenLogin').classList.remove('active');
-    document.getElementById('screenMenu').classList.add('active');
+    finalizeEntry(phone);
     return true;
   }
 
@@ -212,9 +220,14 @@
     const phone = document.getElementById('phoneInput').value.trim();
     if (!phone){ note.textContent = '請輸入手機號碼'; return; }
     note.textContent = '查詢中...';
-    await liffReadyPromise; // make sure we know the LINE identity (if any) before binding, so fast typers don't lose the binding
-    const ok = await enterWithPhone(phone);
-    if (!ok) note.textContent = '目前查不到這支手機號碼的任何入住紀錄,請確認號碼是否正確,或洽詢櫃檯。';
+    // run the LINE identity check and the phone lookup at the same time instead of one after another
+    const [, found] = await Promise.all([liffReadyPromise, fetchStaysForPhone(phone)]);
+    if (!found){ note.textContent = '目前查不到這支手機號碼的任何入住紀錄,請確認號碼是否正確,或洽詢櫃檯。'; return; }
+    if (pendingLineUserId){
+      await setDoc(doc(db, 'lineBindings', pendingLineUserId), { phone });
+      pendingLineUserId = null;
+    }
+    finalizeEntry(phone);
   });
 
   // ---------- LINE LIFF auto-login ----------
