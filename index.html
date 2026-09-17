@@ -266,6 +266,7 @@
     if (!confirm('確定要解除目前這支 LINE 帳號的綁定嗎?下次打開會需要重新輸入電話號碼。')) return;
     if (myLineUserId){
       try { await deleteDoc(doc(db, 'lineBindings', myLineUserId)); } catch (err) { /* ignore if already gone */ }
+      pendingLineUserId = myLineUserId; // re-arm binding so the next phone entered actually gets saved
     }
     document.getElementById('phoneInput').value = '';
     document.getElementById('loginNote').textContent = '請輸入正確的手機號碼重新綁定。';
