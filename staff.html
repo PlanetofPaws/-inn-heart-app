@@ -1871,42 +1871,49 @@
         </div>
       </div>`;
     }).join('');
-
-    list.querySelectorAll('.log-entry').forEach(row => {
-      const entryId = row.dataset.entryId;
-      const entryData = dayEntries.find(e => e.id === entryId);
-      row.querySelector('.entry-edit-btn').addEventListener('click', () => {
-        jumpToEditEntry(entryId, entryData);
-      });
-      row.querySelector('.entry-delete-btn').addEventListener('click', async () => {
-        if (!confirm('確定要刪除這筆紀錄嗎?')) return;
-        const snap = await getDoc(doc(db, 'rooms', currentRoomId, 'entries', entryId));
-        const data = snap.exists() ? snap.data() : null;
-        if (data && data.pendingSnapshot && Object.keys(data.pendingSnapshot).length){
-          // only safe to auto-revert a pending field if this is the MOST RECENT entry that touched it
-          const allEntriesSnap = await getDocs(query(collection(db, 'rooms', currentRoomId, 'entries'), where('stayId', '==', allRooms[currentRoomId].stayId)));
-          const stayEntries = [];
-          allEntriesSnap.forEach(d => { stayEntries.push({ id: d.id, ...d.data() }); });
-          const revertFields = {};
-          const skippedFields = [];
-          Object.keys(data.pendingSnapshot).forEach(field => {
-            const later = stayEntries.some(e2 => e2.id !== entryId && e2.pendingSnapshot && (field in e2.pendingSnapshot) && (e2.createdAtMs || 0) > (data.createdAtMs || 0));
-            if (!later) revertFields[field] = data.pendingSnapshot[field];
-            else skippedFields.push(field);
-          });
-          if (Object.keys(revertFields).length){
-            await updateDoc(doc(db, 'rooms', currentRoomId), revertFields);
-            Object.assign(allRooms[currentRoomId], revertFields);
-          }
-          if (skippedFields.length){
-            alert('提醒:這筆紀錄不是最新一筆影響「' + skippedFields.join('、') + '」的紀錄,系統不會自動回推記憶值,以免影響後面已經登打的紀錄。如果需要,建議直接補登一筆更正的紀錄。');
-          }
-        }
-        await deleteDoc(doc(db, 'rooms', currentRoomId, 'entries', entryId));
-        await renderLog();
-      });
-    });
   }
+
+  // one-time event delegation for the log list — avoids rebinding a listener per row on every re-render,
+  // which used to get slower as a stay accumulated more entries
+  document.getElementById('logList').addEventListener('click', async (event) => {
+    const row = event.target.closest('.log-entry');
+    if (!row) return;
+    const entryId = row.dataset.entryId;
+    const dayEntries = currentEntriesByDate[currentSelectedDate] || [];
+    const entryData = dayEntries.find(e => e.id === entryId);
+
+    if (event.target.closest('.entry-edit-btn')){
+      jumpToEditEntry(entryId, entryData);
+      return;
+    }
+    if (event.target.closest('.entry-delete-btn')){
+      if (!confirm('確定要刪除這筆紀錄嗎?')) return;
+      const snap = await getDoc(doc(db, 'rooms', currentRoomId, 'entries', entryId));
+      const data = snap.exists() ? snap.data() : null;
+      if (data && data.pendingSnapshot && Object.keys(data.pendingSnapshot).length){
+        // only safe to auto-revert a pending field if this is the MOST RECENT entry that touched it
+        const allEntriesSnap = await getDocs(query(collection(db, 'rooms', currentRoomId, 'entries'), where('stayId', '==', allRooms[currentRoomId].stayId)));
+        const stayEntries = [];
+        allEntriesSnap.forEach(d => { stayEntries.push({ id: d.id, ...d.data() }); });
+        const revertFields = {};
+        const skippedFields = [];
+        Object.keys(data.pendingSnapshot).forEach(field => {
+          const later = stayEntries.some(e2 => e2.id !== entryId && e2.pendingSnapshot && (field in e2.pendingSnapshot) && (e2.createdAtMs || 0) > (data.createdAtMs || 0));
+          if (!later) revertFields[field] = data.pendingSnapshot[field];
+          else skippedFields.push(field);
+        });
+        if (Object.keys(revertFields).length){
+          await updateDoc(doc(db, 'rooms', currentRoomId), revertFields);
+          Object.assign(allRooms[currentRoomId], revertFields);
+        }
+        if (skippedFields.length){
+          alert('提醒:這筆紀錄不是最新一筆影響「' + skippedFields.join('、') + '」的紀錄,系統不會自動回推記憶值,以免影響後面已經登打的紀錄。如果需要,建議直接補登一筆更正的紀錄。');
+        }
+      }
+      await deleteDoc(doc(db, 'rooms', currentRoomId, 'entries', entryId));
+      await renderLog();
+    }
+  });
 
   function chipVal(group){
     const c = document.querySelector('.chip-row[data-group="'+group+'"] .chip.active');
@@ -2093,22 +2100,21 @@
   }
 
   async function uploadEntryPhotos(){
-    const photoUrls = [];
-    if (entryPhotos.length){
-      try {
-        for (const file of entryPhotos){
-          const compressed = await compressImage(file, 1200, 0.75);
-          const photoPath = 'entries/' + currentRoomId + '/' + Date.now() + '-' + Math.random().toString(36).slice(2,7) + '.jpg';
-          const photoRef = ref(storage, photoPath);
-          await uploadBytes(photoRef, compressed);
-          const url = await getDownloadURL(photoRef);
-          photoUrls.push({ url, path: photoPath });
-        }
-      } catch (err) {
-        return { error: '照片上傳失敗(可能是 Storage 尚未設定完成)。可以先移除照片、只送出文字紀錄。' };
-      }
+    if (!entryPhotos.length) return { photoUrls: [] };
+    try {
+      const uploadOne = async (file) => {
+        const compressed = await compressImage(file, 1200, 0.75);
+        const photoPath = 'entries/' + currentRoomId + '/' + Date.now() + '-' + Math.random().toString(36).slice(2,7) + '.jpg';
+        const photoRef = ref(storage, photoPath);
+        await uploadBytes(photoRef, compressed);
+        const url = await getDownloadURL(photoRef);
+        return { url, path: photoPath };
+      };
+      const photoUrls = await Promise.all(entryPhotos.map(uploadOne));
+      return { photoUrls };
+    } catch (err) {
+      return { error: '照片上傳失敗(可能是 Storage 尚未設定完成)。可以先移除照片、只送出文字紀錄。' };
     }
-    return { photoUrls };
   }
 
   let editingEntryId = null;
@@ -2116,12 +2122,14 @@
   async function createEntry(panelId){
     const fields = buildEntryFields(panelId);
     if (fields.error){ alert(fields.error); return false; }
-    const photoResult = await uploadEntryPhotos();
+
+    const roomWritePromise = Object.keys(fields.roomUpdates).length
+      ? updateDoc(doc(db, 'rooms', currentRoomId), fields.roomUpdates)
+      : Promise.resolve();
+    const [photoResult] = await Promise.all([uploadEntryPhotos(), roomWritePromise]);
     if (photoResult.error){ alert(photoResult.error); return false; }
     const photoUrls = photoResult.photoUrls;
-
     if (Object.keys(fields.roomUpdates).length){
-      await updateDoc(doc(db, 'rooms', currentRoomId), fields.roomUpdates);
       Object.assign(allRooms[currentRoomId], fields.roomUpdates);
     }
 
@@ -2147,6 +2155,7 @@
     });
 
     resetPanelFields(panelId);
+    document.getElementById(fields.noteFieldId).value = '';
     document.getElementById(fields.timeFieldId).value = toDatetimeLocalValue(new Date());
     entryPhotos = [];
     await renderLog();
@@ -2157,11 +2166,12 @@
     const entryId = editingEntryId;
     const fields = buildEntryFields(panelId);
     if (fields.error){ alert(fields.error); return false; }
-    const photoResult = await uploadEntryPhotos();
+    const [photoResult, oldSnap] = await Promise.all([
+      uploadEntryPhotos(),
+      getDoc(doc(db, 'rooms', currentRoomId, 'entries', entryId))
+    ]);
     if (photoResult.error){ alert(photoResult.error); return false; }
     const newPhotoUrls = photoResult.photoUrls;
-
-    const oldSnap = await getDoc(doc(db, 'rooms', currentRoomId, 'entries', entryId));
     const oldData = oldSnap.exists() ? oldSnap.data() : {};
 
     // only safe to recompute the room "pending" memory if this is still the most recent
@@ -2222,6 +2232,9 @@
     }
 
     exitEditMode();
+    resetPanelFields(panelId);
+    document.getElementById(fields.noteFieldId).value = '';
+    document.getElementById(fields.timeFieldId).value = toDatetimeLocalValue(new Date());
     entryPhotos = [];
     await renderLog();
     return true;
