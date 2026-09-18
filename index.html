@@ -376,35 +376,43 @@
       return;
     }
 
-    const entriesSnap = await getDocs(collection(db, 'rooms', room.id, 'entries'));
-    const entries = [];
-    entriesSnap.forEach(d => { const data = d.data(); if (data.stayId === room.stayId) entries.push(data); });
+    document.getElementById('summaryStrip').innerHTML = '';
+    document.getElementById('dayTabs').innerHTML = '';
+    document.getElementById('timeline').innerHTML = '<div class="status-msg">讀取中...</div>';
+    try {
+      const entriesSnap = await getDocs(collection(db, 'rooms', room.id, 'entries'));
+      const entries = [];
+      entriesSnap.forEach(d => { const data = d.data(); if (data.stayId === room.stayId) entries.push(data); });
 
-    currentEntriesByDate = {};
-    entries.forEach(e => {
-      const ds = e.dateStr || dateStrOf(new Date(e.createdAtMs || Date.now()));
-      if (!currentEntriesByDate[ds]) currentEntriesByDate[ds] = [];
-      currentEntriesByDate[ds].push(e);
-    });
-    const today = dateStrOf(new Date());
-    if (room.isActive && !currentEntriesByDate[today]) currentEntriesByDate[today] = [];
-    const dates = Object.keys(currentEntriesByDate).sort().reverse();
-    currentSelectedDate = room.isActive ? today : (dates[0] || today);
-    if (!currentEntriesByDate[currentSelectedDate]) currentEntriesByDate[currentSelectedDate] = [];
-
-    const dayTabs = document.getElementById('dayTabs');
-    dayTabs.innerHTML = dates.map(ds =>
-      `<div class="day-tab ${ds === currentSelectedDate ? 'active' : ''}" data-date="${ds}">${dateLabelOf(ds)}</div>`
-    ).join('');
-    dayTabs.querySelectorAll('.day-tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        currentSelectedDate = tab.dataset.date;
-        dayTabs.querySelectorAll('.day-tab').forEach(t => t.classList.toggle('active', t.dataset.date === currentSelectedDate));
-        renderSelectedDay();
+      currentEntriesByDate = {};
+      entries.forEach(e => {
+        const ds = e.dateStr || dateStrOf(new Date(e.createdAtMs || Date.now()));
+        if (!currentEntriesByDate[ds]) currentEntriesByDate[ds] = [];
+        currentEntriesByDate[ds].push(e);
       });
-    });
+      const today = dateStrOf(new Date());
+      if (room.isActive && !currentEntriesByDate[today]) currentEntriesByDate[today] = [];
+      const dates = Object.keys(currentEntriesByDate).sort().reverse();
+      currentSelectedDate = room.isActive ? today : (dates[0] || today);
+      if (!currentEntriesByDate[currentSelectedDate]) currentEntriesByDate[currentSelectedDate] = [];
 
-    renderSelectedDay();
+      const dayTabs = document.getElementById('dayTabs');
+      dayTabs.innerHTML = dates.map(ds =>
+        `<div class="day-tab ${ds === currentSelectedDate ? 'active' : ''}" data-date="${ds}">${dateLabelOf(ds)}</div>`
+      ).join('');
+      dayTabs.querySelectorAll('.day-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          currentSelectedDate = tab.dataset.date;
+          dayTabs.querySelectorAll('.day-tab').forEach(t => t.classList.toggle('active', t.dataset.date === currentSelectedDate));
+          renderSelectedDay();
+        });
+      });
+
+      renderSelectedDay();
+    } catch (err) {
+      document.getElementById('timeline').innerHTML = '<div class="status-msg" style="color:#E57373;">讀取失敗:' + err.message + '(請截圖回報)</div><div style="text-align:center;margin-top:8px;"><button id="retryRenderPetBtn" style="background:#B39DDB;border:none;border-radius:12px;padding:9px 20px;font-size:13.5px;cursor:pointer;">重試</button></div>';
+      document.getElementById('retryRenderPetBtn').addEventListener('click', renderPet);
+    }
   }
 
   function renderSelectedDay(){
