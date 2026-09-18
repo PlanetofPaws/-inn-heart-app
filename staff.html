@@ -64,6 +64,7 @@
     width:100%;border:1px solid var(--line);background:var(--card);border-radius:12px;
     padding:10px 13px;font-family:'Noto Sans TC',sans-serif;font-size:14.5px;color:var(--ink);
   }
+  textarea{min-height:70px;resize:vertical;}
   .chip-row{display:flex;flex-wrap:wrap;gap:8px;}
   .chip{padding:8px 14px;border-radius:20px;border:1px solid var(--line);background:var(--card);font-size:13.5px;color:var(--ink-soft);cursor:pointer;user-select:none;}
   .chip.active{background:var(--pine);border-color:var(--pine);color:#F4F1E9;}
@@ -530,6 +531,7 @@
         <div class="cat-tab" data-sub="sleep">睡眠評估</div>
         <div class="cat-tab" data-sub="activity">活動評估</div>
         <div class="cat-tab" data-sub="medication">保健與用藥紀錄</div>
+        <div class="cat-tab" data-sub="otherNote">其他</div>
       </div>
     </div>
 
@@ -879,12 +881,6 @@
           <div class="chip warn" data-val="地上翻滾磨蹭">地上翻滾磨蹭</div>
         </div>
       </div>
-      <div class="sub-group">
-        <div id="medOtherToggle" style="text-align:center;font-size:13px;color:var(--ochre);text-decoration:underline;cursor:pointer;">＋ 其他(點擊自行登打)</div>
-        <div id="medOtherTextWrap" style="display:none;margin-top:8px;">
-          <textarea id="medOtherText"></textarea>
-        </div>
-      </div>
       <div class="field">
         <label>備註說明</label>
         <textarea id="medicationNoteText"></textarea>
@@ -894,7 +890,22 @@
         <input type="datetime-local" id="medicationEntryTime">
       </div>
       <div class="submit-row">
-        <button class="submit-btn" id="medicationSubmitBtn">送出保健與用藥紀錄</button>
+        <button class="small-btn" id="medicationSubmitBtn" style="background:var(--pine);color:#F4F1E9;width:100%;">送出保健與用藥紀錄,並繼續填寫其他</button>
+      </div>
+    </div>
+
+    <!-- 其他(自行登打) -->
+    <div class="cat-panel" data-panel="otherNote">
+      <div class="field">
+        <label>其他(自行登打)</label>
+        <textarea id="otherNoteText" style="min-height:160px;"></textarea>
+      </div>
+      <div class="field">
+        <label>紀錄時間</label>
+        <input type="datetime-local" id="otherNoteEntryTime">
+      </div>
+      <div class="submit-row">
+        <button class="submit-btn" id="otherNoteSubmitBtn">送出</button>
       </div>
     </div>
 
@@ -1600,23 +1611,26 @@
 
   async function changeRoom(oldRoomId, newRoomId){
     const oldRoom = allRooms[oldRoomId];
-    await setDoc(doc(db, 'rooms', newRoomId), {
-      area: allRooms[newRoomId].area, no: allRooms[newRoomId].no,
-      name: oldRoom.name, phone: oldRoom.phone, stayId: oldRoom.stayId,
-      items: oldRoom.items || null, notes: oldRoom.notes || null, avatarUrl: oldRoom.avatarUrl || null,
-      checkinDate: oldRoom.checkinDate || '',
-      pendingDryGrams: oldRoom.pendingDryGrams || 0, pendingWetGrams: oldRoom.pendingWetGrams || 0,
-      pendingFreshGrams: oldRoom.pendingFreshGrams || 0, pendingWaterMl: oldRoom.pendingWaterMl || 0
-    });
+    const [, entriesSnap] = await Promise.all([
+      setDoc(doc(db, 'rooms', newRoomId), {
+        area: allRooms[newRoomId].area, no: allRooms[newRoomId].no,
+        name: oldRoom.name, phone: oldRoom.phone, stayId: oldRoom.stayId,
+        items: oldRoom.items || null, notes: oldRoom.notes || null, avatarUrl: oldRoom.avatarUrl || null,
+        checkinDate: oldRoom.checkinDate || '',
+        pendingDryGrams: oldRoom.pendingDryGrams || 0, pendingWetGrams: oldRoom.pendingWetGrams || 0,
+        pendingFreshGrams: oldRoom.pendingFreshGrams || 0, pendingWaterMl: oldRoom.pendingWaterMl || 0,
+        mergedRooms: oldRoom.mergedRooms || null
+      }),
+      getDocs(query(collection(db, 'rooms', oldRoomId, 'entries'), where('stayId', '==', oldRoom.stayId)))
+    ]);
 
-    const entriesSnap = await getDocs(query(collection(db, 'rooms', oldRoomId, 'entries'), where('stayId', '==', oldRoom.stayId)));
-    for (const d of entriesSnap.docs){
-      await setDoc(doc(db, 'rooms', newRoomId, 'entries', d.id), d.data());
-      await deleteDoc(d.ref);
-    }
+    await Promise.all([
+      ...entriesSnap.docs.map(d => setDoc(doc(db, 'rooms', newRoomId, 'entries', d.id), d.data()).then(() => deleteDoc(d.ref))),
+      ...(oldRoom.mergedRooms || []).map(rid => setDoc(doc(db, 'rooms', rid), { area: allRooms[rid].area, no: allRooms[rid].no, mergedInto: newRoomId }, { merge: true }))
+    ]);
 
     await setDoc(doc(db, 'rooms', oldRoomId), {
-      area: oldRoom.area, no: oldRoom.no, name: null, phone: null, stayId: null, items: null, notes: null, avatarUrl: null
+      area: oldRoom.area, no: oldRoom.no, name: null, phone: null, stayId: null, items: null, notes: null, avatarUrl: null, mergedRooms: null
     });
 
     await loadRooms();
@@ -1689,20 +1703,16 @@
     try {
       const room = allRooms[currentRoomId];
 
-      // clean up this stay's photos to save Storage space, keep the text records
+      // clean up this stay's photos to save Storage space, keep the text records (done in parallel for speed)
       const entriesSnap = await getDocs(query(collection(db, 'rooms', currentRoomId, 'entries'), where('stayId', '==', room.stayId)));
-      for (const d of entriesSnap.docs){
+      await Promise.all(entriesSnap.docs.map(async (d) => {
         const data = d.data();
-        {
-          const paths = (data.photoPaths && data.photoPaths.length) ? data.photoPaths : (data.photoPath ? [data.photoPath] : []);
-          if (paths.length){
-            for (const p of paths){
-              try { await deleteObject(ref(storage, p)); } catch (err) { /* file may already be gone, ignore */ }
-            }
-            await updateDoc(d.ref, { photoUrl: null, photoPath: null, photoUrls: [], photoPaths: [] });
-          }
+        const paths = (data.photoPaths && data.photoPaths.length) ? data.photoPaths : (data.photoPath ? [data.photoPath] : []);
+        if (paths.length){
+          await Promise.all(paths.map(p => deleteObject(ref(storage, p)).catch(() => {})));
+          await updateDoc(d.ref, { photoUrl: null, photoPath: null, photoUrls: [], photoPaths: [] });
         }
-      }
+      }));
 
       await setDoc(doc(db, 'members', room.phone), {
         history: arrayUnion({
@@ -1713,9 +1723,17 @@
           avatarUrl: room.avatarUrl || null
         })
       }, { merge: true });
+
+      // release any rooms that were merged into this stay
+      const mergedIds = room.mergedRooms || [];
+      await Promise.all(mergedIds.map(rid => setDoc(doc(db, 'rooms', rid), {
+        area: allRooms[rid].area, no: allRooms[rid].no,
+        mergedInto: null, name: null, phone: null, stayId: null, items: null, notes: null, avatarUrl: null
+      })));
+
       await setDoc(doc(db, 'rooms', currentRoomId), {
         area: room.area, no: room.no, name: null, phone: null, stayId: null, items: null, notes: null,
-        avatarUrl: null
+        avatarUrl: null, mergedRooms: null
       });
       await loadRooms();
       showScreen('screenRooms');
@@ -1816,9 +1834,11 @@
     submitAndChain(document.getElementById('sleepSubmitBtn'), 'sleep', 'activity'));
   document.getElementById('activitySubmitBtn').addEventListener('click', () =>
     submitAndChain(document.getElementById('activitySubmitBtn'), 'activity', 'medication'));
-  document.getElementById('medicationSubmitBtn').addEventListener('click', () => {
-    const btn = document.getElementById('medicationSubmitBtn');
-    return guardedSubmit(btn, '送出', () => editingEntryId ? saveEditedEntry('medication') : createEntry('medication'));
+  document.getElementById('medicationSubmitBtn').addEventListener('click', () =>
+    submitAndChain(document.getElementById('medicationSubmitBtn'), 'medication', 'otherNote'));
+  document.getElementById('otherNoteSubmitBtn').addEventListener('click', () => {
+    const btn = document.getElementById('otherNoteSubmitBtn');
+    return guardedSubmit(btn, '送出', () => editingEntryId ? saveEditedEntry('otherNote') : createEntry('otherNote'));
   });
   document.getElementById('submitBtn').addEventListener('click', () => {
     const btn = document.getElementById('submitBtn');
@@ -1902,13 +1922,6 @@
       document.getElementById('incidentNotifyTimeWrap').style.display = isYes ? 'block' : 'none';
       document.getElementById('incidentCopyBtnWrap').style.display = isYes ? 'block' : 'none';
     });
-  });
-
-  document.getElementById('medOtherToggle').addEventListener('click', () => {
-    const wrap = document.getElementById('medOtherTextWrap');
-    const nowShown = wrap.style.display === 'none';
-    wrap.style.display = nowShown ? 'block' : 'none';
-    if (nowShown) document.getElementById('medOtherText').focus();
   });
 
   document.getElementById('incidentCopyBtn').addEventListener('click', async () => {
@@ -2084,7 +2097,7 @@
 
     const labelMap = {
       bodycheck: 'continueToFeedtoiletBtn', feedtoilet: 'ftSubmitBtn', sleep: 'sleepSubmitBtn',
-      activity: 'activitySubmitBtn', medication: 'medicationSubmitBtn'
+      activity: 'activitySubmitBtn', medication: 'medicationSubmitBtn', otherNote: 'otherNoteSubmitBtn'
     };
     const btnId = labelMap[panelId] || 'submitBtn';
     document.getElementById(btnId).textContent = '儲存修改';
@@ -2116,7 +2129,7 @@
     showPanel('bodycheck');
     resetPanelFields('bodycheck');
     resetPanelFields('feedtoilet');
-    ['sleep','activity','medication','spOther'].forEach(resetPanelFields);
+    ['sleep','activity','medication','otherNote','spOther'].forEach(resetPanelFields);
     document.getElementById('noteText').value = '';
     entryPhotos = [];
     document.getElementById('bcEntryTime').value = toDatetimeLocalValue(new Date());
@@ -2124,6 +2137,7 @@
     document.getElementById('sleepEntryTime').value = toDatetimeLocalValue(new Date());
     document.getElementById('activityEntryTime').value = toDatetimeLocalValue(new Date());
     document.getElementById('medicationEntryTime').value = toDatetimeLocalValue(new Date());
+    document.getElementById('otherNoteEntryTime').value = toDatetimeLocalValue(new Date());
     applyAreaVisibility();
   }
 
@@ -2467,7 +2481,7 @@
   function txtVal(id){ return document.getElementById(id).value.trim(); }
 
   const panelLabels = {
-    bodycheck:'身心評估', feedtoilet:'進食與排泄評估', sleep:'睡眠評估', activity:'活動評估', medication:'保健與用藥紀錄', spOther:'住宿／照護事件'
+    bodycheck:'身心評估', feedtoilet:'進食與排泄評估', sleep:'睡眠評估', activity:'活動評估', medication:'保健與用藥紀錄', otherNote:'其他', spOther:'住宿／照護事件'
   };
 
   function buildEntryFields(panelId){
@@ -2676,9 +2690,11 @@
         if (obsTypes.length === 1 && obsTypes[0] === '無明顯異狀') parts.push('用藥後沒有明顯異狀');
         else { parts.push('用藥後出現' + obsTypes.filter(v => v !== '無明顯異狀').join('、')); warn = true; }
       }
-      const otherText = txtVal('medOtherText');
-      if (otherText) parts.push(otherText);
       content = parts.join('，');
+    }
+
+    if (panelId === 'otherNote'){
+      noteFieldId = 'otherNoteText'; timeFieldId = 'otherNoteEntryTime';
     }
 
     if (panelId === 'spOther'){
@@ -2859,7 +2875,8 @@
     document.getElementById('ftSubmitBtn').textContent = '送出進食與排泄評估,並繼續填寫睡眠評估';
     document.getElementById('sleepSubmitBtn').textContent = '送出睡眠評估,並繼續填寫活動評估';
     document.getElementById('activitySubmitBtn').textContent = '送出活動評估,並繼續填寫保健與用藥紀錄';
-    document.getElementById('medicationSubmitBtn').textContent = '送出保健與用藥紀錄';
+    document.getElementById('medicationSubmitBtn').textContent = '送出保健與用藥紀錄,並繼續填寫其他';
+    document.getElementById('otherNoteSubmitBtn').textContent = '送出';
     document.getElementById('submitBtn').textContent = '送出這筆紀錄';
     document.getElementById('editModeBanner').style.display = 'none';
   }
