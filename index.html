@@ -124,7 +124,8 @@
       <div class="avatar" id="mainAvatar"></div>
       <div class="hero-text">
         <p class="loc" id="mainLoc"></p>
-        <h1 id="mainName"></h1>
+        <h1 id="mainName" style="display:inline;"></h1>
+        <span id="moodIcon" style="font-size:20px;margin-left:6px;" title=""></span>
       </div>
     </div>
 
@@ -133,6 +134,7 @@
     <div id="snackArea"></div>
 
     <div class="summary-strip" id="summaryStrip"></div>
+    <div id="dayHighlight" style="padding:0 22px 12px;font-size:13px;color:var(--ink-soft);"></div>
 
     <div class="day-tabs" id="dayTabs"></div>
     <div class="timeline" id="timeline"></div>
@@ -515,10 +517,35 @@
     }
   }
 
+  const moodIconMap = { '活潑':'😄', '一般':'🙂', '較安靜':'😌', '休息或是睡眠較多':'😴', '反應異常':'⚠️' };
+
+  function computeMoodIcon(allEntries){
+    const bodychecks = allEntries.filter(e => e.panelId === 'bodycheck' && e.formSnapshot && e.formSnapshot.chips && e.formSnapshot.chips['bcSpiritState'] && e.formSnapshot.chips['bcSpiritState'].length)
+      .sort((a,b) => (b.createdAtMs || 0) - (a.createdAtMs || 0));
+    if (!bodychecks.length) return null;
+    const spirit = bodychecks[0].formSnapshot.chips['bcSpiritState'][0];
+    return { icon: moodIconMap[spirit] || '🙂', label: spirit };
+  }
+
+  function computeTodayHighlight(dayEntries){
+    if (!dayEntries || !dayEntries.length) return '今日尚無紀錄';
+    const warnEntries = dayEntries.slice().sort((a,b) => (a.createdAtMs || 0) - (b.createdAtMs || 0)).filter(e => e.warn);
+    if (!warnEntries.length) return '📝 今日重點:狀況穩定,目前沒有異常紀錄';
+    const bits = warnEntries.slice(-3).map(e => (e.contentParts && e.contentParts[0]) || e.content).filter(Boolean);
+    return '📝 今日重點:' + bits.join('；');
+  }
+
   function renderSelectedDay(){
     const dayEntries = (currentEntriesByDate[currentSelectedDate] || []).slice().sort((a,b) => (b.createdAtMs || 0) - (a.createdAtMs || 0));
     const room = visibleStays[currentIdx];
     const area = room ? room.area : 'cat';
+
+    const allStayEntries = Object.values(currentEntriesByDate).flat();
+    const mood = computeMoodIcon(allStayEntries);
+    const moodEl = document.getElementById('moodIcon');
+    if (mood){ moodEl.textContent = mood.icon; moodEl.title = '精神狀態:' + mood.label; }
+    else { moodEl.textContent = ''; moodEl.title = ''; }
+    document.getElementById('dayHighlight').textContent = computeTodayHighlight(dayEntries);
 
     const totalGrams = dayEntries.reduce((s,e) => s + (e.grams || 0), 0);
     const totalWater = dayEntries.reduce((s,e) => s + (e.waterMl || 0), 0);
@@ -553,7 +580,7 @@
         <div class="time">${e.timeStr}</div>
         <div class="body">
           <p class="cat">${e.cat}</p>
-          ${lines.map(l => '<p style="margin-bottom:2px;">'+l+'</p>').join('')}
+          <p>${lines.join('，')}</p>
           ${photos.map(u => '<img src="'+u+'" style="width:100%;max-height:220px;object-fit:cover;border-radius:10px;margin-top:8px;">').join('')}
         </div>
       </div>`;
