@@ -1357,7 +1357,8 @@
           petName: room.name, area: room.area, no: room.no,
           roomId: currentRoomId, stayId: room.stayId,
           checkinDate: room.checkinDate || '',
-          checkedOutAt: new Date().toLocaleString('zh-TW')
+          checkedOutAt: new Date().toLocaleString('zh-TW'),
+          avatarUrl: room.avatarUrl || null
         })
       }, { merge: true });
       await setDoc(doc(db, 'rooms', currentRoomId), {
