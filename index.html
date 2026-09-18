@@ -124,8 +124,7 @@
       <div class="avatar" id="mainAvatar"></div>
       <div class="hero-text">
         <p class="loc" id="mainLoc"></p>
-        <h1 id="mainName" style="display:inline;"></h1>
-        <span id="moodIcon" style="font-size:20px;margin-left:6px;" title=""></span>
+        <h1 id="mainName"></h1>
       </div>
     </div>
 
@@ -134,6 +133,7 @@
     <div id="snackArea"></div>
 
     <div class="summary-strip" id="summaryStrip"></div>
+    <div id="moodRow" style="padding:0 22px 4px;font-size:13px;color:var(--ink-soft);display:flex;align-items:center;gap:6px;"></div>
     <div id="dayHighlight" style="padding:0 22px 12px;font-size:13px;color:var(--ink-soft);"></div>
 
     <div class="day-tabs" id="dayTabs"></div>
@@ -542,9 +542,8 @@
 
     const allStayEntries = Object.values(currentEntriesByDate).flat();
     const mood = computeMoodIcon(allStayEntries);
-    const moodEl = document.getElementById('moodIcon');
-    if (mood){ moodEl.textContent = mood.icon; moodEl.title = '精神狀態:' + mood.label; }
-    else { moodEl.textContent = ''; moodEl.title = ''; }
+    const moodRowEl = document.getElementById('moodRow');
+    moodRowEl.innerHTML = mood ? '<span style="font-size:20px;">' + mood.icon + '</span><span>目前精神狀態:' + mood.label + '</span>' : '';
     document.getElementById('dayHighlight').textContent = computeTodayHighlight(dayEntries);
 
     const totalGrams = dayEntries.reduce((s,e) => s + (e.grams || 0), 0);
