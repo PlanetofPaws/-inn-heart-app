@@ -372,7 +372,6 @@
         <div class="loc" id="recordLoc">貓貓區 · 3 號房</div>
         <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;">
           <h1 id="recordName" style="margin:0;">抹茶</h1>
-          <span id="moodIcon" style="font-size:20px;" title=""></span>
           <span id="notesBadge" style="font-size:11.5px;cursor:pointer;"></span>
         </div>
         <div class="loc" id="recordMember" style="margin-top:4px;text-decoration:underline;cursor:pointer;">家長 0912-345-678</div>
@@ -488,6 +487,24 @@
 
     <div class="field">
       <button id="printBtn" class="small-btn" style="background:var(--ochre);">匯出並列印紀錄</button>
+    </div>
+    <div class="field">
+      <button id="changeRoomBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);width:100%;">🔄 換房間</button>
+    </div>
+    <div class="field" id="changeRoomPanel" style="display:none;">
+      <label>選擇要換到的空房</label>
+      <div id="changeRoomList" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+    </div>
+    <div class="field">
+      <button id="mergeRoomBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);width:100%;">🔗 合併房間</button>
+    </div>
+    <div class="field" id="mergeRoomPanel" style="display:none;">
+      <label>選擇要併入的空房(併入後那間房會跟這隻寶貝共用同一筆入住資料)</label>
+      <div id="mergeRoomList" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+    </div>
+    <div id="mergedRoomsInfo" style="display:none;" class="field">
+      <label>已合併的房間</label>
+      <div id="mergedRoomsList" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
     </div>
     <div class="field">
       <button class="submit-btn" id="checkoutBtn" style="background:var(--danger);">辦理退房</button>
@@ -626,6 +643,7 @@
       <div class="sub-group">
         <div class="glabel-row"><span class="glabel" style="margin:0;">進食紀錄(可複選)</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
         <div id="ftSupplementHint"></div>
+        <input type="text" id="ftSupplementAmount" placeholder="加保健食品,量" style="margin-bottom:8px;">
         <div class="chip-row" data-multigroup="ftFood">
           <div class="chip" data-val="乾糧">乾糧</div>
           <div class="chip" data-val="濕食">濕食</div>
@@ -861,9 +879,11 @@
           <div class="chip warn" data-val="地上翻滾磨蹭">地上翻滾磨蹭</div>
         </div>
       </div>
-      <div class="field">
-        <label>其他(自行登打)</label>
-        <textarea id="medOtherText"></textarea>
+      <div class="sub-group">
+        <div id="medOtherToggle" style="text-align:center;font-size:13px;color:var(--ochre);text-decoration:underline;cursor:pointer;">＋ 其他(點擊自行登打)</div>
+        <div id="medOtherTextWrap" style="display:none;margin-top:8px;">
+          <textarea id="medOtherText"></textarea>
+        </div>
       </div>
       <div class="field">
         <label>備註說明</label>
@@ -890,10 +910,11 @@
           <div class="chip warn" data-val="寵物自行脫離／逃脫風險事件">寵物自行脫離／逃脫風險事件</div>
           <div class="chip warn" data-val="與其他寵物互動">與其他寵物互動</div>
           <div class="chip warn" data-val="發生特殊事件">發生特殊事件</div>
+          <div class="chip warn" data-val="其他">其他</div>
         </div>
       </div>
       <div class="field">
-        <label>特殊狀況</label>
+        <label>事情經過/原因</label>
         <textarea id="incidentDetail"></textarea>
       </div>
       <div class="field">
@@ -940,6 +961,7 @@
       <h2>入住紀錄</h2>
       <div class="day-tabs" id="dayTabs"></div>
       <div class="summary-strip" id="summaryStrip"></div>
+      <div id="moodRow" style="padding:0 22px 4px;font-size:13px;color:var(--ink-soft);display:flex;align-items:center;gap:6px;"></div>
       <div id="dayHighlight" style="padding:0 22px 12px;font-size:13px;color:var(--ink-soft);"></div>
       <div id="logList"><div class="empty-note">目前還沒有紀錄</div></div>
     </div>
@@ -964,7 +986,7 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
   import {
     getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc,
-    addDoc, query, where, orderBy, serverTimestamp, arrayUnion, writeBatch
+    addDoc, query, where, orderBy, serverTimestamp, arrayUnion, arrayRemove, writeBatch
   } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
   import {
     getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut
@@ -1043,7 +1065,11 @@
     for (let i = 1; i <= count; i++){
       const id = roomId(currentArea, i);
       const room = allRooms[id] || {name:null};
-      if (!room.name){
+      if (room.mergedInto){
+        const primary = allRooms[room.mergedInto];
+        const label = primary ? '併入' + primary.no + '號房' : '已合併';
+        html += `<div class="room-btn" data-id="${id}" data-merged-into="${room.mergedInto}" style="opacity:0.6;"><div class="no">${i} 號房</div><div class="name">🔗 ${label}</div></div>`;
+      } else if (!room.name){
         html += `<div class="room-btn" data-id="${id}" data-empty="1"><div class="no">${i} 號房</div><div class="name">＋ 新入住</div></div>`;
       } else {
         html += `<div class="room-btn" data-id="${id}"><div class="no">${i} 號房</div><div class="name">${room.name}</div></div>`;
@@ -1052,7 +1078,8 @@
     grid.innerHTML = html;
     grid.querySelectorAll('.room-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        if (btn.dataset.empty) openCheckin(btn.dataset.id);
+        if (btn.dataset.mergedInto) openRecord(btn.dataset.mergedInto);
+        else if (btn.dataset.empty) openCheckin(btn.dataset.id);
         else openRecord(btn.dataset.id);
       });
     });
@@ -1106,22 +1133,27 @@
     showScreen('screenCheckin');
   }
 
-  document.getElementById('ciMemberNo').addEventListener('blur', async () => {
+  async function tryPrefillCiAvatar(){
     const phone = document.getElementById('ciMemberNo').value.trim();
-    if (!phone || ciNewAvatarFile) return;
+    const petName = document.getElementById('ciPetName').value.trim();
+    if (!phone) return;
     const snap = await getDoc(doc(db, 'members', phone));
-    if (snap.exists()){
-      if (snap.data().name && !document.getElementById('ciMemberName').value.trim()){
-        document.getElementById('ciMemberName').value = snap.data().name;
-      }
-      if (snap.data().avatarUrl){
-        ciExistingAvatarUrl = snap.data().avatarUrl;
-        document.getElementById('ciAvatarPreview').src = ciExistingAvatarUrl;
-        document.getElementById('ciAvatarPreview').style.display = 'block';
-        document.getElementById('ciAvatarNote').textContent = '偵測到這支手機之前上傳過的照片,預設會沿用;如需更換請直接上傳新照片。';
-      }
+    if (!snap.exists()) return;
+    const data = snap.data();
+    if (data.name && !document.getElementById('ciMemberName').value.trim()){
+      document.getElementById('ciMemberName').value = data.name;
     }
-  });
+    if (!petName || ciNewAvatarFile) return;
+    const petAvatarUrl = data.petAvatars && data.petAvatars[petName];
+    if (petAvatarUrl){
+      ciExistingAvatarUrl = petAvatarUrl;
+      document.getElementById('ciAvatarPreview').src = petAvatarUrl;
+      document.getElementById('ciAvatarPreview').style.display = 'block';
+      document.getElementById('ciAvatarNote').textContent = '偵測到「' + petName + '」之前上傳過的照片,預設會沿用;如需更換請直接上傳新照片。';
+    }
+  }
+  document.getElementById('ciMemberNo').addEventListener('blur', tryPrefillCiAvatar);
+  document.getElementById('ciPetName').addEventListener('blur', tryPrefillCiAvatar);
 
   document.getElementById('ciAvatarInput').addEventListener('change', (e) => {
     const file = e.target.files[0];
@@ -1231,7 +1263,7 @@
     await setDoc(doc(db, 'members', phone), {
       updatedAt: serverTimestamp(),
       ...(document.getElementById('ciMemberName').value.trim() ? { name: document.getElementById('ciMemberName').value.trim() } : {}),
-      ...(avatarUrl ? { avatarUrl } : {})
+      ...(avatarUrl ? { petAvatars: { [petName]: avatarUrl } } : {})
     }, { merge: true });
 
     await loadRooms();
@@ -1258,6 +1290,9 @@
     renderNotesCard(room);
     renderFoodHints(room);
     renderMedHints(room);
+    renderMergedRoomsInfo(room);
+    document.getElementById('changeRoomPanel').style.display = 'none';
+    document.getElementById('mergeRoomPanel').style.display = 'none';
     showScreen('screenRecord');
     await renderLog();
   }
@@ -1539,6 +1574,116 @@
     printStay(meta, itemsText, notesText, currentEntriesByDate);
   });
 
+  document.getElementById('changeRoomBtn').addEventListener('click', () => {
+    const panel = document.getElementById('changeRoomPanel');
+    const isOpen = panel.style.display !== 'none';
+    if (isOpen){ panel.style.display = 'none'; return; }
+    const listEl = document.getElementById('changeRoomList');
+    const emptyRooms = Object.values(allRooms).filter(r => !r.name && !r.mergedInto);
+    if (!emptyRooms.length){
+      listEl.innerHTML = '<div class="status-msg">目前沒有空房可以換</div>';
+    } else {
+      listEl.innerHTML = emptyRooms.map(r =>
+        `<div class="chip" data-room-id="${roomId(r.area, r.no)}">${r.area === 'cat' ? '貓' : '狗'}・${r.no}號房</div>`
+      ).join('');
+      listEl.querySelectorAll('.chip').forEach(chip => {
+        chip.addEventListener('click', async () => {
+          const newRoomId = chip.dataset.roomId;
+          const newRoomLabel = chip.textContent;
+          if (!confirm('確定要把「' + allRooms[currentRoomId].name + '」換到 ' + newRoomLabel + ' 嗎?所有紀錄會一併搬過去。')) return;
+          await changeRoom(currentRoomId, newRoomId);
+        });
+      });
+    }
+    panel.style.display = 'block';
+  });
+
+  async function changeRoom(oldRoomId, newRoomId){
+    const oldRoom = allRooms[oldRoomId];
+    await setDoc(doc(db, 'rooms', newRoomId), {
+      area: allRooms[newRoomId].area, no: allRooms[newRoomId].no,
+      name: oldRoom.name, phone: oldRoom.phone, stayId: oldRoom.stayId,
+      items: oldRoom.items || null, notes: oldRoom.notes || null, avatarUrl: oldRoom.avatarUrl || null,
+      checkinDate: oldRoom.checkinDate || '',
+      pendingDryGrams: oldRoom.pendingDryGrams || 0, pendingWetGrams: oldRoom.pendingWetGrams || 0,
+      pendingFreshGrams: oldRoom.pendingFreshGrams || 0, pendingWaterMl: oldRoom.pendingWaterMl || 0
+    });
+
+    const entriesSnap = await getDocs(query(collection(db, 'rooms', oldRoomId, 'entries'), where('stayId', '==', oldRoom.stayId)));
+    for (const d of entriesSnap.docs){
+      await setDoc(doc(db, 'rooms', newRoomId, 'entries', d.id), d.data());
+      await deleteDoc(d.ref);
+    }
+
+    await setDoc(doc(db, 'rooms', oldRoomId), {
+      area: oldRoom.area, no: oldRoom.no, name: null, phone: null, stayId: null, items: null, notes: null, avatarUrl: null
+    });
+
+    await loadRooms();
+    document.getElementById('changeRoomPanel').style.display = 'none';
+    alert('已換到新房間。');
+    openRecord(newRoomId);
+  }
+
+  document.getElementById('mergeRoomBtn').addEventListener('click', () => {
+    const panel = document.getElementById('mergeRoomPanel');
+    const isOpen = panel.style.display !== 'none';
+    if (isOpen){ panel.style.display = 'none'; return; }
+    const listEl = document.getElementById('mergeRoomList');
+    const emptyRooms = Object.values(allRooms).filter(r => !r.name && !r.mergedInto && roomId(r.area, r.no) !== currentRoomId);
+    if (!emptyRooms.length){
+      listEl.innerHTML = '<div class="status-msg">目前沒有空房可以合併</div>';
+    } else {
+      listEl.innerHTML = emptyRooms.map(r =>
+        `<div class="chip" data-room-id="${roomId(r.area, r.no)}">${r.area === 'cat' ? '貓' : '狗'}・${r.no}號房</div>`
+      ).join('');
+      listEl.querySelectorAll('.chip').forEach(chip => {
+        chip.addEventListener('click', async () => {
+          const secondaryId = chip.dataset.roomId;
+          const secondaryLabel = chip.textContent;
+          if (!confirm('確定要把 ' + secondaryLabel + ' 併入這次入住嗎?併入後那間房會暫時無法單獨拿來安排別的寶貝。')) return;
+          await setDoc(doc(db, 'rooms', secondaryId), {
+            area: allRooms[secondaryId].area, no: allRooms[secondaryId].no,
+            mergedInto: currentRoomId
+          }, { merge: true });
+          await updateDoc(doc(db, 'rooms', currentRoomId), { mergedRooms: arrayUnion(secondaryId) });
+          await loadRooms();
+          document.getElementById('mergeRoomPanel').style.display = 'none';
+          renderMergedRoomsInfo(allRooms[currentRoomId]);
+          alert('已合併。');
+        });
+      });
+    }
+    panel.style.display = 'block';
+  });
+
+  function renderMergedRoomsInfo(room){
+    const infoEl = document.getElementById('mergedRoomsInfo');
+    const listEl = document.getElementById('mergedRoomsList');
+    const merged = room.mergedRooms || [];
+    if (!merged.length){ infoEl.style.display = 'none'; return; }
+    infoEl.style.display = 'block';
+    listEl.innerHTML = merged.map(rid => {
+      const r = allRooms[rid];
+      const label = r ? (r.area === 'cat' ? '貓' : '狗') + '・' + r.no + '號房' : rid;
+      return `<div class="chip warn" data-room-id="${rid}">${label} · 取消合併</div>`;
+    }).join('');
+    listEl.querySelectorAll('.chip').forEach(chip => {
+      chip.addEventListener('click', async () => {
+        const secondaryId = chip.dataset.roomId;
+        if (!confirm('確定要取消合併這間房嗎?取消後那間房會變回空房。')) return;
+        await setDoc(doc(db, 'rooms', secondaryId), {
+          area: allRooms[secondaryId].area, no: allRooms[secondaryId].no,
+          mergedInto: null, name: null, phone: null, stayId: null, items: null, notes: null, avatarUrl: null
+        });
+        await updateDoc(doc(db, 'rooms', currentRoomId), { mergedRooms: arrayRemove(secondaryId) });
+        await loadRooms();
+        renderMergedRoomsInfo(allRooms[currentRoomId]);
+        alert('已取消合併。');
+      });
+    });
+  }
+
   document.getElementById('checkoutBtn').addEventListener('click', async () => {
     if (!confirm('確定要辦理退房嗎?退房後這次住宿的照片會自動刪除以節省空間,文字紀錄會保留。')) return;
     try {
@@ -1759,6 +1904,13 @@
     });
   });
 
+  document.getElementById('medOtherToggle').addEventListener('click', () => {
+    const wrap = document.getElementById('medOtherTextWrap');
+    const nowShown = wrap.style.display === 'none';
+    wrap.style.display = nowShown ? 'block' : 'none';
+    if (nowShown) document.getElementById('medOtherText').focus();
+  });
+
   document.getElementById('incidentCopyBtn').addEventListener('click', async () => {
     const room = allRooms[currentRoomId];
     const types = Array.from(document.querySelectorAll('.chip-row[data-multigroup="incidentType"] .chip.active')).map(c => c.dataset.val);
@@ -1766,7 +1918,7 @@
       '【(inn)heart 住宿通知】',
       room ? '寶貝:' + room.name : '',
       types.length ? '事件類型:' + types.join('、') : '',
-      txtVal('incidentDetail') ? '狀況說明:' + txtVal('incidentDetail') : '',
+      txtVal('incidentDetail') ? '事情經過/原因:' + txtVal('incidentDetail') : '',
       document.getElementById('incidentFoundTime').value ? '發現時間:' + document.getElementById('incidentFoundTime').value : '',
       txtVal('incidentAction') ? '處理方式:' + txtVal('incidentAction') : '',
       txtVal('incidentFollowup') ? '目前狀況:' + txtVal('incidentFollowup') : ''
@@ -2197,9 +2349,8 @@
 
     const allStayEntries = Object.values(currentEntriesByDate).flat();
     const mood = computeMoodIcon(allStayEntries);
-    const moodEl = document.getElementById('moodIcon');
-    if (mood){ moodEl.textContent = mood.icon; moodEl.title = '精神狀態:' + mood.label; }
-    else { moodEl.textContent = ''; moodEl.title = ''; }
+    const moodRowEl = document.getElementById('moodRow');
+    moodRowEl.innerHTML = mood ? '<span style="font-size:20px;">' + mood.icon + '</span><span>目前精神狀態:' + mood.label + '</span>' : '';
     document.getElementById('dayHighlight').textContent = computeTodayHighlight(dayEntries);
 
     const totalGrams = dayEntries.reduce((s,e) => s + (e.grams || 0), 0);
@@ -2237,6 +2388,7 @@
         <div class="mactions" style="margin-top:8px;">
           <button class="entry-edit-btn small-btn" style="background:var(--ochre);color:#2A2A2C;flex:1;">編輯</button>
           <button class="entry-delete-btn small-btn" style="background:var(--danger-soft);color:var(--danger);flex:1;">刪除</button>
+          ${e.warn ? '<button class="entry-notify-btn small-btn" style="background:var(--pine);color:#F4F1E9;flex:1;">📋 通報家長</button>' : ''}
         </div>
       </div>`;
     }).join('');
@@ -2253,6 +2405,23 @@
 
     if (event.target.closest('.entry-edit-btn')){
       jumpToEditEntry(entryId, entryData);
+      return;
+    }
+    if (event.target.closest('.entry-notify-btn')){
+      const room = allRooms[currentRoomId];
+      const lines = (entryData.contentParts && entryData.contentParts.length) ? entryData.contentParts : [entryData.content];
+      const msg = [
+        '【(inn)heart 照護通知】',
+        room ? '寶貝:' + room.name : '',
+        entryData.timeStr ? '時間:' + entryData.timeStr + '（' + entryData.cat + '）' : '',
+        lines.join('，')
+      ].filter(Boolean).join('\n');
+      try {
+        await navigator.clipboard.writeText(msg);
+        alert('已複製通報訊息,請貼到 LINE 官方帳號的聊天視窗傳送給飼主。');
+      } catch (err) {
+        alert('複製失敗,請手動選取以下文字:\n\n' + msg);
+      }
       return;
     }
     if (event.target.closest('.entry-delete-btn')){
@@ -2358,10 +2527,16 @@
 
     if (panelId === 'feedtoilet'){
       noteFieldId = 'ftNoteText'; timeFieldId = 'ftEntryTime';
+      const supAmount = txtVal('ftSupplementAmount');
+      if (supAmount) parts.push('額外補充了保健食品，量約' + supAmount);
       const vomits = chipVals('ftVomit');
       if (vomits.length){
-        parts.push('嘔吐:' + vomits.join('、') + (vomits.some(v => v !== '無') ? '(' + txtVal('ftVomitNote') + ')' : ''));
-        if (vomits.some(v => v !== '無')) warn = true;
+        if (vomits.length === 1 && vomits[0] === '無'){
+          parts.push('沒有嘔吐的狀況');
+        } else {
+          parts.push('有' + vomits.filter(v => v !== '無').join('、') + '的狀況' + (txtVal('ftVomitNote') ? '，' + txtVal('ftVomitNote') : ''));
+          warn = true;
+        }
       }
 
       const foods = chipVals('ftFood');
@@ -2383,9 +2558,9 @@
         foodTotal += consumed;
         roomUpdates.pendingDryGrams = Math.max(newPending, 0);
         pendingSnapshot.pendingDryGrams = prevPending;
-        if (fed) parts.push('乾糧 餵食' + fed + 'g');
-        if (discard !== null) parts.push('乾糧 剩餘棄置' + discard + 'g');
-        if (keep !== null) parts.push('乾糧 剩餘保留' + keep + 'g');
+        if (fed) parts.push('乾糧加了' + fed + 'g');
+        if (discard !== null) parts.push('乾糧原本剩餘' + discard + 'g已經倒掉');
+        if (keep !== null) parts.push('乾糧還剩' + keep + 'g，先保留繼續給');
       }
       if (foods.includes('濕食')){
         const served = numVal('ftWetGrams') || 0, left = numVal('ftWetLeftover') || 0;
@@ -2394,8 +2569,7 @@
         foodTotal += consumed;
         roomUpdates.pendingWetGrams = served;
         pendingSnapshot.pendingWetGrams = prevPending;
-        parts.push('濕食 餵食' + served + 'g');
-        if (left) parts.push('濕食 剩餘棄置' + left + 'g');
+        parts.push('濕食餵了' + served + 'g' + (left ? '，剩餘' + left + 'g已倒掉' : ''));
       }
       if (foods.includes('鮮食')){
         const served = numVal('ftFreshGrams') || 0, left = numVal('ftFreshLeftover') || 0;
@@ -2404,8 +2578,7 @@
         foodTotal += consumed;
         roomUpdates.pendingFreshGrams = served;
         pendingSnapshot.pendingFreshGrams = prevPending;
-        parts.push('鮮食 餵食' + served + 'g');
-        if (left) parts.push('鮮食 剩餘棄置' + left + 'g');
+        parts.push('鮮食餵了' + served + 'g' + (left ? '，剩餘' + left + 'g已倒掉' : ''));
       }
       if (foods.length) grams = foodTotal;
 
@@ -2417,105 +2590,112 @@
         waterMl = consumedWater;
         roomUpdates.pendingWaterMl = waterGive || 0;
         pendingSnapshot.pendingWaterMl = prevPendingWater;
-        if (waterGive !== null) parts.push('飲水 給水' + waterGive + 'ML');
-        if (waterDiscard !== null) parts.push('飲水 棄置剩餘' + waterDiscard + 'ML');
+        if (waterGive !== null) parts.push('換了新的水，給了' + waterGive + 'ML');
+        if (waterDiscard !== null) parts.push('原本水碗剩' + waterDiscard + 'ML已倒掉');
       }
       if (area === 'cat'){
-        if (document.getElementById('ftPeeCatNone').checked){ parts.push('排尿:目前無尿尿,待追蹤'); warn = true; }
+        if (document.getElementById('ftPeeCatNone').checked){ parts.push('目前還沒觀察到尿尿，會再留意追蹤'); warn = true; }
         const pg = numVal('ftPeeCatGrams');
         const peeColor = chipVal('ftPeeCatColor');
-        if (pg !== null){ peeGrams = pg; parts.push('排尿' + pg + 'g' + (peeColor ? '・顏色' + peeColor : '') + (document.getElementById('ftPeeCatMulti').checked ? '(多貓同住,無法精準判斷)' : '')); if (peeColor === '異常') warn = true; }
-        if (document.getElementById('ftPoopCatNone').checked){ parts.push('排便:目前無便便,待追蹤'); warn = true; }
+        if (pg !== null){
+          peeGrams = pg;
+          parts.push('尿尿約' + pg + 'g' + (peeColor ? '，顏色' + peeColor : '') + (document.getElementById('ftPeeCatMulti').checked ? '(多貓同住，無法精準判斷)' : ''));
+          if (peeColor === '異常') warn = true;
+        }
+        if (document.getElementById('ftPoopCatNone').checked){ parts.push('目前還沒觀察到便便，會再留意追蹤'); warn = true; }
         const bg = numVal('ftPoopCatGrams');
         const poopColor = chipVal('ftPoopCatColor');
         const poopTexture = chipVal('ftPoopCatTexture');
         if (bg !== null){
           poopGrams = bg;
           const bits = [poopColor ? '顏色' + poopColor : null, poopTexture ? '性質' + poopTexture : null].filter(Boolean);
-          parts.push('排便' + bg + 'g' + (bits.length ? '・' + bits.join('・') : '') + (document.getElementById('ftPoopCatMulti').checked ? '(多貓同住,無法精準判斷)' : ''));
+          parts.push('便便約' + bg + 'g' + (bits.length ? '，' + bits.join('、') : '') + (document.getElementById('ftPoopCatMulti').checked ? '(多貓同住，無法精準判斷)' : ''));
           if (poopColor === '異常' || (poopTexture && poopTexture !== '正常')) warn = true;
         }
       } else {
-        if (document.getElementById('ftPeeDogNone').checked){ parts.push('排尿:目前無尿尿,待追蹤'); warn = true; }
+        if (document.getElementById('ftPeeDogNone').checked){ parts.push('目前還沒觀察到尿尿，會再留意追蹤'); warn = true; }
         const peeType = chipVal('ftPeeDogType');
         const peeColorDog = chipVal('ftPeeDogColor');
-        if (peeType === '尿布墊'){ peeDiaperGrams = numVal('ftPeeDogPadGrams'); if (peeDiaperGrams !== null) parts.push('排尿(尿布墊)' + peeDiaperGrams + 'g' + (peeColorDog ? '・顏色' + peeColorDog : '')); }
-        if (peeType === '戶外'){ peeCount = numVal('ftPeeDogOutCount'); if (peeCount !== null) parts.push('排尿(戶外)' + peeCount + '次' + (peeColorDog ? '・顏色' + peeColorDog : '')); }
+        if (peeType === '尿布墊'){ peeDiaperGrams = numVal('ftPeeDogPadGrams'); if (peeDiaperGrams !== null) parts.push('尿布墊尿量約' + peeDiaperGrams + 'g' + (peeColorDog ? '，顏色' + peeColorDog : '')); }
+        if (peeType === '戶外'){ peeCount = numVal('ftPeeDogOutCount'); if (peeCount !== null) parts.push('戶外尿尿' + peeCount + '次' + (peeColorDog ? '，顏色' + peeColorDog : '')); }
         if (peeColorDog === '異常') warn = true;
-        if (document.getElementById('ftPoopDogNone').checked){ parts.push('排便:目前無便便,待追蹤'); warn = true; }
+        if (document.getElementById('ftPoopDogNone').checked){ parts.push('目前還沒觀察到便便，會再留意追蹤'); warn = true; }
         const padPoop = numVal('ftPoopDogPadGrams') || 0, outPoop = numVal('ftPoopDogOutGrams') || 0;
         const poopColorDog = chipVal('ftPoopDogColor');
         const poopTextureDog = chipVal('ftPoopDogTexture');
         if (padPoop || outPoop){
           poopGrams = padPoop + outPoop;
           const bits = [poopColorDog ? '顏色' + poopColorDog : null, poopTextureDog ? '性質' + poopTextureDog : null].filter(Boolean);
-          parts.push('排便 尿布墊' + padPoop + 'g、戶外' + outPoop + 'g' + (bits.length ? '・' + bits.join('・') : ''));
+          parts.push('便便尿布墊' + padPoop + 'g、戶外' + outPoop + 'g' + (bits.length ? '，' + bits.join('、') : ''));
           if (poopColorDog === '異常' || (poopTextureDog && poopTextureDog !== '正常')) warn = true;
         }
       }
-      content = parts.join('。');
+      content = parts.join('，');
     }
 
     if (panelId === 'sleep'){
       noteFieldId = 'sleepNoteText'; timeFieldId = 'sleepEntryTime';
       const period = chipVal('sleepPeriod');
-      if (period) parts.push('時段:' + period);
+      if (period) parts.push(period + '的休息');
       const observe = chipVal('sleepObserve');
-      if (observe){ parts.push('睡眠觀察:' + observe); if (observe !== '自然入睡') warn = true; }
+      if (observe){ parts.push('觀察到' + observe); if (observe !== '自然入睡') warn = true; }
       const status = chipVal('sleepStatus');
-      if (status){ parts.push('睡眠狀況:' + status); if (status !== '入睡後安穩') warn = true; }
-      content = parts.join('。');
+      if (status){ parts.push('睡眠狀況是' + status); if (status !== '入睡後安穩') warn = true; }
+      content = parts.join('，');
     }
 
     if (panelId === 'activity'){
       noteFieldId = 'activityNoteText'; timeFieldId = 'activityEntryTime';
       const types = chipVals('activityType');
-      if (types.length) parts.push('類型:' + types.join('、'));
       const mins = numVal('activityMinutes');
-      if (mins !== null) parts.push('時間' + mins + '分鐘');
+      if (types.length) parts.push('進行了' + types.join('、') + (mins !== null ? '，約' + mins + '分鐘' : ''));
+      else if (mins !== null) parts.push('活動時間約' + mins + '分鐘');
       const state = chipVal('activityState');
       if (state){
         const isWarn = ['頭低低憂鬱','緊張防衛','抗拒活動'].includes(state);
-        parts.push('活動狀態:' + state + (isWarn ? '(' + txtVal('activityStateNote') + ')' : ''));
+        parts.push('活動狀態' + state + (isWarn && txtVal('activityStateNote') ? '，' + txtVal('activityStateNote') : ''));
         if (isWarn) warn = true;
       }
-      content = parts.join('。');
+      content = parts.join('，');
     }
 
     if (panelId === 'medication'){
       noteFieldId = 'medicationNoteText'; timeFieldId = 'medicationEntryTime';
       const supResult = chipVal('medSupplementResult');
       if (supResult){
-        parts.push('保健品:' + supResult + ((supResult === '失敗' || supResult === '極度抗拒') ? '(' + txtVal('medSupplementNote') + ')' : ''));
+        parts.push('保健食品' + (supResult === '成功好棒！' ? '順利給完' : supResult) + ((supResult === '失敗' || supResult === '極度抗拒') && txtVal('medSupplementNote') ? '，' + txtVal('medSupplementNote') : ''));
         if (supResult !== '成功好棒！') warn = true;
       }
       const medResult = chipVal('medResult');
       if (medResult){
-        parts.push('用藥:' + medResult + ((medResult === '失敗' || medResult === '極度抗拒') ? '(' + txtVal('medResultNote') + ')' : ''));
+        parts.push('用藥' + (medResult === '成功好棒！' ? '順利完成' : medResult) + ((medResult === '失敗' || medResult === '極度抗拒') && txtVal('medResultNote') ? '，' + txtVal('medResultNote') : ''));
         if (medResult !== '成功好棒！') warn = true;
       }
       const obsTypes = chipVals('medObsType');
-      if (obsTypes.length){ parts.push('用藥後觀察:' + obsTypes.join('、')); if (obsTypes.some(v => v !== '無明顯異狀')) warn = true; }
+      if (obsTypes.length){
+        if (obsTypes.length === 1 && obsTypes[0] === '無明顯異狀') parts.push('用藥後沒有明顯異狀');
+        else { parts.push('用藥後出現' + obsTypes.filter(v => v !== '無明顯異狀').join('、')); warn = true; }
+      }
       const otherText = txtVal('medOtherText');
-      if (otherText) parts.push('其他:' + otherText);
-      content = parts.join('。');
+      if (otherText) parts.push(otherText);
+      content = parts.join('，');
     }
 
     if (panelId === 'spOther'){
       const types = chipVals('incidentType');
-      if (types.length){ parts.push('事件類型:' + types.join('、')); warn = true; }
-      if (txtVal('incidentDetail')) parts.push('特殊狀況:' + txtVal('incidentDetail'));
+      if (types.length){ parts.push('發生了' + types.join('、') + '的狀況'); warn = true; }
+      if (txtVal('incidentDetail')) parts.push(txtVal('incidentDetail'));
       const foundTime = document.getElementById('incidentFoundTime').value;
-      if (foundTime) parts.push('發現時間:' + foundTime);
+      if (foundTime) parts.push('發現時間是' + foundTime);
       if (txtVal('incidentAction')) parts.push('處理方式:' + txtVal('incidentAction'));
-      if (txtVal('incidentFollowup')) parts.push('後續狀況:' + txtVal('incidentFollowup'));
+      if (txtVal('incidentFollowup')) parts.push('目前狀況:' + txtVal('incidentFollowup'));
       const notified = chipVal('incidentNotified');
       if (notified){
-        parts.push('是否通知飼主:' + notified);
+        parts.push(notified === '是' ? '已通知飼主' : '尚未通知飼主');
         const notifyTime = document.getElementById('incidentNotifyTime').value;
-        if (notified === '是' && notifyTime) parts.push('通知時間:' + notifyTime);
+        if (notified === '是' && notifyTime) parts.push('通知時間' + notifyTime);
       }
-      content = parts.join('。');
+      content = parts.join('，');
     }
 
     const note = txtVal(noteFieldId);
