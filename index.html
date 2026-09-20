@@ -232,6 +232,14 @@
     document.getElementById('phoneEcho3').textContent = '家長 ' + phone;
     document.getElementById('screenLogin').classList.remove('active');
     document.getElementById('screenMenu').classList.add('active');
+
+    // deep-link support: a LINE rich-menu card can send people straight to a section via ?mode=
+    const mode = new URLSearchParams(window.location.search).get('mode');
+    if (mode === 'stay') enterMenuView('current');
+    else if (mode === 'history') enterMenuView('history');
+    else if (mode === 'daycare' || mode === 'inhome'){
+      alert('這項服務即將上線,敬請期待!');
+    }
   }
 
   async function enterWithPhone(phone){
