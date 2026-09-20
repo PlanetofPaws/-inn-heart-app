@@ -177,6 +177,7 @@
       <button class="submit-btn" id="menuMembersBtn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);">會員資料管理</button>
       <div id="cameraSettingLink" style="text-align:center;font-size:12.5px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:8px;">設定小米 App 連結</div>
       <div id="staffManageLink" style="text-align:center;font-size:12.5px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:4px;">新增工作人員(管理者)</div>
+      <div style="text-align:center;font-size:10.5px;color:var(--ink-soft);opacity:0.5;margin-top:20px;">版本 2026-09-20-v9</div>
     </div>
   </div>
 
@@ -2731,7 +2732,12 @@
     if (panelId === 'feedtoilet'){
       noteFieldId = 'ftNoteText'; timeFieldId = 'ftEntryTime';
       const supAmount = txtVal('ftSupplementAmount');
-      if (supAmount) parts.push('額外補充了保健食品，量約' + supAmount);
+      if (supAmount){
+        const room = allRooms[currentRoomId];
+        const sup = room && room.items && room.items.details && room.items.details['保健食品'];
+        const isWithMeal = sup && sup.隨餐 === '隨餐';
+        parts.push('營養品' + (isWithMeal ? '隨餐給予' : '額外給予') + '，量約' + supAmount);
+      }
       const vomits = chipVals('ftVomit');
       if (vomits.length){
         if (vomits.length === 1 && vomits[0] === '無'){
