@@ -2,6 +2,9 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>寶貝紀錄後台(資料庫版) · (inn)heart</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1008,7 +1011,7 @@
         <input type="time" id="incidentNotifyTime">
       </div>
       <div class="submit-row" id="incidentCopyBtnWrap" style="display:none;">
-        <button type="button" class="small-btn" id="incidentCopyBtn" style="background:var(--ochre);color:#2A2A2C;width:100%;">📋 複製通知訊息(貼到 LINE 傳給飼主)</button>
+        <button type="button" class="small-btn" id="incidentCopyBtn" style="background:var(--pine);color:#F4F1E9;width:100%;">📱 發送LINE通報家長</button>
       </div>
     </div>
 
@@ -1031,6 +1034,10 @@
       <div id="moodRow" style="padding:0 22px 4px;font-size:13px;color:var(--ink-soft);display:flex;align-items:center;gap:6px;"></div>
       <div id="dayHighlight" style="padding:0 22px 12px;font-size:13px;color:var(--ink-soft);"></div>
       <div id="logList"><div class="empty-note">目前還沒有紀錄</div></div>
+    </div>
+
+    <div style="padding:40px 22px 30px;text-align:center;">
+      <span id="forceResetLink" style="font-size:11px;color:var(--ink-soft);opacity:0.4;text-decoration:underline;cursor:pointer;">重置這間房(僅用於資料異常時)</span>
     </div>
   </div>
 
@@ -1152,11 +1159,11 @@
       if (room.mergedInto){
         const primary = allRooms[room.mergedInto];
         const label = primary ? '併入' + primary.no + '號房' : '已合併';
-        html += `<div class="room-btn" data-id="${id}" data-merged-into="${room.mergedInto}" style="opacity:0.6;position:relative;"><div class="no">${i} 號房</div><div class="name">🔗 ${label}</div><div class="force-reset" data-id="${id}" style="position:absolute;top:2px;right:4px;font-size:10px;color:var(--danger);text-decoration:underline;">重置</div></div>`;
+        html += `<div class="room-btn" data-id="${id}" data-merged-into="${room.mergedInto}" style="opacity:0.6;position:relative;"><div class="no">${i} 號房</div><div class="name">🔗 ${label}</div><div class="force-reset" data-id="${id}" style="position:absolute;top:2px;right:4px;font-size:9px;color:var(--ink-soft);text-decoration:underline;opacity:0.7;">重置</div></div>`;
       } else if (!room.name){
         html += `<div class="room-btn" data-id="${id}" data-empty="1"><div class="no">${i} 號房</div><div class="name">＋ 新入住</div></div>`;
       } else {
-        html += `<div class="room-btn" data-id="${id}" style="position:relative;"><div class="no">${i} 號房</div><div class="name">${room.name}</div><div class="force-reset" data-id="${id}" style="position:absolute;top:2px;right:4px;font-size:10px;color:var(--danger);text-decoration:underline;">重置</div></div>`;
+        html += `<div class="room-btn" data-id="${id}"><div class="no">${i} 號房</div><div class="name">${room.name}</div></div>`;
       }
     }
     grid.innerHTML = html;
@@ -1197,6 +1204,30 @@
   function showScreen(id){
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById(id).classList.add('active');
+  }
+
+  const LINE_PUSH_FUNCTION_URL = 'https://send-line-message-1090283293954.asia-east1.run.app';
+
+  async function sendLineNotification(phone, message){
+    if (!phone) { alert('這筆資料沒有手機號碼,無法發送。'); return; }
+    const lineIds = await findLineBindingsForPhone(phone);
+    if (!lineIds.length){
+      alert('這位家長目前還沒有綁定 LINE,沒辦法直接發送。可以請他先用家長端的頁面綁定 LINE,或是自己手動聯絡。');
+      return;
+    }
+    try {
+      const results = await Promise.all(lineIds.map(lineUserId =>
+        fetch(LINE_PUSH_FUNCTION_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ lineUserId, message })
+        }).then(r => r.ok)
+      ));
+      if (results.every(ok => ok)) alert('已發送到家長的 LINE。');
+      else alert('部分發送失敗,建議改用複製訊息手動傳送確認。');
+    } catch (err) {
+      alert('發送失敗:' + err.message + '\n可以改用複製訊息手動傳送。');
+    }
   }
 
   function toDatetimeLocalValue(d){
@@ -1456,6 +1487,22 @@
   }
 
   document.getElementById('backBtn').addEventListener('click', async () => { await loadRooms(); showScreen('screenRooms'); renderRooms(); });
+
+  document.getElementById('forceResetLink').addEventListener('click', async (ev) => {
+    ev.stopPropagation();
+    const id = currentRoomId;
+    if (!confirm('確定要強制重置這間房嗎?這會直接清空目前的入住狀態(不會刪除已經寫入的每日紀錄),用在資料卡住、退不了房的情況。')) return;
+    await setDoc(doc(db, 'rooms', id), {
+      area: allRooms[id].area, no: allRooms[id].no,
+      name: null, phone: null, stayId: null, items: null, notes: null, avatarUrl: null,
+      mergedRooms: null, mergedInto: null,
+      pendingDryGrams: 0, pendingWetGrams: 0, pendingFreshGrams: 0, pendingWaterMl: 0
+    });
+    await loadRooms();
+    showScreen('screenRooms');
+    renderRooms();
+    alert('已重置。');
+  });
 
   document.getElementById('recordMember').addEventListener('click', () => {
     document.getElementById('memberSearchInput').value = allRooms[currentRoomId].phone;
@@ -2088,12 +2135,7 @@
       txtVal('incidentAction') ? '處理方式:' + txtVal('incidentAction') : '',
       txtVal('incidentFollowup') ? '目前狀況:' + txtVal('incidentFollowup') : ''
     ].filter(Boolean).join('\n');
-    try {
-      await navigator.clipboard.writeText(lines);
-      alert('已複製通知訊息,請貼到 LINE 官方帳號的聊天視窗傳送給飼主。');
-    } catch (err) {
-      alert('複製失敗,請手動選取以下文字:\n\n' + lines);
-    }
+    await sendLineNotification(room ? room.phone : null, lines);
   });
 
   ['medSupplementResult','medResult'].forEach(group => {
@@ -2554,7 +2596,7 @@
         <div class="mactions" style="margin-top:8px;">
           <button class="entry-edit-btn small-btn" style="background:var(--ochre);color:#2A2A2C;flex:1;">編輯</button>
           <button class="entry-delete-btn small-btn" style="background:var(--danger-soft);color:var(--danger);flex:1;">刪除</button>
-          ${e.warn ? '<button class="entry-notify-btn small-btn" style="background:var(--pine);color:#F4F1E9;flex:1;">📋 通報家長</button>' : ''}
+          ${e.warn ? '<button class="entry-notify-btn small-btn" style="background:var(--pine);color:#F4F1E9;flex:1;">📱 發送LINE通報家長</button>' : ''}
         </div>
       </div>`;
     }).join('');
@@ -2582,12 +2624,7 @@
         entryData.timeStr ? '時間:' + entryData.timeStr + '（' + entryData.cat + '）' : '',
         lines.join('，')
       ].filter(Boolean).join('\n');
-      try {
-        await navigator.clipboard.writeText(msg);
-        alert('已複製通報訊息,請貼到 LINE 官方帳號的聊天視窗傳送給飼主。');
-      } catch (err) {
-        alert('複製失敗,請手動選取以下文字:\n\n' + msg);
-      }
+      await sendLineNotification(room ? room.phone : null, msg);
       return;
     }
     if (event.target.closest('.entry-delete-btn')){
@@ -3073,9 +3110,24 @@
   document.getElementById('memberSearchBtn').addEventListener('click', async () => {
     const searchTerm = document.getElementById('memberSearchInput').value.trim();
     if (!searchTerm) return;
-    const found = await findMemberByAnything(searchTerm);
+    const btn = document.getElementById('memberSearchBtn');
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '搜尋中...';
+    let found;
+    try {
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('搜尋逾時,請檢查網路連線')), 20000));
+      found = await Promise.race([findMemberByAnything(searchTerm), timeoutPromise]);
+    } catch (err) {
+      alert('搜尋失敗:' + err.message);
+      btn.disabled = false;
+      btn.textContent = originalText;
+      return;
+    }
+    btn.disabled = false;
+    btn.textContent = originalText;
     if (!found){
-      alert('查無符合的會員(可輸入手機號碼、家長姓名或寶貝名字查詢)');
+      alert('查無符合的會員(可輸入手機號碼、家長姓名或寶貝名字查詢;直接輸入手機號碼查詢速度最快)');
       return;
     }
     const phone = found.phone;
@@ -3189,7 +3241,8 @@
     }
     let entries;
     try {
-      const entriesSnap = await getDocs(query(collection(db, 'rooms', h.roomId, 'entries'), where('stayId', '==', h.stayId)));
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('讀取逾時,請檢查網路連線後再試一次')), 20000));
+      const entriesSnap = await Promise.race([getDocs(query(collection(db, 'rooms', h.roomId, 'entries'), where('stayId', '==', h.stayId))), timeoutPromise]);
       entries = [];
       entriesSnap.forEach(d => { entries.push(d.data()); });
       entries.sort((a,b) => (a.createdAtMs || 0) - (b.createdAtMs || 0));
