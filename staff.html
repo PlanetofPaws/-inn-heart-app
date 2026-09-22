@@ -172,12 +172,14 @@
       <h1>請選擇</h1>
     </div>
     <div style="padding:20px 22px 0;display:flex;flex-direction:column;gap:12px;">
-      <button class="submit-btn" id="menuCareBtn">照護紀錄</button>
+      <button class="submit-btn" id="menuCareBtn">住宿照護紀錄</button>
+      <button class="submit-btn" id="menuDaycareBtn" style="background:var(--pine);color:#F4F1E9;">安親照護紀錄</button>
+      <button class="submit-btn" id="menuInhomeBtn" style="background:var(--card);color:var(--ink-soft);border:1px solid var(--line);">到府照護紀錄(即將上線)</button>
       <button class="submit-btn" id="menuHistoryBtn" style="background:var(--ochre);color:#2A2A2C;">歷史紀錄</button>
       <button class="submit-btn" id="menuMembersBtn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);">會員資料管理</button>
       <div id="cameraSettingLink" style="text-align:center;font-size:12.5px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:8px;">設定小米 App 連結</div>
       <div id="staffManageLink" style="text-align:center;font-size:12.5px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:4px;">新增工作人員(管理者)</div>
-      <div style="text-align:center;font-size:10.5px;color:var(--ink-soft);opacity:0.5;margin-top:20px;">版本 2026-09-20-v11</div>
+      <div style="text-align:center;font-size:10.5px;color:var(--ink-soft);opacity:0.5;margin-top:20px;">版本 2026-09-21-daycare1</div>
     </div>
   </div>
 
@@ -199,6 +201,109 @@
       <input type="text" id="staffNewName" placeholder="例如：小美">
       <div class="submit-row"><button class="submit-btn" id="staffAddSubmit">新增這位員工</button></div>
       <div style="font-size:11.5px;color:var(--ink-soft);margin-top:8px;">新增後,這位員工用這組信箱登入 Google 就能直接進入後台,不需要再去 Firebase 後台手動加。</div>
+    </div>
+  </div>
+
+  <!-- 安親:今日名單 -->
+  <div class="screen" id="screenDaycareList">
+    <div class="back-row" id="daycareBackBtn">← 返回選單</div>
+    <div class="topbar">
+      <div class="sub">(inn)heart · 安親照護</div>
+      <h1>今日在園寶貝</h1>
+    </div>
+    <div style="padding:16px 22px 0;">
+      <button class="submit-btn" id="daycareNewBtn" style="background:var(--pine);color:#F4F1E9;">➕ 新增今日安親</button>
+    </div>
+    <div id="daycareList" style="padding:16px 22px 30px;display:flex;flex-direction:column;gap:10px;"></div>
+  </div>
+
+  <!-- 安親:報到 -->
+  <div class="screen" id="screenDaycareCheckin">
+    <div class="back-row" id="daycareCiBackBtn">← 返回列表</div>
+    <div class="topbar">
+      <div class="sub">(inn)heart · 安親照護</div>
+      <h1>今日安親報到</h1>
+    </div>
+    <div class="field">
+      <label>寶貝名字</label>
+      <input type="text" id="dcPetName">
+    </div>
+    <div class="field">
+      <label>家長手機</label>
+      <input type="text" id="dcMemberNo">
+    </div>
+    <div class="field">
+      <img id="dcAvatarPreview" style="display:none;width:80px;height:80px;border-radius:16px;object-fit:cover;margin-bottom:8px;">
+      <div id="dcAvatarNote" style="font-size:11.5px;color:var(--ink-soft);margin-bottom:6px;"></div>
+      <label>大頭照(選填,若之前上傳過會自動帶入)</label>
+      <input type="file" id="dcAvatarInput" accept="image/*">
+    </div>
+    <div class="sub-group">
+      <span class="glabel">精神/活力</span>
+      <div class="chip-row" data-group="dcSpirit">
+        <div class="chip" data-val="正常">正常</div>
+        <div class="chip warn" data-val="異常">異常</div>
+      </div>
+    </div>
+    <div class="sub-group">
+      <span class="glabel">是否有外傷</span>
+      <div class="chip-row" data-group="dcInjury">
+        <div class="chip" data-val="無">無</div>
+        <div class="chip warn" data-val="有">有</div>
+      </div>
+      <input type="text" id="dcInjuryNote" placeholder="說明" style="margin-top:8px;display:none;">
+    </div>
+    <div class="field">
+      <label>備註(選填)</label>
+      <textarea id="dcCheckinNote"></textarea>
+    </div>
+    <div class="submit-row">
+      <button class="submit-btn" id="dcCheckinSubmitBtn">完成報到</button>
+    </div>
+  </div>
+
+  <!-- 安親:紀錄畫面 -->
+  <div class="screen" id="screenDaycareRecord">
+    <div class="back-row" id="dcRecordBackBtn">← 返回列表</div>
+    <div class="record-head" style="display:flex;gap:14px;align-items:center;">
+      <img id="dcRecordAvatar" style="display:none;width:64px;height:64px;border-radius:16px;object-fit:cover;flex-shrink:0;">
+      <div>
+        <div class="loc">安親照護</div>
+        <h1 id="dcRecordName" style="margin:0;">-</h1>
+        <div class="loc" id="dcRecordMember" style="margin-top:4px;"></div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>時段紀錄(點選要登打的時段)</label>
+      <div class="chip-row" id="dcSlotTabs" style="flex-wrap:wrap;">
+        <div class="chip active" data-slot="上午放風">上午放風</div>
+        <div class="chip" data-slot="午餐時間">午餐時間</div>
+        <div class="chip" data-slot="午休安撫">午休安撫</div>
+        <div class="chip" data-slot="下午放風">下午放風</div>
+        <div class="chip warn" data-slot="其他異常">其他異常</div>
+      </div>
+    </div>
+
+    <div id="dcSlotFormArea"></div>
+
+    <div class="today-section">
+      <h2>今日紀錄</h2>
+      <div id="dcLogList"><div class="empty-note">目前還沒有紀錄</div></div>
+    </div>
+
+    <div class="field" id="dcCheckoutPanel" style="display:none;">
+      <label>離店前確認</label>
+      <input type="text" id="dcCheckoutFood" placeholder="今日餵食量,例如:完食 / 剩餘50g">
+      <label style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:14px;color:var(--ink);">
+        <input type="checkbox" id="dcCheckoutItemsConfirm"> 已確認交還所有物品
+      </label>
+      <div class="submit-row">
+        <button class="submit-btn" id="dcCheckoutConfirmBtn" style="background:var(--danger);opacity:0.5;" disabled>確認離店</button>
+      </div>
+    </div>
+    <div class="field">
+      <button class="small-btn" id="dcCheckoutBtn" style="background:var(--danger);width:100%;">辦理離店</button>
     </div>
   </div>
 
@@ -3620,6 +3725,303 @@
     document.getElementById('staffBar').style.display = 'flex';
     await startApp();
   });
+
+  // ================= 安親照護 (daycare) =================
+  let currentDaycareId = null;
+  let dcAvatarFile = null;
+  let dcExistingAvatarUrl = null;
+  let dcCurrentSlot = '上午放風';
+
+  document.getElementById('menuDaycareBtn').addEventListener('click', () => { showScreen('screenDaycareList'); loadDaycareList(); });
+  document.getElementById('menuInhomeBtn').addEventListener('click', () => alert('到府照護紀錄即將上線,敬請期待!'));
+  document.getElementById('daycareBackBtn').addEventListener('click', () => showScreen('screenMenu'));
+  document.getElementById('daycareCiBackBtn').addEventListener('click', () => showScreen('screenDaycareList'));
+  document.getElementById('dcRecordBackBtn').addEventListener('click', () => { showScreen('screenDaycareList'); loadDaycareList(); });
+
+  async function loadDaycareList(){
+    const listEl = document.getElementById('daycareList');
+    listEl.innerHTML = '<div class="status-msg">讀取中...</div>';
+    const today = dateStrOf(new Date());
+    const snap = await getDocs(query(collection(db, 'daycare'), where('checkinDate', '==', today), where('status', '==', 'active')));
+    const items = [];
+    snap.forEach(d => items.push({ id: d.id, ...d.data() }));
+    if (!items.length){
+      listEl.innerHTML = '<div class="empty-note">今天還沒有安親寶貝報到</div>';
+      return;
+    }
+    items.sort((a,b) => (a.checkinTime || '').localeCompare(b.checkinTime || ''));
+    listEl.innerHTML = items.map(it => `
+      <div class="log-entry" data-id="${it.id}" style="cursor:pointer;display:flex;align-items:center;gap:12px;">
+        ${it.avatarUrl ? '<img src="'+it.avatarUrl+'" style="width:48px;height:48px;border-radius:12px;object-fit:cover;flex-shrink:0;">' : '<div style="width:48px;height:48px;border-radius:12px;background:var(--line);flex-shrink:0;"></div>'}
+        <div>
+          <div style="font-weight:700;">${it.name}</div>
+          <div class="meta">報到時間 ${it.checkinTime || ''}</div>
+        </div>
+      </div>
+    `).join('');
+    listEl.querySelectorAll('[data-id]').forEach(el => {
+      el.addEventListener('click', () => openDaycareRecord(el.dataset.id));
+    });
+  }
+
+  document.getElementById('daycareNewBtn').addEventListener('click', () => {
+    document.getElementById('dcPetName').value = '';
+    document.getElementById('dcMemberNo').value = '';
+    document.getElementById('dcAvatarPreview').style.display = 'none';
+    document.getElementById('dcAvatarNote').textContent = '';
+    document.getElementById('dcCheckinNote').value = '';
+    document.getElementById('dcInjuryNote').value = '';
+    document.getElementById('dcInjuryNote').style.display = 'none';
+    dcAvatarFile = null;
+    dcExistingAvatarUrl = null;
+    document.querySelectorAll('#screenDaycareCheckin .chip').forEach(c => c.classList.remove('active'));
+    showScreen('screenDaycareCheckin');
+  });
+
+  async function tryPrefillDcAvatar(){
+    const phone = document.getElementById('dcMemberNo').value.trim();
+    const petName = document.getElementById('dcPetName').value.trim();
+    if (!phone || !petName || dcAvatarFile) return;
+    const snap = await getDoc(doc(db, 'members', phone));
+    if (!snap.exists()) return;
+    const petAvatarUrl = snap.data().petAvatars && snap.data().petAvatars[petName];
+    if (petAvatarUrl){
+      dcExistingAvatarUrl = petAvatarUrl;
+      document.getElementById('dcAvatarPreview').src = petAvatarUrl;
+      document.getElementById('dcAvatarPreview').style.display = 'block';
+      document.getElementById('dcAvatarNote').textContent = '偵測到「' + petName + '」之前上傳過的照片,預設會沿用。';
+    }
+  }
+  document.getElementById('dcMemberNo').addEventListener('blur', tryPrefillDcAvatar);
+  document.getElementById('dcPetName').addEventListener('blur', tryPrefillDcAvatar);
+  document.getElementById('dcAvatarInput').addEventListener('change', (e) => {
+    if (e.target.files[0]){ dcAvatarFile = e.target.files[0]; document.getElementById('dcAvatarNote').textContent = '將使用這次新上傳的照片。'; }
+  });
+
+  document.querySelectorAll('.chip-row[data-group="dcInjury"] .chip').forEach(chip => {
+    chip.addEventListener('chipchange', () => {
+      const isActive = chip.classList.contains('active');
+      document.getElementById('dcInjuryNote').style.display = (isActive && chip.dataset.val === '有') ? 'block' : 'none';
+    });
+  });
+
+  document.getElementById('dcCheckinSubmitBtn').addEventListener('click', () => guardedSubmit(document.getElementById('dcCheckinSubmitBtn'), '送出', async () => {
+    const name = document.getElementById('dcPetName').value.trim();
+    const phone = document.getElementById('dcMemberNo').value.trim();
+    if (!name || !phone){ throw new Error('請填寫寶貝名字跟家長手機'); }
+
+    let avatarUrl = dcExistingAvatarUrl;
+    if (dcAvatarFile){
+      const compressed = await compressImage(dcAvatarFile, 800, 0.8);
+      const avatarRef = ref(storage, 'daycareAvatars/' + Date.now() + '_' + dcAvatarFile.name);
+      await uploadBytes(avatarRef, compressed);
+      avatarUrl = await getDownloadURL(avatarRef);
+      await setDoc(doc(db, 'members', phone), { petAvatars: { [name]: avatarUrl } }, { merge: true });
+    }
+
+    const spirit = chipVal('dcSpirit') || '正常';
+    const injury = chipVal('dcInjury') || '無';
+    const injuryNote = document.getElementById('dcInjuryNote').value.trim();
+    const checkinNote = document.getElementById('dcCheckinNote').value.trim();
+    const now = new Date();
+
+    const docRef = await addDoc(collection(db, 'daycare'), {
+      name, phone, avatarUrl: avatarUrl || null,
+      checkinDate: dateStrOf(now),
+      checkinTime: now.toTimeString().slice(0,5),
+      status: 'active',
+      spirit, injury, injuryNote: injury === '有' ? injuryNote : '',
+      checkinNote,
+      entries: [],
+      createdAtMs: now.getTime()
+    });
+
+    await openDaycareRecord(docRef.id);
+  }));
+
+  const dcSlotFieldMap = {
+    '上午放風': 'walk', '下午放風': 'walk', '午餐時間': 'meal', '午休安撫': 'rest', '其他異常': 'other'
+  };
+
+  function renderSlotForm(slot){
+    dcCurrentSlot = slot;
+    document.querySelectorAll('#dcSlotTabs .chip').forEach(c => c.classList.toggle('active', c.dataset.slot === slot));
+    const area = document.getElementById('dcSlotFormArea');
+    const kind = dcSlotFieldMap[slot];
+    if (kind === 'walk'){
+      area.innerHTML = `
+        <div class="sub-group">
+          <span class="glabel">互動狀況</span>
+          <div class="chip-row" data-group="dcWalkState">
+            <div class="chip" data-val="佳">佳</div>
+            <div class="chip" data-val="普通">普通</div>
+            <div class="chip warn" data-val="緊繃">緊繃</div>
+          </div>
+        </div>
+        <div class="field"><label>說明(選填)</label><textarea id="dcWalkNote"></textarea></div>
+        <div class="submit-row"><button class="submit-btn" id="dcSlotSubmitBtn">送出這筆紀錄</button></div>
+      `;
+    } else if (kind === 'meal'){
+      area.innerHTML = `
+        <div class="field"><label>餵食量</label><input type="text" id="dcMealAmount" placeholder="例如:100g"></div>
+        <div class="sub-group">
+          <span class="glabel">進食狀況</span>
+          <div class="chip-row" data-group="dcMealState">
+            <div class="chip" data-val="完食">完食</div>
+            <div class="chip warn" data-val="剩餘">剩餘</div>
+          </div>
+        </div>
+        <div class="field" id="dcMealLeftoverWrap" style="display:none;"><label>剩餘量</label><input type="text" id="dcMealLeftover"></div>
+        <div class="submit-row"><button class="submit-btn" id="dcSlotSubmitBtn">送出這筆紀錄</button></div>
+      `;
+      document.querySelectorAll('.chip-row[data-group="dcMealState"] .chip').forEach(chip => {
+        chip.addEventListener('chipchange', () => {
+          document.getElementById('dcMealLeftoverWrap').style.display = (chip.classList.contains('active') && chip.dataset.val === '剩餘') ? 'block' : 'none';
+        });
+      });
+    } else if (kind === 'rest'){
+      area.innerHTML = `
+        <div class="sub-group">
+          <span class="glabel">睡眠與休息狀態</span>
+          <div class="chip-row" data-group="dcRestState">
+            <div class="chip" data-val="平穩">平穩</div>
+            <div class="chip warn" data-val="躁動">躁動</div>
+          </div>
+        </div>
+        <div class="submit-row"><button class="submit-btn" id="dcSlotSubmitBtn">送出這筆紀錄</button></div>
+      `;
+    } else {
+      area.innerHTML = `
+        <div class="sub-group">
+          <span class="glabel">狀況(可複選)</span>
+          <div class="chip-row" data-multigroup="dcOtherType">
+            <div class="chip warn" data-val="咬傷">咬傷</div>
+            <div class="chip warn" data-val="緊迫">緊迫</div>
+            <div class="chip warn" data-val="嘔吐">嘔吐</div>
+            <div class="chip warn" data-val="其他">其他</div>
+          </div>
+        </div>
+        <div class="field"><label>說明</label><textarea id="dcOtherNote" placeholder="請輸入詳細說明..."></textarea></div>
+        <div class="submit-row"><button class="submit-btn" id="dcSlotSubmitBtn" style="background:var(--danger);">送出這筆紀錄</button></div>
+      `;
+    }
+    document.getElementById('dcSlotSubmitBtn').addEventListener('click', () => submitDcSlotEntry(slot, kind));
+    wireDynamicChips(area);
+  }
+
+  function wireDynamicChips(scope){
+    scope.querySelectorAll('.chip-row[data-group] .chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const wasActive = chip.classList.contains('active');
+        chip.parentElement.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+        if (!wasActive) chip.classList.add('active');
+        chip.dispatchEvent(new Event('chipchange', { bubbles: true }));
+      });
+    });
+    scope.querySelectorAll('.chip-row[data-multigroup] .chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        chip.classList.toggle('active');
+        chip.dispatchEvent(new Event('chipchange', { bubbles: true }));
+      });
+    });
+  }
+
+  document.querySelectorAll('#dcSlotTabs .chip').forEach(chip => {
+    chip.addEventListener('click', () => renderSlotForm(chip.dataset.slot));
+  });
+
+  async function submitDcSlotEntry(slot, kind){
+    const btn = document.getElementById('dcSlotSubmitBtn');
+    await guardedSubmit(btn, '送出', async () => {
+      let content = '', warn = false;
+      if (kind === 'walk'){
+        const state = chipVal('dcWalkState');
+        if (!state) throw new Error('請選擇互動狀況');
+        const note = document.getElementById('dcWalkNote').value.trim();
+        content = slot + '互動狀況' + state + (note ? '，' + note : '');
+        warn = state === '緊繃';
+      } else if (kind === 'meal'){
+        const amount = document.getElementById('dcMealAmount').value.trim();
+        const state = chipVal('dcMealState');
+        if (!amount || !state) throw new Error('請填寫餵食量與進食狀況');
+        const leftover = document.getElementById('dcMealLeftover').value.trim();
+        content = '餵食量' + amount + '，' + state + (state === '剩餘' && leftover ? '(剩餘' + leftover + ')' : '');
+        warn = state === '剩餘';
+      } else if (kind === 'rest'){
+        const state = chipVal('dcRestState');
+        if (!state) throw new Error('請選擇睡眠與休息狀態');
+        content = '睡眠與休息狀態' + state;
+        warn = state === '躁動';
+      } else {
+        const types = chipVals('dcOtherType');
+        const note = document.getElementById('dcOtherNote').value.trim();
+        if (!types.length) throw new Error('請選擇狀況類型');
+        content = types.join('、') + (note ? '，' + note : '');
+        warn = true;
+      }
+
+      const now = new Date();
+      const entry = { slot, time: now.toTimeString().slice(0,5), content, warn, staff: currentStaffName || '未填寫', createdAtMs: now.getTime() };
+      await updateDoc(doc(db, 'daycare', currentDaycareId), { entries: arrayUnion(entry) });
+      renderSlotForm(slot);
+      await refreshDcLog();
+    });
+  }
+
+  async function refreshDcLog(){
+    const snap = await getDoc(doc(db, 'daycare', currentDaycareId));
+    const data = snap.data();
+    const entries = (data.entries || []).slice().sort((a,b) => (b.createdAtMs||0) - (a.createdAtMs||0));
+    const listEl = document.getElementById('dcLogList');
+    if (!entries.length){ listEl.innerHTML = '<div class="empty-note">目前還沒有紀錄</div>'; return; }
+    listEl.innerHTML = entries.map(e => `
+      <div class="log-entry ${e.warn ? 'warn' : ''}">
+        <div class="meta"><span>${e.time} · ${e.slot}${e.staff ? '｜' + e.staff : ''}</span></div>
+        <div>${e.content}</div>
+      </div>
+    `).join('');
+  }
+
+  async function openDaycareRecord(id){
+    currentDaycareId = id;
+    const snap = await getDoc(doc(db, 'daycare', id));
+    if (!snap.exists()){ alert('找不到這筆安親資料'); return; }
+    const data = snap.data();
+    document.getElementById('dcRecordName').textContent = data.name;
+    document.getElementById('dcRecordMember').textContent = '家長 ' + data.phone + '・報到 ' + (data.checkinTime || '');
+    if (data.avatarUrl){ document.getElementById('dcRecordAvatar').src = data.avatarUrl; document.getElementById('dcRecordAvatar').style.display = 'block'; }
+    else { document.getElementById('dcRecordAvatar').style.display = 'none'; }
+    document.getElementById('dcCheckoutPanel').style.display = 'none';
+    document.getElementById('dcCheckoutFood').value = '';
+    document.getElementById('dcCheckoutItemsConfirm').checked = false;
+    renderSlotForm('上午放風');
+    await refreshDcLog();
+    showScreen('screenDaycareRecord');
+  }
+
+  document.getElementById('dcCheckoutBtn').addEventListener('click', () => {
+    const panel = document.getElementById('dcCheckoutPanel');
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+    const confirmBtn = document.getElementById('dcCheckoutConfirmBtn');
+    function checkReady(){
+      const ready = document.getElementById('dcCheckoutFood').value.trim() && document.getElementById('dcCheckoutItemsConfirm').checked;
+      confirmBtn.disabled = !ready;
+      confirmBtn.style.opacity = ready ? '1' : '0.5';
+    }
+    document.getElementById('dcCheckoutFood').oninput = checkReady;
+    document.getElementById('dcCheckoutItemsConfirm').onchange = checkReady;
+    checkReady();
+  });
+
+  document.getElementById('dcCheckoutConfirmBtn').addEventListener('click', () => guardedSubmit(document.getElementById('dcCheckoutConfirmBtn'), '離店處理', async () => {
+    const food = document.getElementById('dcCheckoutFood').value.trim();
+    await updateDoc(doc(db, 'daycare', currentDaycareId), {
+      status: 'done', checkoutFood: food, checkoutAt: new Date().toLocaleString('zh-TW')
+    });
+    showScreen('screenDaycareList');
+    await loadDaycareList();
+    alert('已完成離店。');
+  }));
 </script>
 </body>
 </html>
