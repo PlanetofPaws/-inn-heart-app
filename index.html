@@ -108,9 +108,15 @@
     <div class="topbar"><span>(inn)heart</span><span id="phoneEcho2"></span></div>
     <div style="padding:20px 22px 0;display:flex;flex-direction:column;gap:12px;">
       <button class="login-btn" id="menuCurrentBtn" style="margin-top:0;">照護紀錄(現在住房中)</button>
+      <button class="login-btn" id="menuDaycareBtn" style="margin-top:0;background:var(--pine);">安親照護紀錄</button>
       <button class="login-btn" id="menuHistoryBtn" style="margin-top:0;background:var(--ochre);">照護紀錄(歷史住房紀錄)</button>
       <div id="menuLogoutLink" style="text-align:center;font-size:12px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:6px;">不是我的寶貝?換一支電話號碼</div>
     </div>
+  </div>
+
+  <div class="screen" id="screenDaycare">
+    <div class="topbar"><span id="daycareBackLink" style="text-decoration:underline;cursor:pointer;">← 返回選單</span><span id="phoneEcho4"></span></div>
+    <div id="daycareContent" style="padding:20px 22px;"></div>
   </div>
 
   <div class="screen" id="screenHistoryList">
@@ -157,7 +163,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-  import { getFirestore, collection, doc, getDoc, getDocs, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+  import { getFirestore, collection, doc, getDoc, getDocs, setDoc, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDF0t4WRcgRVGOApUdLn8Oj8VbHy6vMZp8",
@@ -237,8 +243,9 @@
     const mode = new URLSearchParams(window.location.search).get('mode');
     if (mode === 'stay') enterMenuView('current');
     else if (mode === 'history') enterMenuView('history');
-    else if (mode === 'daycare' || mode === 'inhome'){
-      alert('這項服務即將上線,敬請期待!');
+    else if (mode === 'daycare') enterDaycareView();
+    else if (mode === 'inhome'){
+      alert('到府照護紀錄即將上線,敬請期待!');
     }
   }
 
@@ -406,6 +413,58 @@
 
   document.getElementById('menuCurrentBtn').addEventListener('click', () => enterMenuView('current'));
   document.getElementById('menuHistoryBtn').addEventListener('click', () => enterMenuView('history'));
+  document.getElementById('menuDaycareBtn').addEventListener('click', () => enterDaycareView());
+  document.getElementById('daycareBackLink').addEventListener('click', () => {
+    document.getElementById('screenDaycare').classList.remove('active');
+    document.getElementById('screenMenu').classList.add('active');
+  });
+
+  async function enterDaycareView(){
+    document.getElementById('phoneEcho4').textContent = document.getElementById('phoneEcho2').textContent;
+    document.getElementById('screenMenu').classList.remove('active');
+    document.getElementById('screenDaycare').classList.add('active');
+    const contentEl = document.getElementById('daycareContent');
+    contentEl.innerHTML = '<div class="status-msg">讀取中...</div>';
+
+    const phone = document.getElementById('phoneEcho2').textContent.replace('家長 ', '');
+    try {
+      const today = new Date();
+      const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+      const snap = await getDocs(query(collection(db, 'daycare'), where('phone', '==', phone), where('checkinDate', '==', todayStr)));
+      const items = [];
+      snap.forEach(d => items.push({ id: d.id, ...d.data() }));
+
+      if (!items.length){
+        contentEl.innerHTML = '<div class="status-msg">今天還沒有安親紀錄。</div>';
+        return;
+      }
+
+      contentEl.innerHTML = items.map(it => {
+        const entries = (it.entries || []).slice().sort((a,b) => (b.createdAtMs||0) - (a.createdAtMs||0));
+        const statusText = it.status === 'done' ? '已離店(' + (it.checkoutAt || '') + ')' : '在園中';
+        const entriesHtml = entries.length
+          ? entries.map(e => `
+              <div class="log-entry ${e.warn ? 'warn' : ''}">
+                <div class="meta"><span>${e.time} · ${e.slot}</span></div>
+                <div>${e.content}</div>
+              </div>
+            `).join('')
+          : '<div class="empty-note">目前還沒有紀錄</div>';
+        return `
+          <div class="hero" style="margin-bottom:6px;">
+            ${it.avatarUrl ? '<img src="'+it.avatarUrl+'" class="avatar" style="object-fit:cover;">' : '<div class="avatar"></div>'}
+            <div class="hero-text">
+              <p class="loc">安親照護・${statusText}</p>
+              <h1>${it.name}</h1>
+            </div>
+          </div>
+          <div style="margin:12px 0 24px;">${entriesHtml}</div>
+        `;
+      }).join('<div style="height:1px;background:var(--line);margin:20px 0;"></div>');
+    } catch (err) {
+      contentEl.innerHTML = '<div class="status-msg" style="color:var(--danger);">讀取失敗:' + err.message + '</div>';
+    }
+  }
 
   document.getElementById('historyBackLink').addEventListener('click', () => {
     document.getElementById('screenHistoryList').classList.remove('active');
