@@ -109,7 +109,7 @@
     <div style="padding:20px 22px 0;display:flex;flex-direction:column;gap:12px;">
       <button class="login-btn" id="menuCurrentBtn" style="margin-top:0;">照護紀錄(現在住房中)</button>
       <button class="login-btn" id="menuDaycareBtn" style="margin-top:0;background:var(--pine);">安親照護紀錄</button>
-      <button class="login-btn" id="menuHistoryBtn" style="margin-top:0;background:var(--ochre);">照護紀錄(歷史住房紀錄)</button>
+      <button class="login-btn" id="menuHistoryBtn" style="margin-top:0;background:var(--ochre);">歷史查詢</button>
       <div id="menuLogoutLink" style="text-align:center;font-size:12px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:6px;">不是我的寶貝?換一支電話號碼</div>
     </div>
   </div>
@@ -126,12 +126,26 @@
     <div class="hero">
       <div class="avatar" id="historyAvatar"></div>
       <div class="hero-text">
-        <p class="loc">歷史入住紀錄</p>
+        <p class="loc">歷史紀錄查詢</p>
         <h1 id="historyPetName"></h1>
       </div>
     </div>
 
-    <div id="historyDateList" style="padding:4px 22px 20px;"></div>
+    <div style="padding:4px 22px 0;">
+      <select id="historyTypeFilter" style="width:100%;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:14px;">
+        <option value="all">全部紀錄</option>
+        <option value="stay">住宿</option>
+        <option value="daycare">安親</option>
+        <option value="inhome">到府</option>
+      </select>
+    </div>
+
+    <div id="historyDateList" style="padding:12px 22px 20px;"></div>
+  </div>
+
+  <div class="screen" id="screenDaycareHistoryDetail">
+    <div class="topbar"><span id="dcHistBackLink" style="text-decoration:underline;cursor:pointer;">← 返回列表</span></div>
+    <div id="dcHistContent" style="padding:20px 22px;"></div>
   </div>
 
   <div class="screen" id="screenMain">
@@ -178,6 +192,7 @@
   const db = getFirestore(app);
 
   let myStays = [];
+  let myDaycareHistory = [];
   let globalMihomeUrl = null;
 
   (async function loadGlobalSettings(){
@@ -229,7 +244,14 @@
       });
     }
     myStays.forEach(s => { if (s.isActive && !s.avatarUrl) s.avatarUrl = memberAvatarUrl; });
-    return myStays.length > 0;
+
+    myDaycareHistory = [];
+    try {
+      const dcSnap = await getDocs(query(collection(db, 'daycare'), where('phone', '==', phone), where('status', '==', 'done')));
+      dcSnap.forEach(d => myDaycareHistory.push({ id: d.id, ...d.data() }));
+    } catch (err) { /* daycare history is best-effort; ignore failures here */ }
+
+    return myStays.length > 0 || myDaycareHistory.length > 0;
   }
 
   function finalizeEntry(phone){
@@ -324,23 +346,29 @@
       return;
     }
 
-    // history mode: group past stays by pet name, show a pet picker + date list first
-    const pastStays = myStays.filter(s => !s.isActive);
-    if (pastStays.length === 0){
-      alert('目前沒有已退房的歷史紀錄');
+    // history mode: group past stays + past daycare by pet name, show a pet picker + type filter + date list
+    const pastStays = myStays.filter(s => !s.isActive).map(s => ({ ...s, historyType: 'stay' }));
+    const pastDaycare = myDaycareHistory.map(d => ({
+      historyType: 'daycare', name: d.name, avatarUrl: d.avatarUrl,
+      checkinDate: d.checkinDate, checkedOutAt: d.checkoutAt, id: d.id, entries: d.entries || []
+    }));
+    const allPast = [...pastStays, ...pastDaycare];
+    if (allPast.length === 0){
+      alert('目前沒有已完成的歷史紀錄');
       return;
     }
     const byName = {};
-    pastStays.forEach(s => {
-      if (!byName[s.name]) byName[s.name] = { name: s.name, avatarUrl: s.avatarUrl, stays: [] };
-      byName[s.name].stays.push(s);
+    allPast.forEach(s => {
+      if (!byName[s.name]) byName[s.name] = { name: s.name, avatarUrl: s.avatarUrl, records: [] };
+      byName[s.name].records.push(s);
     });
     historyPets = Object.values(byName);
     historyPets.forEach(p => {
-      p.stays.sort((a,b) => (b.checkedOutAt || '').localeCompare(a.checkedOutAt || ''));
-      if (p.stays[0] && p.stays[0].avatarUrl) p.avatarUrl = p.stays[0].avatarUrl; // show the most recent photo for this pet
+      p.records.sort((a,b) => (b.checkedOutAt || '').localeCompare(a.checkedOutAt || ''));
+      if (p.records[0] && p.records[0].avatarUrl) p.avatarUrl = p.records[0].avatarUrl; // show the most recent photo for this pet
     });
     historyIdx = 0;
+    document.getElementById('historyTypeFilter').value = 'all';
     document.getElementById('screenMenu').classList.remove('active');
     document.getElementById('screenHistoryList').classList.add('active');
     renderHistoryPetTabs();
@@ -382,6 +410,8 @@
     return fmt(inParts) + ' - ' + fmt(outParts) + '(入住' + days + '天)';
   }
 
+  const historyTypeLabels = { stay: '🏠住宿', daycare: '🐾安親', inhome: '🚗到府' };
+
   function renderHistoryDateList(){
     const pet = historyPets[historyIdx];
     document.getElementById('historyPetName').textContent = pet.name;
@@ -393,22 +423,64 @@
       avatarEl.style.background = 'radial-gradient(circle at 30% 30%,#E8DCC8,transparent 60%),linear-gradient(155deg,#D8CBAE,#B9A47D)';
       avatarEl.innerHTML = '';
     }
+    const filterVal = document.getElementById('historyTypeFilter').value;
+    const filtered = pet.records.filter(r => filterVal === 'all' || r.historyType === filterVal);
     const listEl = document.getElementById('historyDateList');
-    listEl.innerHTML = pet.stays.map((s, i) => {
-      const dateLabel = formatStayRange(s);
-      return `<div class="history-date-row" data-idx="${i}"><span class="date">${dateLabel}</span><span class="arrow">›</span></div>`;
+    if (!filtered.length){
+      listEl.innerHTML = '<div class="status-msg">這個篩選條件下沒有紀錄。</div>';
+      return;
+    }
+    listEl.innerHTML = filtered.map((r, i) => {
+      const dateLabel = formatStayRange(r);
+      const typeLabel = historyTypeLabels[r.historyType] || '';
+      return `<div class="history-date-row" data-idx="${pet.records.indexOf(r)}"><span class="date">${typeLabel}・${dateLabel}</span><span class="arrow">›</span></div>`;
     }).join('');
     listEl.querySelectorAll('.history-date-row').forEach(row => {
       row.addEventListener('click', () => {
-        const stay = pet.stays[parseInt(row.dataset.idx)];
-        visibleStays = [stay];
-        currentIdx = 0;
-        document.getElementById('screenHistoryList').classList.remove('active');
-        document.getElementById('screenMain').classList.add('active');
-        document.getElementById('petTabs').innerHTML = '';
-        renderPet();
+        const record = pet.records[parseInt(row.dataset.idx)];
+        if (record.historyType === 'daycare') {
+          openDaycareHistoryDetail(record);
+        } else {
+          visibleStays = [record];
+          currentIdx = 0;
+          document.getElementById('screenHistoryList').classList.remove('active');
+          document.getElementById('screenMain').classList.add('active');
+          document.getElementById('petTabs').innerHTML = '';
+          renderPet();
+        }
       });
     });
+  }
+
+  document.getElementById('historyTypeFilter').addEventListener('change', () => renderHistoryDateList());
+
+  document.getElementById('dcHistBackLink').addEventListener('click', () => {
+    document.getElementById('screenDaycareHistoryDetail').classList.remove('active');
+    document.getElementById('screenHistoryList').classList.add('active');
+  });
+
+  function openDaycareHistoryDetail(record){
+    document.getElementById('screenHistoryList').classList.remove('active');
+    document.getElementById('screenDaycareHistoryDetail').classList.add('active');
+    const entries = (record.entries || []).slice().sort((a,b) => (b.createdAtMs||0) - (a.createdAtMs||0));
+    const entriesHtml = entries.length
+      ? entries.map(e => `
+          <div class="log-entry ${e.warn ? 'warn' : ''}">
+            <div class="meta"><span>${e.time} · ${e.slot}</span></div>
+            <div>${e.content}</div>
+          </div>
+        `).join('')
+      : '<div class="empty-note">這天沒有留下紀錄</div>';
+    document.getElementById('dcHistContent').innerHTML = `
+      <div class="hero">
+        ${record.avatarUrl ? '<img src="'+record.avatarUrl+'" class="avatar" style="object-fit:cover;">' : '<div class="avatar"></div>'}
+        <div class="hero-text">
+          <p class="loc">安親照護・${record.checkinDate || ''}</p>
+          <h1>${record.name}</h1>
+        </div>
+      </div>
+      <div style="margin-top:16px;">${entriesHtml}</div>
+    `;
   }
 
   document.getElementById('menuCurrentBtn').addEventListener('click', () => enterMenuView('current'));
