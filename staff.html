@@ -27,34 +27,34 @@
   .screen{display:none;}
   .screen.active{display:block;}
 
-  .staff-bar{display:flex;justify-content:space-between;align-items:center;padding:14px 22px;background:var(--card);border-bottom:1px solid var(--line);font-size:12.5px;color:var(--ink-soft);gap:8px;}
-  .staff-bar input{flex:1;border:none;background:transparent;font-family:'Noto Sans TC',sans-serif;font-size:12.5px;color:var(--ink);font-weight:600;text-align:right;}
+  .staff-bar{display:flex;justify-content:space-between;align-items:center;padding:14px 22px;background:var(--card);border-bottom:1px solid var(--line);font-size:11px;color:var(--ink-soft);gap:8px;}
+  .staff-bar input{flex:1;border:none;background:transparent;font-family:'Noto Sans TC',sans-serif;font-size:11px;color:var(--ink);font-weight:600;text-align:right;}
 
   .topbar{padding:18px 22px 4px;}
-  .topbar .sub{font-size:12px;color:var(--ink-soft);}
-  .topbar h1{font-weight:900;font-size:24px;margin:2px 0 0;}
+  .topbar .sub{font-size:10.5px;color:var(--ink-soft);}
+  .topbar h1{font-weight:900;font-size:21px;margin:2px 0 0;}
   .member-search{padding:16px 22px 0;}
   .member-search .row{display:flex;gap:8px;}
-  .member-search input{flex:1;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:10px 13px;font-size:14px;font-family:'Noto Sans TC',sans-serif;color:var(--ink);}
-  .member-search button{background:var(--deep);color:#F4F1E9;border:none;border-radius:12px;padding:0 16px;font-size:13.5px;font-weight:600;cursor:pointer;}
-  .divider{display:flex;align-items:center;gap:10px;margin:18px 0 4px;color:var(--ink-soft);font-size:12px;}
+  .member-search input{flex:1;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:10px 13px;font-size:12.5px;font-family:'Noto Sans TC',sans-serif;color:var(--ink);}
+  .member-search button{background:var(--deep);color:#F4F1E9;border:none;border-radius:12px;padding:0 16px;font-size:12px;font-weight:600;cursor:pointer;}
+  .divider{display:flex;align-items:center;gap:10px;margin:18px 0 4px;color:var(--ink-soft);font-size:10.5px;}
   .divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--line);}
 
   .area-toggle{display:flex;gap:8px;padding:16px 22px 6px;}
-  .area-chip{flex:1;text-align:center;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-size:14px;color:var(--ink-soft);cursor:pointer;}
+  .area-chip{flex:1;text-align:center;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-size:12.5px;color:var(--ink-soft);cursor:pointer;}
   .area-chip.active{background:var(--pine);border-color:var(--pine);color:#F4F1E9;}
   .room-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:14px 22px 0;}
   .room-btn{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 8px;text-align:center;cursor:pointer;}
-  .room-btn .no{font-size:11px;color:var(--ink-soft);}
-  .room-btn .name{font-size:14px;font-weight:600;margin-top:2px;}
+  .room-btn .no{font-size:9.5px;color:var(--ink-soft);}
+  .room-btn .name{font-size:12.5px;font-weight:600;margin-top:2px;}
   .room-btn[data-empty]{border-style:dashed;color:var(--ink-soft);}
 
-  .back-row{padding:16px 22px 0;font-size:13px;color:var(--ink-soft);cursor:pointer;}
+  .back-row{padding:16px 22px 0;font-size:11.5px;color:var(--ink-soft);cursor:pointer;}
   .record-head{padding:6px 22px 0;}
-  .record-head .loc{font-size:12px;color:var(--ink-soft);}
-  .record-head h1{font-weight:900;font-size:26px;margin:2px 0 0;}
+  .record-head .loc{font-size:10.5px;color:var(--ink-soft);}
+  .record-head h1{font-weight:900;font-size:23px;margin:2px 0 0;}
 
-  .summary-card{margin:14px 22px 0;padding:13px 16px;border-radius:14px;font-size:13.5px;line-height:1.5;}
+  .summary-card{margin:14px 22px 0;padding:13px 16px;border-radius:14px;font-size:12px;line-height:1.5;}
   .summary-card.ok{background:var(--pine-soft);color:var(--pine);}
   .summary-card.warn{background:var(--danger-soft);color:var(--danger);}
 
@@ -62,70 +62,70 @@
   .info-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 16px;border-bottom:1px solid var(--line);}
   .info-row:last-child{border-bottom:none;}
   .info-row.alert{border-left:3px solid var(--danger);}
-  .info-label{font-size:11.5px;color:var(--ink-soft);margin-bottom:2px;}
-  .info-value{font-size:13.5px;color:var(--ink);}
+  .info-label{font-size:10px;color:var(--ink-soft);margin-bottom:2px;}
+  .info-value{font-size:12px;color:var(--ink);}
   .info-row.alert .info-value{color:var(--danger);}
-  .info-edit{flex-shrink:0;background:var(--ochre-soft);color:var(--ochre);font-size:12px;font-weight:600;padding:6px 12px;border-radius:20px;cursor:pointer;}
+  .info-edit{flex-shrink:0;background:var(--ochre-soft);color:var(--ochre);font-size:10.5px;font-weight:600;padding:6px 12px;border-radius:20px;cursor:pointer;}
 
   .field{padding:16px 22px 0;}
-  .field label{display:block;font-size:13px;color:var(--ink-soft);margin-bottom:8px;}
+  .field label{display:block;font-size:11.5px;color:var(--ink-soft);margin-bottom:8px;}
   textarea,input[type=text],input[type=number]{
     width:100%;border:1px solid var(--line);background:var(--card);border-radius:12px;
-    padding:10px 13px;font-family:'Noto Sans TC',sans-serif;font-size:14.5px;color:var(--ink);
+    padding:10px 13px;font-family:'Noto Sans TC',sans-serif;font-size:13px;color:var(--ink);
   }
   textarea{min-height:70px;resize:vertical;}
   .chip-row{display:flex;flex-wrap:wrap;gap:8px;}
-  .chip{padding:8px 14px;border-radius:20px;border:1px solid var(--line);background:var(--card);font-size:13.5px;color:var(--ink-soft);cursor:pointer;user-select:none;}
+  .chip{padding:6px 12px;border-radius:20px;border:1px solid var(--line);background:var(--card);font-size:12px;color:var(--ink-soft);cursor:pointer;user-select:none;}
   .chip.active{background:var(--pine);border-color:var(--pine);color:#F4F1E9;}
   .chip.active.warn{background:var(--danger);border-color:var(--danger);}
   .cat-tabs{display:flex;gap:8px;padding:18px 22px 0;overflow-x:auto;}
   .pet-tabs{display:flex;gap:8px;padding:18px 22px 0;overflow-x:auto;}
-  .pet-tab{padding:8px 16px;border-radius:20px;border:1px solid var(--line);background:var(--card);font-size:13.5px;color:var(--ink-soft);cursor:pointer;white-space:nowrap;flex-shrink:0;}
+  .pet-tab{padding:7px 14px;border-radius:20px;border:1px solid var(--line);background:var(--card);font-size:12px;color:var(--ink-soft);cursor:pointer;white-space:nowrap;flex-shrink:0;}
   .pet-tab.active{background:var(--pine);border-color:var(--pine);color:#F4F1E9;}
   .history-date-row{background:var(--card);border-radius:14px;padding:16px 18px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;}
-  .history-date-row .date{font-weight:700;font-size:15px;}
+  .history-date-row .date{font-weight:700;font-size:13px;}
   .history-date-row .arrow{color:var(--ink-soft);}
-  .cat-tab{flex-shrink:0;padding:9px 15px;border-radius:20px;border:1px solid var(--line);background:var(--card);font-size:13.5px;color:var(--ink-soft);cursor:pointer;}
+  .cat-tab{flex-shrink:0;padding:7px 13px;border-radius:20px;border:1px solid var(--line);background:var(--card);font-size:12px;color:var(--ink-soft);cursor:pointer;}
   .cat-tab.active{background:var(--ochre);border-color:var(--ochre);color:#2A2A2C;}
   .cat-panel{display:none;}
   .cat-panel.show{display:block;}
   .sub-group{padding:14px 22px 0;}
-  .sub-group .glabel{font-size:12.5px;color:var(--ink-soft);margin-bottom:6px;display:block;}
-  .glabel{font-size:12.5px;color:var(--ink-soft);margin-bottom:6px;display:block;}
+  .sub-group .glabel{font-size:11px;color:var(--ink-soft);margin-bottom:6px;display:block;}
+  .glabel{font-size:11px;color:var(--ink-soft);margin-bottom:6px;display:block;}
   .detail-card{border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:10px;background:rgba(255,255,255,0.03);}
-  .detail-card-title{font-size:12px;font-weight:700;color:var(--ochre);margin-bottom:8px;}
+  .detail-card-title{font-size:10.5px;font-weight:700;color:var(--ochre);margin-bottom:8px;}
   .glabel-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
-  .photo-mini{flex-shrink:0;width:26px;height:26px;border-radius:8px;border:1px solid var(--line);background:var(--card);display:flex;align-items:center;justify-content:center;font-size:13px;cursor:pointer;}
+  .photo-mini{flex-shrink:0;width:26px;height:26px;border-radius:8px;border:1px solid var(--line);background:var(--card);display:flex;align-items:center;justify-content:center;font-size:11.5px;cursor:pointer;}
   .photo-mini input{display:none;}
-  .photo-count{font-size:11px;color:var(--ochre);margin-left:4px;}
+  .photo-count{font-size:9.5px;color:var(--ochre);margin-left:4px;}
   .two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 22px 0;}
   .three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
 
-  .submit-btn{width:100%;background:var(--pine);color:#F4F1E9;border:none;border-radius:14px;padding:15px;font-family:'Noto Sans TC',sans-serif;font-weight:600;font-size:15px;cursor:pointer;}
-  .small-btn{display:inline-block;color:#2A2A2C;border:none;border-radius:12px;padding:10px 16px;font-family:'Noto Sans TC',sans-serif;font-weight:600;font-size:13.5px;cursor:pointer;}
+  .submit-btn{width:100%;background:var(--pine);color:#F4F1E9;border:none;border-radius:14px;padding:13px;font-family:'Noto Sans TC',sans-serif;font-weight:600;font-size:13px;cursor:pointer;}
+  .small-btn{display:inline-block;color:#2A2A2C;border:none;border-radius:12px;padding:9px 14px;font-family:'Noto Sans TC',sans-serif;font-weight:600;font-size:12px;cursor:pointer;}
   .submit-row{padding:18px 22px 0;}
 
   .today-section{margin-top:30px;padding:0 22px;}
-  .today-section h2{font-size:14px;color:var(--ink-soft);font-weight:500;margin:0 0 12px;}
+  .today-section h2{font-size:12.5px;color:var(--ink-soft);font-weight:500;margin:0 0 12px;}
   .log-entry{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px 16px;margin-bottom:10px;}
   .member-row{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px 16px;margin-bottom:10px;}
-  .member-row .mline{font-size:12.5px;color:var(--ink-soft);margin-bottom:3px;}
+  .member-row .mline{font-size:11px;color:var(--ink-soft);margin-bottom:3px;}
   .member-row .mline b{color:var(--ink);font-weight:600;}
   .member-row .mactions{display:flex;gap:8px;margin-top:10px;}
-  .member-row .mactions button{flex:1;border:none;border-radius:10px;padding:8px;font-size:12.5px;font-weight:600;cursor:pointer;}
+  .member-row .mactions button{flex:1;border:none;border-radius:10px;padding:8px;font-size:11px;font-weight:600;cursor:pointer;}
   .log-entry.warn{border-color:var(--danger);}
-  .log-entry .meta{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-soft);margin-bottom:4px;}
-  .log-entry p{margin:0;font-size:14px;line-height:1.5;}
-  .empty-note{font-size:13px;color:var(--ink-soft);text-align:center;padding:20px 0;}
-  .status-msg{padding:12px 22px;font-size:13px;color:var(--ink-soft);}
+  .log-entry .meta{display:flex;justify-content:space-between;font-size:10.5px;color:var(--ink-soft);margin-bottom:4px;}
+  .log-entry p{margin:0;font-size:12.5px;line-height:1.5;}
+  .empty-note{font-size:11.5px;color:var(--ink-soft);text-align:center;padding:20px 0;}
+  .status-msg{padding:12px 22px;font-size:11.5px;color:var(--ink-soft);}
 
   .day-tabs{display:flex;gap:8px;padding:0 22px 14px;overflow-x:auto;}
-  .day-tab{flex-shrink:0;padding:8px 14px;border-radius:20px;border:1px solid var(--line);background:var(--card);font-size:13px;color:var(--ink-soft);cursor:pointer;}
+  .day-tab{flex-shrink:0;padding:6px 12px;border-radius:20px;border:1px solid var(--line);background:var(--card);font-size:11.5px;color:var(--ink-soft);cursor:pointer;}
   .day-tab.active{background:var(--deep);border-color:var(--deep);color:#F4F1E9;}
   .summary-strip{display:flex;gap:10px;padding:0 22px 16px;}
   .summary-item{flex:1;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 8px;text-align:center;}
-  .summary-item .num{font-weight:900;font-size:18px;color:var(--pine);}
-  .summary-item .lbl{font-size:11px;color:var(--ink-soft);margin-top:2px;}
+  .summary-item .num{font-weight:900;font-size:16px;color:var(--pine);}
+  .summary-item .lbl{font-size:9.5px;color:var(--ink-soft);margin-top:2px;}
 
   #printArea{display:none;}
   @media print{
@@ -135,13 +135,13 @@
       display:block !important;
       background:#fff; color:#111; font-family:'Noto Sans TC',sans-serif; padding:0;
     }
-    #printArea h1{font-size:20px;margin:0 0 4px;color:#111;}
-    #printArea .meta{font-size:13px;color:#444;}
-    #printArea h2{font-size:15px;margin:18px 0 6px;border-bottom:1px solid #999;padding-bottom:4px;color:#111;}
+    #printArea h1{font-size:17.5px;margin:0 0 4px;color:#111;}
+    #printArea .meta{font-size:11.5px;color:#444;}
+    #printArea h2{font-size:13px;margin:18px 0 6px;border-bottom:1px solid #999;padding-bottom:4px;color:#111;}
     #printArea p{color:#111;}
-    #printArea .pentry{margin-bottom:10px;font-size:13px;line-height:1.5;page-break-inside:avoid;color:#111;}
+    #printArea .pentry{margin-bottom:10px;font-size:11.5px;line-height:1.5;page-break-inside:avoid;color:#111;}
     #printArea .pentry .ptime{font-weight:700;margin-right:8px;}
-    #printArea .pentry .pcat{color:#666;font-size:12px;}
+    #printArea .pentry .pcat{color:#666;font-size:10.5px;}
     #printArea .pentry .pcontent{margin-top:2px;}
   }
 </style>
@@ -156,10 +156,10 @@
 
   <div class="screen active" id="screenAuthLogin">
     <div style="padding:80px 30px 0;text-align:center;">
-      <div style="font-weight:900;font-size:24px;margin-bottom:10px;">(inn)heart</div>
-      <p style="font-size:13px;color:var(--ink-soft);margin-bottom:26px;">工作人員後台,請用公司核准的 Google 帳號登入。</p>
+      <div style="font-weight:900;font-size:21.5px;margin-bottom:10px;">(inn)heart</div>
+      <p style="font-size:11.5px;color:var(--ink-soft);margin-bottom:26px;">工作人員後台,請用公司核准的 Google 帳號登入。</p>
       <button class="submit-btn" id="googleLoginBtn">使用 Google 登入</button>
-      <div id="authNote" style="font-size:12.5px;color:var(--danger);margin-top:16px;"></div>
+      <div id="authNote" style="font-size:11px;color:var(--danger);margin-top:16px;"></div>
     </div>
   </div>
 
@@ -177,10 +177,32 @@
       <button class="submit-btn" id="menuInhomeBtn" style="background:var(--card);color:var(--ink-soft);border:1px solid var(--line);">到府照護紀錄(即將上線)</button>
       <button class="submit-btn" id="menuHistoryBtn" style="background:var(--ochre);color:#2A2A2C;">歷史紀錄</button>
       <button class="submit-btn" id="menuMembersBtn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);">會員資料管理</button>
-      <div id="cameraSettingLink" style="text-align:center;font-size:12.5px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:8px;">設定小米 App 連結</div>
-      <div id="staffManageLink" style="text-align:center;font-size:12.5px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:4px;">新增工作人員(管理者)</div>
-      <div style="text-align:center;font-size:10.5px;color:var(--ink-soft);opacity:0.5;margin-top:20px;">版本 2026-09-21-daycare1</div>
+      <button class="submit-btn" id="menuPendingBindingsBtn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);position:relative;">
+        LINE 綁定審核<span id="pendingBindingsBadge" style="display:none;background:var(--danger);color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;margin-left:6px;">0</span>
+      </button>
+      <div id="cameraSettingLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:8px;">設定小米 App 連結</div>
+      <div id="staffManageLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:4px;">新增工作人員(管理者)</div>
+      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:20px;">版本 2026-09-21-daycare1</div>
     </div>
+  </div>
+
+  <div class="screen" id="screenPickupVerify">
+    <div class="back-row" id="pickupVerifyBackBtn">← 返回選單</div>
+    <div class="topbar">
+      <div class="sub">(inn)heart · 接回核對</div>
+      <h1>掃碼核對結果</h1>
+    </div>
+    <div id="pickupVerifyContent"></div>
+  </div>
+
+  <div class="screen" id="screenPendingBindings">
+    <div class="back-row" id="pendingBindingsBackBtn">← 返回選單</div>
+    <div class="topbar">
+      <div class="sub">(inn)heart · 工作人員後台</div>
+      <h1>LINE 綁定審核</h1>
+    </div>
+    <div style="padding:0 22px 8px;font-size:12px;color:var(--ink-soft);">這支電話已經有其他 LINE 帳號綁定過,家長又用新的 LINE 帳號輸入了同一支電話,需要你確認是不是同一家人再核准。</div>
+    <div id="pendingBindingsList" style="padding:10px 22px 20px;"></div>
   </div>
 
   <div class="screen" id="screenStaffManage">
@@ -200,7 +222,7 @@
       <label style="margin-top:12px;">員工姓名(選填,方便自己辨識)</label>
       <input type="text" id="staffNewName" placeholder="例如：小美">
       <div class="submit-row"><button class="submit-btn" id="staffAddSubmit">新增這位員工</button></div>
-      <div style="font-size:11.5px;color:var(--ink-soft);margin-top:8px;">新增後,這位員工用這組信箱登入 Google 就能直接進入後台,不需要再去 Firebase 後台手動加。</div>
+      <div style="font-size:10.5px;color:var(--ink-soft);margin-top:8px;">新增後,這位員工用這組信箱登入 Google 就能直接進入後台,不需要再去 Firebase 後台手動加。</div>
     </div>
   </div>
 
@@ -234,7 +256,7 @@
     </div>
     <div class="field">
       <img id="dcAvatarPreview" style="display:none;width:80px;height:80px;border-radius:16px;object-fit:cover;margin-bottom:8px;">
-      <div id="dcAvatarNote" style="font-size:11.5px;color:var(--ink-soft);margin-bottom:6px;"></div>
+      <div id="dcAvatarNote" style="font-size:10.5px;color:var(--ink-soft);margin-bottom:6px;"></div>
       <label>大頭照(選填,若之前上傳過會自動帶入)</label>
       <input type="file" id="dcAvatarInput" accept="image/*">
     </div>
@@ -295,7 +317,7 @@
     <div class="field" id="dcCheckoutPanel" style="display:none;">
       <label>離店前確認</label>
       <input type="text" id="dcCheckoutFood" placeholder="今日餵食量,例如:完食 / 剩餘50g">
-      <label style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:14px;color:var(--ink);">
+      <label style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:12.5px;color:var(--ink);">
         <input type="checkbox" id="dcCheckoutItemsConfirm"> 已確認交還所有物品
       </label>
       <div class="submit-row">
@@ -354,27 +376,27 @@
       <label>家長姓名</label>
       <div style="display:flex;gap:8px;">
         <input type="text" id="mhNameInput" placeholder="尚未填寫">
-        <button id="mhNameSaveBtn" style="background:var(--pine);color:#F4F1E9;border:none;border-radius:12px;padding:0 16px;font-size:13.5px;cursor:pointer;">儲存</button>
+        <button id="mhNameSaveBtn" style="background:var(--pine);color:#F4F1E9;border:none;border-radius:12px;padding:0 16px;font-size:12px;cursor:pointer;">儲存</button>
       </div>
       <label style="margin-top:12px;">變更手機號碼</label>
       <div style="display:flex;gap:8px;">
         <input type="text" id="mhNewPhoneInput" placeholder="輸入新的手機號碼">
-        <button id="mhPhoneChangeBtn" style="background:var(--ochre);color:#2A2A2C;border:none;border-radius:12px;padding:0 16px;font-size:13.5px;cursor:pointer;white-space:nowrap;">搬移資料</button>
+        <button id="mhPhoneChangeBtn" style="background:var(--ochre);color:#2A2A2C;border:none;border-radius:12px;padding:0 16px;font-size:12px;cursor:pointer;white-space:nowrap;">搬移資料</button>
       </div>
-      <div style="font-size:11.5px;color:var(--ink-soft);margin-top:6px;">會把姓名、歷史紀錄搬到新號碼底下,並自動更新目前入住中的房間對應,原號碼會被刪除。</div>
+      <div style="font-size:10.5px;color:var(--ink-soft);margin-top:6px;">會把姓名、歷史紀錄搬到新號碼底下,並自動更新目前入住中的房間對應,原號碼會被刪除。</div>
 
       <label style="margin-top:16px;">LINE 綁定狀態</label>
-      <div id="manageLineStatus" style="font-size:13.5px;color:var(--ink-soft);margin-bottom:8px;">讀取中...</div>
-      <button id="mhUnbindLineBtn" style="background:var(--danger-soft);color:var(--danger);border:none;border-radius:12px;padding:9px 16px;font-size:13.5px;cursor:pointer;width:100%;">解除 LINE 綁定(不影響入住紀錄)</button>
-      <div style="font-size:11.5px;color:var(--ink-soft);margin-top:6px;">只會解除 LINE 帳號跟這支手機的連結,家長之後要用可以重新用 LINE 綁定;不會刪除任何入住紀錄或姓名資料。</div>
+      <div id="manageLineStatus" style="font-size:12px;color:var(--ink-soft);margin-bottom:8px;">讀取中...</div>
+      <button id="mhUnbindLineBtn" style="background:var(--danger-soft);color:var(--danger);border:none;border-radius:12px;padding:9px 16px;font-size:12px;cursor:pointer;width:100%;">解除 LINE 綁定(不影響入住紀錄)</button>
+      <div style="font-size:10.5px;color:var(--ink-soft);margin-top:6px;">只會解除 LINE 帳號跟這支手機的連結,家長之後要用可以重新用 LINE 綁定;不會刪除任何入住紀錄或姓名資料。</div>
 
       <label style="margin-top:16px;">更改寶貝綁定的家長</label>
       <input type="text" id="mhReassignPetName" placeholder="寶貝名字(需與紀錄中完全一致)">
       <div style="display:flex;gap:8px;margin-top:8px;">
         <input type="text" id="mhReassignNewPhone" placeholder="要轉移過去的新家長手機號碼">
-        <button id="mhReassignBtn" style="background:var(--danger-soft);color:var(--danger);border:none;border-radius:12px;padding:0 16px;font-size:13.5px;cursor:pointer;white-space:nowrap;">轉移</button>
+        <button id="mhReassignBtn" style="background:var(--danger-soft);color:var(--danger);border:none;border-radius:12px;padding:0 16px;font-size:12px;cursor:pointer;white-space:nowrap;">轉移</button>
       </div>
-      <div style="font-size:11.5px;color:var(--ink-soft);margin-top:6px;">會把這隻寶貝底下的入住歷史紀錄跟照片,搬到新的手機號碼底下(其他寶貝不受影響);如果這隻寶貝目前正在住房中,也會一併更新。</div>
+      <div style="font-size:10.5px;color:var(--ink-soft);margin-top:6px;">會把這隻寶貝底下的入住歷史紀錄跟照片,搬到新的手機號碼底下(其他寶貝不受影響);如果這隻寶貝目前正在住房中,也會一併更新。</div>
     </div>
 
     <div class="divider" style="margin:20px 22px 0;">或從下方清單直接編輯</div>
@@ -405,10 +427,29 @@
       <input type="datetime-local" id="ciCheckinTime">
     </div>
     <div class="field">
+      <label>預計接回的家長姓名</label>
+      <input type="text" id="ciPickupName" placeholder="例如：陳小姐(可與送來者相同)">
+    </div>
+    <div class="field">
+      <label>預計接回的家長電話</label>
+      <input type="text" id="ciPickupPhone" placeholder="例如：0912345678">
+    </div>
+    <div class="field">
+      <label>與送來者的關係</label>
+      <div class="chip-row" data-group="ciPickupRelation">
+        <div class="chip" data-val="本人">本人</div>
+        <div class="chip" data-val="配偶">配偶</div>
+        <div class="chip" data-val="家人">家人</div>
+        <div class="chip" data-val="朋友">朋友</div>
+        <div class="chip" data-val="保母">保母</div>
+        <div class="chip" data-val="其他">其他</div>
+      </div>
+    </div>
+    <div class="field">
       <label>寶貝大頭照</label>
-      <div id="ciAvatarNote" style="font-size:12.5px;color:var(--ink-soft);margin-bottom:8px;"></div>
+      <div id="ciAvatarNote" style="font-size:11px;color:var(--ink-soft);margin-bottom:8px;"></div>
       <img id="ciAvatarPreview" style="display:none;width:88px;height:88px;border-radius:16px;object-fit:cover;margin-bottom:8px;">
-      <label class="photo-btn-like" style="display:inline-block;border:1px dashed var(--line);background:var(--card);border-radius:12px;padding:10px 16px;font-size:13px;color:var(--ink-soft);cursor:pointer;">
+      <label class="photo-btn-like" style="display:inline-block;border:1px dashed var(--line);background:var(--card);border-radius:12px;padding:10px 16px;font-size:11.5px;color:var(--ink-soft);cursor:pointer;">
         上傳 / 更換照片
         <input type="file" accept="image/*" id="ciAvatarInput" style="display:none;">
       </label>
@@ -430,7 +471,7 @@
     <div class="detail-card" id="ciFoodDetail" style="display:none;">
       <label class="glabel">飼料資訊(可以帶不只一種)</label>
       <div id="ciFoodItemsList"></div>
-      <div id="ciFoodAddBtn" style="text-align:center;font-size:13px;color:var(--ochre);text-decoration:underline;cursor:pointer;margin-top:8px;">＋ 新增一種飼料</div>
+      <div id="ciFoodAddBtn" style="text-align:center;font-size:11.5px;color:var(--ochre);text-decoration:underline;cursor:pointer;margin-top:8px;">＋ 新增一種飼料</div>
     </div>
 
     <div class="detail-card" id="ciSnackDetail" style="display:none;">
@@ -528,7 +569,7 @@
         <div class="loc" id="recordLoc">貓貓區 · 3 號房</div>
         <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;">
           <h1 id="recordName" style="margin:0;">抹茶</h1>
-          <span id="notesBadge" style="font-size:11.5px;cursor:pointer;"></span>
+          <span id="notesBadge" style="font-size:10.5px;cursor:pointer;"></span>
         </div>
         <div class="loc" id="recordMember" style="margin-top:4px;text-decoration:underline;cursor:pointer;">家長 0912-345-678</div>
       </div>
@@ -558,7 +599,7 @@
       <div class="detail-card" id="recFoodDetail" style="display:none;padding:14px 0 0;">
         <label class="glabel">飼料資訊(可以帶不只一種)</label>
         <div id="recFoodItemsList"></div>
-        <div id="recFoodAddBtn" style="text-align:center;font-size:13px;color:var(--ochre);text-decoration:underline;cursor:pointer;margin-top:8px;">＋ 新增一種飼料</div>
+        <div id="recFoodAddBtn" style="text-align:center;font-size:11.5px;color:var(--ochre);text-decoration:underline;cursor:pointer;margin-top:8px;">＋ 新增一種飼料</div>
       </div>
 
       <div class="detail-card" id="recSnackDetail" style="display:none;padding:14px 0 0;">
@@ -642,9 +683,12 @@
     </div>
 
     <div class="field" style="display:flex;gap:8px;">
-      <button id="printBtn" class="small-btn" style="background:var(--ochre);flex:1;font-size:12.5px;padding:9px 6px;">匯出並列印紀錄</button>
-      <button id="changeRoomBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);flex:1;font-size:12.5px;padding:9px 6px;">🔄 換房間</button>
-      <button id="mergeRoomBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);flex:1;font-size:12.5px;padding:9px 6px;">🔗 合併房間</button>
+      <button id="printBtn" class="small-btn" style="background:var(--ochre);flex:1;font-size:11px;padding:9px 6px;">匯出並列印紀錄</button>
+      <button id="changeRoomBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);flex:1;font-size:11px;padding:9px 6px;">🔄 換房間</button>
+      <button id="mergeRoomBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);flex:1;font-size:11px;padding:9px 6px;">🔗 合併房間</button>
+    </div>
+    <div class="field">
+      <button id="reprintPickupCardBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);width:100%;font-size:11px;">🎫 重新列印/傳送接回小卡</button>
     </div>
     <div class="field" id="changeRoomPanel" style="display:none;">
       <label>選擇要換到的空房</label>
@@ -664,7 +708,7 @@
     <div class="field" id="checkoutChecklistPanel" style="display:none;">
       <label>退房前物品核對(全部確認才能退房)</label>
       <div id="checkoutItemsList" style="display:flex;flex-direction:column;gap:8px;"></div>
-      <label style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:14px;color:var(--ink);">
+      <label style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:12.5px;color:var(--ink);">
         <input type="checkbox" id="checkoutMihomeConfirm"> 已退出小米共享設備
       </label>
       <div class="submit-row">
@@ -680,7 +724,7 @@
       </div>
     </div>
 
-    <div id="editModeBanner" style="display:none;margin:0 22px 12px;background:var(--ochre);color:#2A2A2C;border-radius:12px;padding:10px 14px;font-size:13px;align-items:center;justify-content:space-between;">
+    <div id="editModeBanner" style="display:none;margin:0 22px 12px;background:var(--ochre);color:#2A2A2C;border-radius:12px;padding:10px 14px;font-size:11.5px;align-items:center;justify-content:space-between;">
       <span>✏️ 正在編輯舊紀錄,改好後記得按下方的「儲存修改」</span>
       <span class="cancel-edit-btn" style="text-decoration:underline;cursor:pointer;white-space:nowrap;margin-left:10px;">取消編輯</span>
     </div>
@@ -721,11 +765,11 @@
         </div>
         <div id="bcEyeDetail" style="display:none;margin-top:8px;">
           <input type="text" id="bcEyeQuality" placeholder="性質">
-          <label style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:13px;color:var(--ink-soft);"><input type="checkbox" id="bcEyeHandled"> 已清潔</label>
+          <label style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:11.5px;color:var(--ink-soft);"><input type="checkbox" id="bcEyeHandled"> 已清潔</label>
         </div>
         <div id="bcNoseDetail" style="display:none;margin-top:8px;">
           <input type="text" id="bcNoseQuality" placeholder="性質">
-          <label style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:13px;color:var(--ink-soft);"><input type="checkbox" id="bcNoseHandled"> 已清潔</label>
+          <label style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:11.5px;color:var(--ink-soft);"><input type="checkbox" id="bcNoseHandled"> 已清潔</label>
         </div>
       </div>
       <div class="sub-group" id="bcDogFields">
@@ -781,8 +825,8 @@
         <div class="glabel-row"><span class="glabel" style="margin:0;">呼吸(平穩狀態)</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
         <div class="chip-row" data-group="bcBreathing">
           <div class="chip" data-val="呼吸平順">呼吸平順</div>
-          <div class="chip warn" data-val="呼吸偏快(大於50下/分以上小於70下/分)">呼吸偏快(大於50下/分以上小於70下/分)</div>
-          <div class="chip warn" data-val="呼吸急促(大於70下/分以上)">呼吸急促(大於70下/分以上)</div>
+          <div class="chip warn" data-val="呼吸偏快(>50下/分，<70下/分)">呼吸偏快(>50下/分，<70下/分)</div>
+          <div class="chip warn" data-val="呼吸急促(>70下/分以上)">呼吸急促(>70下/分以上)</div>
           <div class="chip warn" data-val="張口呼吸">張口呼吸</div>
           <div class="chip warn" data-val="抬頭呼吸">抬頭呼吸</div>
           <div class="chip warn" data-val="用力呼吸">用力呼吸</div>
@@ -888,7 +932,7 @@
           <div><label class="glabel">剩餘棄置(g)</label><input type="number" min="0" id="ftDryDiscard" placeholder="倒掉的剩餘量"></div>
           <div><label class="glabel">剩餘保留(g)</label><input type="number" min="0" id="ftDryKeep" placeholder="留著的剩餘量"></div>
         </div>
-        <div style="font-size:11.5px;color:var(--ink-soft);margin-top:6px;">剩餘棄置 = 這次把之前留下的量倒掉不要了;剩餘保留 = 留著繼續給,會自動跟這次的餵食量加在一起。兩者擇一填寫即可,系統會自動算出這段時間吃了多少。</div>
+        <div style="font-size:10.5px;color:var(--ink-soft);margin-top:6px;">剩餘棄置 = 這次把之前留下的量倒掉不要了;剩餘保留 = 留著繼續給,會自動跟這次的餵食量加在一起。兩者擇一填寫即可,系統會自動算出這段時間吃了多少。</div>
       </div>
       <div class="detail-card" id="ftWetDetail" style="display:none;">
         <div class="detail-card-title">濕食</div>
@@ -913,14 +957,14 @@
           <div><label class="glabel">給水量(ML)</label><input type="number" min="0" id="ftWaterGiveMl"></div>
           <div><label class="glabel">棄置剩餘水量(ML)</label><input type="number" min="0" id="ftWaterDiscardMl"></div>
         </div>
-        <div style="font-size:11.5px;color:var(--ink-soft);margin-top:6px;">今日飲水量 = 上次給水量 − 這次棄置剩餘量,自動累計</div>
+        <div style="font-size:10.5px;color:var(--ink-soft);margin-top:6px;">今日飲水量 = 上次給水量 − 這次棄置剩餘量,自動累計</div>
       </div>
 
       <div class="sub-group" id="ftPeeCat" style="display:none;">
         <div class="glabel-row"><span class="glabel" style="margin:0;">排尿紀錄(貓貓區)</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
-        <label style="display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:13px;color:var(--ink-soft);"><input type="checkbox" id="ftPeeCatNone"> 目前無尿尿,待追蹤</label>
+        <label style="display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:11.5px;color:var(--ink-soft);"><input type="checkbox" id="ftPeeCatNone"> 目前無尿尿,待追蹤</label>
         <input type="number" min="0" id="ftPeeCatGrams" placeholder="重量(含貓砂,g)">
-        <label style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:13px;color:var(--ink-soft);"><input type="checkbox" id="ftPeeCatMulti"> 多貓同住,無法精準判斷</label>
+        <label style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:11.5px;color:var(--ink-soft);"><input type="checkbox" id="ftPeeCatMulti"> 多貓同住,無法精準判斷</label>
         <div class="glabel" style="margin-top:10px;">顏色</div>
         <div class="chip-row" data-group="ftPeeCatColor">
           <div class="chip" data-val="正常">正常</div>
@@ -929,7 +973,7 @@
       </div>
       <div class="sub-group" id="ftPeeDog" style="display:none;">
         <div class="glabel-row"><span class="glabel" style="margin:0;">排尿紀錄(狗狗區)</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
-        <label style="display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:13px;color:var(--ink-soft);"><input type="checkbox" id="ftPeeDogNone"> 目前無尿尿,待追蹤</label>
+        <label style="display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:11.5px;color:var(--ink-soft);"><input type="checkbox" id="ftPeeDogNone"> 目前無尿尿,待追蹤</label>
         <div class="chip-row" data-group="ftPeeDogType">
           <div class="chip" data-val="尿布墊">尿布墊</div>
           <div class="chip" data-val="戶外">戶外</div>
@@ -947,9 +991,9 @@
 
       <div class="sub-group" id="ftPoopCat" style="display:none;">
         <div class="glabel-row"><span class="glabel" style="margin:0;">排便紀錄(貓貓區)</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
-        <label style="display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:13px;color:var(--ink-soft);"><input type="checkbox" id="ftPoopCatNone"> 目前無便便,待追蹤</label>
+        <label style="display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:11.5px;color:var(--ink-soft);"><input type="checkbox" id="ftPoopCatNone"> 目前無便便,待追蹤</label>
         <input type="number" min="0" id="ftPoopCatGrams" placeholder="重量(含貓砂,g)">
-        <label style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:13px;color:var(--ink-soft);"><input type="checkbox" id="ftPoopCatMulti"> 多貓同住,無法精準判斷</label>
+        <label style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:11.5px;color:var(--ink-soft);"><input type="checkbox" id="ftPoopCatMulti"> 多貓同住,無法精準判斷</label>
         <div class="glabel" style="margin-top:10px;">顏色</div>
         <div class="chip-row" data-group="ftPoopCatColor">
           <div class="chip" data-val="正常">正常</div>
@@ -965,7 +1009,7 @@
       </div>
       <div class="sub-group" id="ftPoopDog" style="display:none;">
         <div class="glabel-row"><span class="glabel" style="margin:0;">排便紀錄(狗狗區)</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
-        <label style="display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:13px;color:var(--ink-soft);"><input type="checkbox" id="ftPoopDogNone"> 目前無便便,待追蹤</label>
+        <label style="display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:11.5px;color:var(--ink-soft);"><input type="checkbox" id="ftPoopDogNone"> 目前無便便,待追蹤</label>
         <div class="two-col">
           <div><label class="glabel">尿布墊(已扣除,g)</label><input type="number" min="0" id="ftPoopDogPadGrams"></div>
           <div><label class="glabel">戶外(g)</label><input type="number" min="0" id="ftPoopDogOutGrams"></div>
@@ -1226,13 +1270,13 @@
       <h2>入住紀錄</h2>
       <div class="day-tabs" id="dayTabs"></div>
       <div class="summary-strip" id="summaryStrip"></div>
-      <div id="moodRow" style="padding:0 22px 4px;font-size:13px;color:var(--ink-soft);display:flex;align-items:center;gap:6px;"></div>
-      <div id="dayHighlight" style="padding:0 22px 12px;font-size:13px;color:var(--ink-soft);"></div>
+      <div id="moodRow" style="padding:0 22px 4px;font-size:11.5px;color:var(--ink-soft);display:flex;align-items:center;gap:6px;"></div>
+      <div id="dayHighlight" style="padding:0 22px 12px;font-size:11.5px;color:var(--ink-soft);"></div>
       <div id="logList"><div class="empty-note">目前還沒有紀錄</div></div>
     </div>
 
     <div style="padding:40px 22px 30px;text-align:center;">
-      <span id="forceResetLink" style="font-size:11px;color:var(--ink-soft);opacity:0.4;text-decoration:underline;cursor:pointer;">重置這間房(僅用於資料異常時)</span>
+      <span id="forceResetLink" style="font-size:10px;color:var(--ink-soft);opacity:0.4;text-decoration:underline;cursor:pointer;">重置這間房(僅用於資料異常時)</span>
     </div>
   </div>
 
@@ -1249,7 +1293,7 @@
     </div>
 
     <div class="field">
-      <select id="mhTypeFilter" style="width:100%;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:14px;">
+      <select id="mhTypeFilter" style="width:100%;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:12.5px;">
         <option value="all">全部紀錄</option>
         <option value="stay">住宿</option>
         <option value="daycare">安親</option>
@@ -1264,8 +1308,8 @@
       <div id="mhItemsCard"></div>
       <div id="mhNotesCard"></div>
       <div class="summary-strip" id="mhSummaryStrip"></div>
-      <div id="mhMoodRow" style="padding:0 22px 4px;font-size:13px;color:var(--ink-soft);display:flex;align-items:center;gap:6px;"></div>
-      <div id="mhHighlight" style="padding:0 22px 12px;font-size:13px;color:var(--ink-soft);"></div>
+      <div id="mhMoodRow" style="padding:0 22px 4px;font-size:11.5px;color:var(--ink-soft);display:flex;align-items:center;gap:6px;"></div>
+      <div id="mhHighlight" style="padding:0 22px 12px;font-size:11.5px;color:var(--ink-soft);"></div>
       <div id="mhTimeline"></div>
       <div class="field">
         <button class="small-btn" id="mhPrintBtn" style="background:var(--ochre);width:100%;">匯出並列印這次紀錄</button>
@@ -1284,9 +1328,9 @@
 
 <div id="emergencyModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:999;align-items:center;justify-content:center;padding:20px;">
   <div style="background:var(--danger);color:#fff;border-radius:20px;padding:24px 22px;max-width:380px;width:100%;max-height:80vh;overflow-y:auto;">
-    <div style="font-size:20px;font-weight:700;margin-bottom:10px;">⚠️ 緊急提醒</div>
-    <div id="emergencyModalBody" style="font-size:14.5px;line-height:1.7;white-space:pre-line;"></div>
-    <button id="emergencyModalCloseBtn" style="margin-top:18px;width:100%;padding:12px;border-radius:12px;border:none;background:#fff;color:var(--danger);font-weight:700;font-size:15px;cursor:pointer;">我知道了</button>
+    <div style="font-size:18px;font-weight:700;margin-bottom:10px;">⚠️ 緊急提醒</div>
+    <div id="emergencyModalBody" style="font-size:13px;line-height:1.7;white-space:pre-line;"></div>
+    <button id="emergencyModalCloseBtn" style="margin-top:18px;width:100%;padding:12px;border-radius:12px;border:none;background:#fff;color:var(--danger);font-weight:700;font-size:13.5px;cursor:pointer;">我知道了</button>
   </div>
 </div>
 
@@ -1376,11 +1420,11 @@
       if (room.mergedInto){
         const primary = allRooms[room.mergedInto];
         const label = primary ? '併入' + primary.no + '號房' : '已合併';
-        html += `<div class="room-btn" data-id="${id}" data-merged-into="${room.mergedInto}" style="opacity:0.6;position:relative;"><div class="no">${i} 號房</div><div class="name">🔗 ${label}</div><div class="force-reset" data-id="${id}" style="position:absolute;top:2px;right:4px;font-size:9px;color:var(--ink-soft);text-decoration:underline;opacity:0.7;">重置</div></div>`;
+        html += `<div class="room-btn" data-id="${id}" data-merged-into="${room.mergedInto}" style="opacity:0.6;position:relative;"><div class="no">${i} 號房</div><div class="name">🔗 ${label}</div><div class="force-reset" data-id="${id}" style="position:absolute;top:2px;right:4px;font-size:8px;color:var(--ink-soft);text-decoration:underline;opacity:0.7;">重置</div></div>`;
       } else if (!room.name){
         html += `<div class="room-btn" data-id="${id}" data-empty="1"><div class="no">${i} 號房</div><div class="name">＋ 新入住</div></div>`;
       } else {
-        const emergencyBadge = room.hasEmergency ? '<span style="position:absolute;top:2px;right:6px;font-size:16px;">⚠️</span>' : '';
+        const emergencyBadge = room.hasEmergency ? '<span style="position:absolute;top:2px;right:6px;font-size:14.5px;">⚠️</span>' : '';
         html += `<div class="room-btn" data-id="${id}" style="position:relative;border:${room.hasEmergency ? '2px solid var(--danger)' : 'none'};">${emergencyBadge}<div class="no">${i} 號房</div><div class="name">${room.name}</div></div>`;
       }
     }
@@ -1425,6 +1469,20 @@
   }
 
   const LINE_PUSH_FUNCTION_URL = 'https://send-line-message-1090283293954.asia-east1.run.app';
+  const STAFF_BASE_URL = 'https://planetofpaws.github.io/-inn-heart-app/staff.html';
+
+  async function sendLineImage(phone, imageUrl){
+    if (!phone) return;
+    const lineIds = await findLineBindingsForPhone(phone);
+    if (!lineIds.length) return; // parent hasn't bound LINE yet; the printed pickup card still covers this
+    await Promise.all(lineIds.map(lineUserId =>
+      fetch(LINE_PUSH_FUNCTION_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lineUserId, imageUrl })
+      }).catch(() => {})
+    ));
+  }
 
   async function sendLineNotification(phone, message){
     if (!phone) { alert('這筆資料沒有手機號碼,無法發送。'); return; }
@@ -1593,6 +1651,14 @@
       }
     }
 
+    const pickupName = document.getElementById('ciPickupName').value.trim();
+    const pickupPhone = document.getElementById('ciPickupPhone').value.trim();
+    const pickupRelationChip = document.querySelector('.chip-row[data-group="ciPickupRelation"] .chip.active');
+    const pickupRelation = pickupRelationChip ? pickupRelationChip.dataset.val : '';
+    const verifyToken = currentRoomId + '::' + stayId;
+    const verifyUrl = STAFF_BASE_URL + '?pickupVerify=' + encodeURIComponent(verifyToken);
+    const qrImageUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=360x360&data=' + encodeURIComponent(verifyUrl);
+
     await setDoc(doc(db, 'rooms', currentRoomId), {
       area: allRooms[currentRoomId].area,
       no: allRooms[currentRoomId].no,
@@ -1606,7 +1672,12 @@
       pendingDryGrams: 0,
       pendingWetGrams: 0,
       pendingFreshGrams: 0,
-      pendingWaterMl: 0
+      pendingWaterMl: 0,
+      pickupName: pickupName || null,
+      pickupPhone: pickupPhone || null,
+      pickupRelation: pickupRelation || null,
+      verifyToken: verifyToken,
+      qrImageUrl: qrImageUrl
     });
 
     await setDoc(doc(db, 'members', phone), {
@@ -1617,6 +1688,10 @@
 
     await loadRooms();
     openRecord(currentRoomId);
+    showPickupCard(currentRoomId, qrImageUrl);
+
+    // best-effort: send the QR code to the parent's LINE if they've already bound one
+    sendLineImage(phone, qrImageUrl).catch(() => {});
   });
 
   // ---------- record page ----------
@@ -1661,7 +1736,7 @@
       if (f.special) bits.push('特殊配方:' + f.special);
       if (!bits.length) return;
       const el = document.getElementById(elId);
-      el.innerHTML += '<div style="font-size:11.5px;color:var(--ochre);margin-bottom:8px;">💡 入住登記填寫:' + bits.join('・') + '</div>';
+      el.innerHTML += '<div style="font-size:10.5px;color:var(--ochre);margin-bottom:8px;">💡 入住登記填寫:' + bits.join('・') + '</div>';
     });
 
     const supHintEl = document.getElementById('ftSupplementHint');
@@ -1670,7 +1745,7 @@
       const bits = [];
       if (sup.名稱) bits.push('名稱:' + sup.名稱);
       if (sup.頻率) bits.push('頻率:' + sup.頻率);
-      supHintEl.innerHTML = '<div style="font-size:11.5px;color:var(--ochre);margin-bottom:8px;">💡 保健食品(隨餐,入住登記填寫):' + bits.join('・') + '</div>';
+      supHintEl.innerHTML = '<div style="font-size:10.5px;color:var(--ochre);margin-bottom:8px;">💡 保健食品(隨餐,入住登記填寫):' + bits.join('・') + '</div>';
     } else {
       supHintEl.innerHTML = '';
     }
@@ -1684,7 +1759,7 @@
       if (sup.名稱) bits.push('名稱:' + sup.名稱);
       if (sup.頻率) bits.push('頻率:' + sup.頻率);
       if (sup.其他) bits.push(sup.其他);
-      supEl.innerHTML = '<div style="font-size:11.5px;color:var(--ochre);margin-bottom:8px;">💡 入住登記填寫:' + bits.join('・') + '</div>';
+      supEl.innerHTML = '<div style="font-size:10.5px;color:var(--ochre);margin-bottom:8px;">💡 入住登記填寫:' + bits.join('・') + '</div>';
     } else {
       supEl.innerHTML = '';
     }
@@ -1698,7 +1773,7 @@
       if (med.劑量) bits.push('劑量:' + med.劑量);
       if (med.預定投藥時間) bits.push('時間:' + med.預定投藥時間);
       if (med.投藥小技巧) bits.push('技巧:' + med.投藥小技巧);
-      medEl.innerHTML = '<div style="font-size:11.5px;color:var(--ochre);margin-bottom:8px;">💡 入住登記填寫:' + bits.join('・') + '</div>';
+      medEl.innerHTML = '<div style="font-size:10.5px;color:var(--ochre);margin-bottom:8px;">💡 入住登記填寫:' + bits.join('・') + '</div>';
     } else {
       medEl.innerHTML = '';
     }
@@ -1820,7 +1895,7 @@
   function renderNotesCard(room){
     const badge = document.getElementById('notesBadge');
     if (!room.notes){
-      badge.innerHTML = '<span style="font-size:12px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;">＋ 新增注意事項</span>';
+      badge.innerHTML = '<span style="font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;">＋ 新增注意事項</span>';
       badge.onclick = () => openNotesEdit(room);
       return;
     }
@@ -1913,6 +1988,26 @@
     return parseInt(m[1]) + '年' + parseInt(m[2]) + '月' + parseInt(m[3]) + '日';
   }
 
+  function showPickupCard(roomId, qrImageUrl){
+    const room = allRooms[roomId];
+    document.getElementById('printArea').innerHTML = `
+      <div style="max-width:380px;margin:0 auto;text-align:center;font-family:'Noto Sans TC',sans-serif;">
+        <h1 style="font-size:18px;margin-bottom:4px;">(inn)heart 接回小卡</h1>
+        <p style="font-size:12px;color:#888;margin-top:0;">接回寶貝時,請出示此卡讓工作人員掃描核對</p>
+        ${room.avatarUrl ? '<img src="'+room.avatarUrl+'" style="width:90px;height:90px;border-radius:16px;object-fit:cover;margin:8px 0;">' : ''}
+        <h2 style="margin:4px 0;">${room.name}</h2>
+        <p style="font-size:13px;">${room.area === 'cat' ? '貓貓區' : '狗狗區'} ${room.no} 號房・入住時間 ${room.checkinDate || ''}</p>
+        <img src="${qrImageUrl}" style="width:220px;height:220px;margin:12px 0;">
+        <div style="text-align:left;font-size:13px;border-top:1px solid #ccc;padding-top:10px;margin-top:8px;">
+          <p>預計接回家長:${room.pickupName || '(未登記)'}</p>
+          <p>接回電話:${room.pickupPhone || '(未登記)'}</p>
+          <p>與送來者關係:${room.pickupRelation || '(未登記)'}</p>
+        </div>
+      </div>
+    `;
+    window.print();
+  }
+
   function printStay(meta, itemsText, notesText, entriesByDateObj){
     const dates = Object.keys(entriesByDateObj).sort();
     let daysHtml = '';
@@ -1937,6 +2032,22 @@
     `;
     window.print();
   }
+
+  document.getElementById('reprintPickupCardBtn').addEventListener('click', async () => {
+    const room = allRooms[currentRoomId];
+    let qrImageUrl = room.qrImageUrl;
+    if (!qrImageUrl || !room.verifyToken || !room.stayId || !room.verifyToken.endsWith(room.stayId)){
+      // older record from before this feature existed, or token is stale: generate fresh
+      const verifyToken = currentRoomId + '::' + room.stayId;
+      const verifyUrl = STAFF_BASE_URL + '?pickupVerify=' + encodeURIComponent(verifyToken);
+      qrImageUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=360x360&data=' + encodeURIComponent(verifyUrl);
+      await updateDoc(doc(db, 'rooms', currentRoomId), { verifyToken, qrImageUrl });
+      room.verifyToken = verifyToken;
+      room.qrImageUrl = qrImageUrl;
+    }
+    showPickupCard(currentRoomId, qrImageUrl);
+    sendLineImage(room.phone, qrImageUrl).catch(() => {});
+  });
 
   document.getElementById('printBtn').addEventListener('click', () => {
     const room = allRooms[currentRoomId];
@@ -2079,7 +2190,7 @@
       listEl.innerHTML = '<div class="status-msg">這次入住沒有登記攜帶物品</div>';
     } else {
       listEl.innerHTML = itemLines.map((line, i) =>
-        `<label style="display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink);"><input type="checkbox" class="checkout-item-check" data-idx="${i}"> ${line}(已歸還/清點)</label>`
+        `<label style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink);"><input type="checkbox" class="checkout-item-check" data-idx="${i}"> ${line}(已歸還/清點)</label>`
       ).join('');
     }
     document.getElementById('checkoutMihomeConfirm').checked = false;
@@ -2626,7 +2737,7 @@
       <input type="text" class="food-frequency" placeholder="餵食頻率(例如:一天兩次)" style="margin-top:8px;">
       <input type="text" class="food-amount" placeholder="每次餵食量" style="margin-top:8px;">
       <input type="text" class="food-special" placeholder="特殊配方(選填)" style="margin-top:8px;">
-      <div class="remove-food-item" style="text-align:right;font-size:12px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:8px;">✕ 移除這一種</div>
+      <div class="remove-food-item" style="text-align:right;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:8px;">✕ 移除這一種</div>
     `;
     row.querySelectorAll('.chip-row .chip').forEach(chip => {
       chip.addEventListener('click', () => {
@@ -2861,12 +2972,35 @@
     return { icon: moodIconMap[spirit] || '🙂', label: spirit };
   }
 
-  function computeTodayHighlight(dayEntries){
+  function computeTodayHighlight(dayEntries, area){
     if (!dayEntries || !dayEntries.length) return '今日尚無紀錄';
-    const warnEntries = dayEntries.slice().sort((a,b) => (a.createdAtMs || 0) - (b.createdAtMs || 0)).filter(e => e.warn);
-    if (!warnEntries.length) return '📝 今日重點:狀況穩定,目前沒有異常紀錄';
-    const bits = warnEntries.slice(-3).map(e => (e.contentParts && e.contentParts[0]) || e.content).filter(Boolean);
-    return '📝 今日重點:' + bits.join('；');
+    if (area !== 'cat'){
+      const warnEntries = dayEntries.slice().sort((a,b) => (a.createdAtMs || 0) - (b.createdAtMs || 0)).filter(e => e.warn);
+      if (!warnEntries.length) return '📝 今日重點:狀況穩定,目前沒有異常紀錄';
+      const bits = warnEntries.slice(-3).map(e => (e.contentParts && e.contentParts[0]) || e.content).filter(Boolean);
+      return '📝 今日重點:' + bits.join('；');
+    }
+
+    // cat: build a genuine day summary instead of just listing warnings
+    const sorted = dayEntries.slice().sort((a,b) => (b.createdAtMs || 0) - (a.createdAtMs || 0));
+    const totalGrams = dayEntries.reduce((s,e) => s + (e.grams || 0), 0);
+    const totalWater = dayEntries.reduce((s,e) => s + (e.waterMl || 0), 0);
+
+    const latestBodycheck = sorted.find(e => e.panelId === 'bodycheck' && e.formSnapshot);
+    const bits = [];
+    bits.push('進食約' + totalGrams + 'g、飲水約' + totalWater + 'ml');
+    if (latestBodycheck){
+      const level = (latestBodycheck.formSnapshot.chips['bcBehaviorLevel'] || [])[0];
+      const breathing = (latestBodycheck.formSnapshot.chips['bcBreathing'] || [])[0];
+      const behaviorBits = [];
+      if (level) behaviorBits.push('目前行為反應' + level);
+      if (breathing && breathing !== '呼吸平順') behaviorBits.push('呼吸' + breathing);
+      if (behaviorBits.length) bits.push(behaviorBits.join('，'));
+    }
+    const warnCount = dayEntries.filter(e => e.warn).length;
+    bits.push(warnCount ? '今日有' + warnCount + '筆異常紀錄' : '狀況穩定');
+
+    return '📝 今日重點:' + bits.join('，');
   }
 
   function renderSelectedDay(){
@@ -2877,8 +3011,8 @@
     const allStayEntries = Object.values(currentEntriesByDate).flat();
     const mood = computeMoodIcon(allStayEntries);
     const moodRowEl = document.getElementById('moodRow');
-    moodRowEl.innerHTML = mood ? '<span style="font-size:20px;">' + mood.icon + '</span><span>目前精神狀態:' + mood.label + '</span>' : '';
-    document.getElementById('dayHighlight').textContent = computeTodayHighlight(dayEntries);
+    moodRowEl.innerHTML = mood ? '<span style="font-size:18px;">' + mood.icon + '</span><span>目前精神狀態:' + mood.label + '</span>' : '';
+    document.getElementById('dayHighlight').textContent = computeTodayHighlight(dayEntries, area);
 
     const totalGrams = dayEntries.reduce((s,e) => s + (e.grams || 0), 0);
     const totalWater = dayEntries.reduce((s,e) => s + (e.waterMl || 0), 0);
@@ -3467,6 +3601,21 @@
     if (roomMatchPhone){
       const snap = await getDoc(doc(db, 'members', roomMatchPhone));
       if (snap.exists()) return { phone: roomMatchPhone, member: snap.data() };
+      return { phone: roomMatchPhone, member: {} };
+    }
+
+    // also check pet names in daycare records (covers customers who only ever did daycare, including older records)
+    const daycareSnap = await getDocs(collection(db, 'daycare'));
+    let daycareMatchPhone = null;
+    daycareSnap.forEach(d => {
+      if (daycareMatchPhone) return;
+      const dc = d.data();
+      if (dc.name && dc.name.includes(searchTerm) && dc.phone) daycareMatchPhone = dc.phone;
+    });
+    if (daycareMatchPhone){
+      const snap = await getDoc(doc(db, 'members', daycareMatchPhone));
+      if (snap.exists()) return { phone: daycareMatchPhone, member: snap.data() };
+      return { phone: daycareMatchPhone, member: {} };
     }
     return null;
   }
@@ -3649,7 +3798,7 @@
     if (h.notes && (h.notes.list || []).length){
       const parts = h.notes.list.slice();
       if (h.notes.other) parts.push(h.notes.other);
-      document.getElementById('mhNotesCard').innerHTML = '<div style="padding:0 22px 12px;color:var(--danger);font-size:13px;">⚠ ' + parts.join('、') + '</div>';
+      document.getElementById('mhNotesCard').innerHTML = '<div style="padding:0 22px 12px;color:var(--danger);font-size:11.5px;">⚠ ' + parts.join('、') + '</div>';
     }
 
     if (!h.roomId || !h.stayId){
@@ -3673,8 +3822,8 @@
     }
 
     const mood = computeMoodIcon(entries);
-    document.getElementById('mhMoodRow').innerHTML = mood ? '<span style="font-size:20px;">' + mood.icon + '</span><span>目前精神狀態:' + mood.label + '</span>' : '';
-    document.getElementById('mhHighlight').textContent = computeTodayHighlight(entries);
+    document.getElementById('mhMoodRow').innerHTML = mood ? '<span style="font-size:18px;">' + mood.icon + '</span><span>目前精神狀態:' + mood.label + '</span>' : '';
+    document.getElementById('mhHighlight').textContent = computeTodayHighlight(entries, h.area);
 
     const totalGrams = entries.reduce((s,e) => s + (e.grams || 0), 0);
     const totalWater = entries.reduce((s,e) => s + (e.waterMl || 0), 0);
@@ -3888,12 +4037,48 @@
       await ensureRoomsSeeded();
       await loadRooms();
       document.getElementById('loadingMsg').style.display = 'none';
-      showScreen('screenMenu');
-      renderRooms();
+      const verifyToken = new URLSearchParams(window.location.search).get('pickupVerify');
+      if (verifyToken){
+        showPickupVerifyScreen(verifyToken);
+      } else {
+        showScreen('screenMenu');
+        renderRooms();
+        refreshPendingBindingsBadge();
+      }
     } catch (err) {
       document.getElementById('loadingMsg').textContent = '連線失敗:' + err.message;
     }
   }
+
+  async function showPickupVerifyScreen(verifyToken){
+    showScreen('screenPickupVerify');
+    const contentEl = document.getElementById('pickupVerifyContent');
+    contentEl.innerHTML = '<div class="status-msg">核對中...</div>';
+    const [roomId, stayId] = verifyToken.split('::');
+    const room = allRooms[roomId];
+    if (room && room.stayId === stayId){
+      contentEl.innerHTML = `
+        <div class="hero" style="margin-bottom:6px;">
+          ${room.avatarUrl ? '<img src="'+room.avatarUrl+'" class="avatar" style="object-fit:cover;">' : '<div class="avatar"></div>'}
+          <div class="hero-text">
+            <p class="loc">${room.area === 'cat' ? '貓貓區' : '狗狗區'} ${room.no} 號房・目前在園中</p>
+            <h1>${room.name}</h1>
+          </div>
+        </div>
+        <div class="info-card"><div class="info-row"><div class="info-text">
+          <div class="info-label">入住時間</div><div class="info-value">${room.checkinDate || '(未登記)'}</div>
+        </div></div></div>
+        <div class="info-card"><div class="info-row"><div class="info-text">
+          <div class="info-label">預計接回家長</div><div class="info-value">${room.pickupName || '(未登記)'}・${room.pickupPhone || '(未登記)'}・${room.pickupRelation || '(未登記)'}</div>
+        </div></div></div>
+        <div style="padding:16px 22px;font-size:12.5px;color:var(--ink-soft);">請核對來人是否與登記的接回家長一致,如果不是本人,建議進一步確認關係再放行。</div>
+      `;
+    } else {
+      contentEl.innerHTML = '<div class="status-msg" style="color:var(--danger);">這張卡對應的入住紀錄已經結束、房間已經被新客人使用,或資料有誤,請直接以人工方式核對身份。</div>';
+    }
+  }
+
+  document.getElementById('pickupVerifyBackBtn').addEventListener('click', () => { showScreen('screenMenu'); renderRooms(); });
 
   document.getElementById('menuCareBtn').addEventListener('click', () => { showScreen('screenRooms'); renderRooms(); });
   document.getElementById('menuHistoryBtn').addEventListener('click', () => showScreen('screenHistorySearch'));
@@ -3904,6 +4089,70 @@
     currentMemberPhone = null;
     renderMemberManageList();
   });
+
+  document.getElementById('menuPendingBindingsBtn').addEventListener('click', () => {
+    showScreen('screenPendingBindings');
+    loadPendingBindings();
+  });
+  document.getElementById('pendingBindingsBackBtn').addEventListener('click', () => showScreen('screenMenu'));
+
+  async function refreshPendingBindingsBadge(){
+    try {
+      const snap = await getDocs(collection(db, 'pendingLineBindings'));
+      const badge = document.getElementById('pendingBindingsBadge');
+      if (snap.size > 0){ badge.textContent = snap.size; badge.style.display = 'inline-block'; }
+      else { badge.style.display = 'none'; }
+    } catch (err) { /* badge is best-effort */ }
+  }
+
+  async function loadPendingBindings(){
+    const listEl = document.getElementById('pendingBindingsList');
+    listEl.innerHTML = '<div class="status-msg">讀取中...</div>';
+    try {
+      const snap = await getDocs(collection(db, 'pendingLineBindings'));
+      if (snap.empty){
+        listEl.innerHTML = '<div class="status-msg">目前沒有待審核的綁定申請。</div>';
+        return;
+      }
+      const items = [];
+      snap.forEach(d => items.push({ id: d.id, ...d.data() }));
+      listEl.innerHTML = items.map(it => `
+        <div class="member-row" data-line-id="${it.id}">
+          <div class="mline">申請綁定的手機:<b>${it.phone}</b></div>
+          <div class="mline">LINE 帳號 ID:<b style="font-size:10px;word-break:break-all;">${it.id}</b></div>
+          <div class="mactions">
+            <button class="p-approve" style="background:var(--pine);color:#fff;">核准</button>
+            <button class="p-reject" style="background:var(--danger-soft);color:var(--danger);">拒絕</button>
+          </div>
+        </div>
+      `).join('');
+      listEl.querySelectorAll('.p-approve').forEach(btn => {
+        btn.addEventListener('click', async (ev) => {
+          const row = ev.target.closest('.member-row');
+          const lineId = row.dataset.lineId;
+          const item = items.find(it => it.id === lineId);
+          if (!confirm('確認核准這組 LINE 帳號綁定「' + item.phone + '」這支電話嗎?核准後,這個 LINE 帳號下次打開就能直接看到這支電話的紀錄,不用再輸入手機號碼。')) return;
+          await setDoc(doc(db, 'lineBindings', lineId), { phone: item.phone });
+          await deleteDoc(doc(db, 'pendingLineBindings', lineId));
+          await loadPendingBindings();
+          await refreshPendingBindingsBadge();
+        });
+      });
+      listEl.querySelectorAll('.p-reject').forEach(btn => {
+        btn.addEventListener('click', async (ev) => {
+          const row = ev.target.closest('.member-row');
+          const lineId = row.dataset.lineId;
+          if (!confirm('確定要拒絕這筆綁定申請嗎?')) return;
+          await deleteDoc(doc(db, 'pendingLineBindings', lineId));
+          await loadPendingBindings();
+          await refreshPendingBindingsBadge();
+        });
+      });
+    } catch (err) {
+      listEl.innerHTML = '<div class="status-msg" style="color:var(--danger);">讀取失敗:' + err.message + '</div>';
+    }
+  }
+
   document.getElementById('cameraSettingLink').addEventListener('click', async () => {
     const snap = await getDoc(doc(db, 'settings', 'global'));
     const current = snap.exists() ? (snap.data().mihomeUrl || '') : '';
@@ -3955,13 +4204,22 @@
     const listEl = document.getElementById('memberManageList');
     listEl.innerHTML = '讀取中...';
     try {
-      const [membersSnap, bindingsSnap] = await Promise.all([
+      const [membersSnap, bindingsSnap, daycareSnap] = await Promise.all([
         getDocs(collection(db, 'members')),
-        getDocs(collection(db, 'lineBindings'))
+        getDocs(collection(db, 'lineBindings')),
+        getDocs(collection(db, 'daycare'))
       ]);
 
       const lineCountByPhone = {};
       bindingsSnap.forEach(d => { lineCountByPhone[d.data().phone] = (lineCountByPhone[d.data().phone] || 0) + 1; });
+
+      const daycarePetsByPhone = {};
+      daycareSnap.forEach(d => {
+        const dc = d.data();
+        if (!dc.phone || !dc.name) return;
+        if (!daycarePetsByPhone[dc.phone]) daycarePetsByPhone[dc.phone] = new Set();
+        daycarePetsByPhone[dc.phone].add(dc.name);
+      });
 
       if (membersSnap.empty){
         listEl.innerHTML = '<div class="status-msg">目前還沒有任何會員資料</div>';
@@ -3977,6 +4235,7 @@
         const petNames = new Set();
         (m.history || []).forEach(h => { if (h.petName) petNames.add(h.petName); });
         Object.values(allRooms).forEach(r => { if (r.phone === phone && r.name) petNames.add(r.name); });
+        (daycarePetsByPhone[phone] || []).forEach(n => petNames.add(n));
         const petText = petNames.size ? Array.from(petNames).join('、') : '（尚無寶貝紀錄）';
         const lineCount = lineCountByPhone[phone] || 0;
 
@@ -4131,8 +4390,12 @@
       const avatarRef = ref(storage, 'daycareAvatars/' + Date.now() + '_' + dcAvatarFile.name);
       await uploadBytes(avatarRef, compressed);
       avatarUrl = await getDownloadURL(avatarRef);
-      await setDoc(doc(db, 'members', phone), { petAvatars: { [name]: avatarUrl } }, { merge: true });
     }
+    // always upsert the member record so this customer shows up in 會員資料管理 and 歷史查詢, even with no photo
+    await setDoc(doc(db, 'members', phone), {
+      updatedAt: serverTimestamp(),
+      ...(avatarUrl ? { petAvatars: { [name]: avatarUrl } } : {})
+    }, { merge: true });
 
     const spirit = chipVal('dcSpirit') || '正常';
     const injury = chipVal('dcInjury') || '無';
