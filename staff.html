@@ -342,8 +342,15 @@
       <h1>掃描接回 QR Code</h1>
     </div>
     <div style="padding:0 22px;">
-      <video id="qrScannerVideo" style="width:100%;border-radius:16px;background:#000;" playsinline muted></video>
+      <video id="qrScannerVideo" style="width:100%;border-radius:16px;background:#000;" playsinline muted autoplay></video>
       <div id="qrScannerStatus" style="text-align:center;font-size:12.5px;color:var(--ink-soft);margin-top:10px;">請將 QR Code 對準畫面</div>
+      <div id="qrManualInputWrap" style="margin-top:16px;">
+        <label style="font-size:11px;color:var(--ink-soft);">相機掃不到嗎?也可以把 QR Code 底下的網址貼在這裡</label>
+        <div style="display:flex;gap:8px;margin-top:6px;">
+          <input type="text" id="qrManualInput" placeholder="貼上或輸入接回代碼">
+          <button id="qrManualSubmitBtn" style="background:var(--pine);color:#F4F1E9;border:none;border-radius:12px;padding:0 16px;font-size:12px;cursor:pointer;white-space:nowrap;">核對</button>
+        </div>
+      </div>
     </div>
     <div id="qrScanResultView" style="display:none;"></div>
   </div>
@@ -706,15 +713,26 @@
       <div class="submit-row"><button class="submit-btn" id="notesSaveBtn">儲存注意事項</button></div>
     </div>
 
+    <div class="field">
+      <button id="confirmLineBoundBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);width:100%;font-size:11px;">✅ 已確認綁定此家長LINE</button>
+    </div>
+
     <div class="field" style="display:flex;gap:8px;">
       <button id="printBtn" class="small-btn" style="background:var(--ochre);flex:1;font-size:11px;padding:9px 6px;">匯出並列印紀錄</button>
-      <button id="changeRoomBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);flex:1;font-size:11px;padding:9px 6px;">🔄 換房間</button>
-      <button id="mergeRoomBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);flex:1;font-size:11px;padding:9px 6px;">🔗 合併房間</button>
+      <button id="roomManageToggleBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);flex:1;font-size:11px;padding:9px 6px;">🏠 房間管理</button>
+      <button id="pickupCardToggleBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);flex:1;font-size:11px;padding:9px 6px;">🎫 接回小卡管理</button>
     </div>
-    <div class="field">
-      <button id="reprintPickupCardBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);width:100%;font-size:11px;margin-bottom:8px;">🖨️ 重新列印接回小卡</button>
-      <button id="resendPickupQrBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);width:100%;font-size:11px;margin-bottom:8px;">📱 傳送QR給家長LINE</button>
-      <button id="confirmLineBoundBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);width:100%;font-size:11px;">✅ 已確認綁定此家長LINE</button>
+    <div class="field" id="roomManagePanelWrap" style="display:none;">
+      <div style="display:flex;gap:8px;">
+        <button id="changeRoomBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);flex:1;font-size:11px;padding:9px 6px;">🔄 換房間</button>
+        <button id="mergeRoomBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);flex:1;font-size:11px;padding:9px 6px;">🔗 合併房間</button>
+      </div>
+    </div>
+    <div class="field" id="pickupCardPanelWrap" style="display:none;">
+      <div style="display:flex;gap:8px;">
+        <button id="reprintPickupCardBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);flex:1;font-size:11px;padding:9px 6px;">🖨️ 重新列印小卡</button>
+        <button id="resendPickupQrBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);flex:1;font-size:11px;padding:9px 6px;">📱 傳送小卡給家長</button>
+      </div>
     </div>
     <div class="field" id="changeRoomPanel" style="display:none;">
       <label>選擇要換到的空房</label>
@@ -737,6 +755,9 @@
       <label style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:12.5px;color:var(--ink);">
         <input type="checkbox" id="checkoutMihomeConfirm"> 已退出小米共享設備
       </label>
+      <div id="checkoutLastTimesCard" style="background:var(--card);border-radius:14px;padding:12px 14px;margin-top:12px;font-size:12px;color:var(--ink-soft);"></div>
+      <label style="margin-top:12px;">交代給家長的特殊事項(選填)</label>
+      <textarea id="checkoutSpecialNote" placeholder="例如:今天精神稍微差一點,回家後請多留意進食狀況..."></textarea>
       <div class="submit-row">
         <button class="submit-btn" id="checkoutConfirmBtn" style="background:var(--danger);opacity:0.5;" disabled>確認退房</button>
       </div>
@@ -1760,6 +1781,8 @@
     document.getElementById('changeRoomPanel').style.display = 'none';
     document.getElementById('mergeRoomPanel').style.display = 'none';
     document.getElementById('checkoutChecklistPanel').style.display = 'none';
+    document.getElementById('roomManagePanelWrap').style.display = 'none';
+    document.getElementById('pickupCardPanelWrap').style.display = 'none';
     showScreen('screenRecord');
     await renderLog();
   }
@@ -2116,6 +2139,15 @@
     printStay(meta, itemsText, notesText, currentEntriesByDate);
   });
 
+  document.getElementById('roomManageToggleBtn').addEventListener('click', () => {
+    const wrap = document.getElementById('roomManagePanelWrap');
+    wrap.style.display = wrap.style.display === 'none' ? 'block' : 'none';
+  });
+  document.getElementById('pickupCardToggleBtn').addEventListener('click', () => {
+    const wrap = document.getElementById('pickupCardPanelWrap');
+    wrap.style.display = wrap.style.display === 'none' ? 'block' : 'none';
+  });
+
   document.getElementById('changeRoomBtn').addEventListener('click', () => {
     const panel = document.getElementById('changeRoomPanel');
     const isOpen = panel.style.display !== 'none';
@@ -2252,6 +2284,17 @@
         `<label style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink);"><input type="checkbox" class="checkout-item-check" data-idx="${i}"> ${line}(已歸還/清點)</label>`
       ).join('');
     }
+
+    const allEntries = Object.values(currentEntriesByDate).flat();
+    const sortedEntries = allEntries.slice().sort((a,b) => (b.createdAtMs||0) - (a.createdAtMs||0));
+    const lastPee = sortedEntries.find(e => (e.peeGrams||0) > 0 || (e.peeDiaperGrams||0) > 0 || (e.peeCount||0) > 0);
+    const lastPoop = sortedEntries.find(e => (e.poopGrams||0) > 0);
+    document.getElementById('checkoutLastTimesCard').innerHTML = `
+      <div>🐾 最後一次排尿時間:<b style="color:var(--ink);">${lastPee ? (lastPee.dateStr + ' ' + lastPee.timeStr) : '這次入住沒有排尿紀錄'}</b></div>
+      <div style="margin-top:4px;">💩 最後一次排便時間:<b style="color:var(--ink);">${lastPoop ? (lastPoop.dateStr + ' ' + lastPoop.timeStr) : '這次入住沒有排便紀錄'}</b></div>
+    `;
+    document.getElementById('checkoutSpecialNote').value = '';
+
     document.getElementById('checkoutMihomeConfirm').checked = false;
     const confirmBtn = document.getElementById('checkoutConfirmBtn');
     confirmBtn.disabled = true;
@@ -2268,6 +2311,13 @@
     document.getElementById('checkoutChecklistPanel').style.display = 'block';
   });
 
+  function buildHomecomingReminder(area){
+    if (area === 'dog'){
+      return '🐶 寶貝回家囉｜返家小提醒\n回家後可能會因為作息與環境改變，出現比較累、特別黏人、興奮、安靜或睡比較多的情況，先讓寶貝好好休息，不需要急著陪玩或一直互動 🤎\n\n接下來 48 小時，可以在日常中留意：\n🍚 吃飯｜是否願意進食，食慾有沒有慢慢回到平常\n💧 喝水｜是否有正常攝取水分，是否突然明顯異常\n🚽 大小便｜是否有正常尿尿、便便，狀態是否和平常差不多\n💤 精神｜休息後是否能正常活動、互動\n🐕 行為｜是否逐漸恢復平常的個性與生活節奏\n\n不需要因為一餐吃少一點或多睡一點就太緊張，重點是觀察牠是否正在慢慢恢復。\n\n若出現持續不吃不喝、反覆嘔吐／腹瀉、明顯精神不佳、疼痛、呼吸異常或其他明顯異常，建議儘早諮詢獸醫師。\n\n🤎 謝謝你讓我們陪寶貝度過這段小小的旅程，回家後就讓牠好好休息、慢慢恢復自己的節奏吧！';
+    }
+    return '🐱 寶貝回家囉｜返家小提醒\n回家後可能會出現躲藏、安靜、睡比較多、突然變黏或暫時不想互動的情況，先給牠一點空間，讓牠自己重新熟悉家裡的味道 🤎\n\n接下來 48 小時，可以在日常中留意：\n🍚 吃飯｜是否願意進食，食慾有沒有慢慢回到平常\n💧 水分｜是否有正常攝取水分，也可以一起觀察尿尿情況\n🚽 貓砂｜是否有正常尿尿、便便，有沒有頻繁進出貓砂盆\n😺 精神｜休息後是否仍能正常活動、探索\n🤎 行為｜是否慢慢恢復原本的生活節奏\n\n不需要因為牠一回家躲起來就緊張，重點是觀察牠是否正在慢慢恢復。\n\n若出現持續拒食、反覆嘔吐／腹瀉、明顯精神不佳、呼吸異常、疼痛，或一直進出貓砂盆卻無法正常排尿，建議儘早諮詢獸醫師。\n\n🤎 謝謝你讓我們陪寶貝度過這段小小的旅程，回家後就讓牠慢慢找回自己的節奏吧！';
+  }
+
   document.getElementById('checkoutConfirmBtn').addEventListener('click', async () => {
     if (!confirm('確定要辦理退房嗎?退房後這次住宿的照片會自動刪除以節省空間,文字紀錄會保留。')) return;
     const confirmBtn = document.getElementById('checkoutConfirmBtn');
@@ -2276,6 +2326,7 @@
     confirmBtn.textContent = '退房處理中...';
     try {
       const room = allRooms[currentRoomId];
+      const specialNote = document.getElementById('checkoutSpecialNote').value.trim();
 
       // these three are independent of each other, so run them at the same time instead of one after another
       const photoCleanupPromise = room.stayId
@@ -2299,7 +2350,8 @@
               checkinDate: room.checkinDate || '',
               checkedOutAt: new Date().toLocaleString('zh-TW'),
               avatarUrl: room.avatarUrl || null,
-              items: room.items || null, notes: room.notes || null
+              items: room.items || null, notes: room.notes || null,
+              specialNote: specialNote || null
             })
           }, { merge: true })
         : Promise.resolve();
@@ -2313,6 +2365,13 @@
 
       const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('退房逾時,請檢查網路連線後再試一次(如果房間已經清空一半,可以用房間卡片上的「重置」按鈕清乾淨)')), 20000));
       await Promise.race([Promise.all([photoCleanupPromise, historyWritePromise, mergeReleasePromise]), timeoutPromise]);
+
+      // best-effort: send a warm homecoming reminder to the parent's LINE; never blocks checkout if it fails
+      if (room.phone){
+        const reminderMessages = [{ type: 'text', text: buildHomecomingReminder(room.area) }];
+        if (specialNote) reminderMessages.push({ type: 'text', text: '📌 這次想特別提醒您:\n' + specialNote });
+        sendLineMessagesToPhone(room.phone, reminderMessages).catch(() => {});
+      }
 
       await setDoc(doc(db, 'rooms', currentRoomId), {
         area: room.area, no: room.no, name: null, phone: null, stayId: null, items: null, notes: null,
@@ -4156,21 +4215,40 @@
   // ---------- in-app QR scanner ----------
   let qrScanStream = null;
   let qrScanRafId = null;
+  let qrScanCanvas = null;
+  let qrScanCtx = null;
 
   document.getElementById('scanPickupQrBtn').addEventListener('click', async () => {
     showScreen('screenQrScanner');
     document.getElementById('qrScanResultView').style.display = 'none';
     document.getElementById('qrScanResultView').innerHTML = '';
     document.getElementById('qrScannerVideo').style.display = 'block';
-    document.getElementById('qrScannerStatus').textContent = '請將 QR Code 對準畫面';
+    document.getElementById('qrScannerStatus').textContent = '正在開啟相機...';
+    document.getElementById('qrManualInput').value = '';
+    document.getElementById('qrManualInputWrap').style.display = 'block';
+
+    if (typeof window.jsQR !== 'function'){
+      document.getElementById('qrScannerStatus').textContent = '掃描程式庫載入失敗,請檢查網路連線後重新整理頁面再試一次(或直接用下面手動輸入)。';
+      return;
+    }
+
     try {
-      qrScanStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      qrScanStream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: { ideal: 'environment' },
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
+      });
       const video = document.getElementById('qrScannerVideo');
       video.srcObject = qrScanStream;
       await video.play();
+      document.getElementById('qrScannerStatus').textContent = '請將 QR Code 對準畫面中央,保持約 15-20 公分距離';
+      qrScanCanvas = document.createElement('canvas');
+      qrScanCtx = qrScanCanvas.getContext('2d', { willReadFrequently: true });
       scanQrFrame();
     } catch (err) {
-      document.getElementById('qrScannerStatus').textContent = '無法開啟相機:' + err.message + '(請確認已允許瀏覽器使用相機權限)';
+      document.getElementById('qrScannerStatus').textContent = '無法開啟相機:' + err.message + '(請確認瀏覽器已允許使用相機權限,或改用下面手動輸入)';
     }
   });
 
@@ -4183,39 +4261,56 @@
     }
   }
 
+  function showQrScanResult(verifyToken){
+    stopQrScanner();
+    document.getElementById('qrScannerVideo').style.display = 'none';
+    document.getElementById('qrScannerStatus').textContent = '';
+    document.getElementById('qrManualInputWrap').style.display = 'none';
+    const resultEl = document.getElementById('qrScanResultView');
+    resultEl.style.display = 'block';
+    resultEl.innerHTML = buildPickupVerifyHtml(verifyToken, true);
+    const jumpBtn = document.getElementById('pickupVerifyGotoRecordBtn');
+    if (jumpBtn){
+      jumpBtn.addEventListener('click', () => openRecord(jumpBtn.dataset.roomId));
+    }
+  }
+
+  function extractVerifyToken(text){
+    const match = text.match(/[?&]pickupVerify=([^&]+)/);
+    return match ? decodeURIComponent(match[1]) : (text.includes('::') ? text.trim() : null);
+  }
+
   function scanQrFrame(){
     const video = document.getElementById('qrScannerVideo');
     if (!video.videoWidth){
       qrScanRafId = requestAnimationFrame(scanQrFrame);
       return;
     }
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const code = window.jsQR ? window.jsQR(imageData.data, imageData.width, imageData.height) : null;
+    if (qrScanCanvas.width !== video.videoWidth){
+      qrScanCanvas.width = video.videoWidth;
+      qrScanCanvas.height = video.videoHeight;
+    }
+    qrScanCtx.drawImage(video, 0, 0, qrScanCanvas.width, qrScanCanvas.height);
+    const imageData = qrScanCtx.getImageData(0, 0, qrScanCanvas.width, qrScanCanvas.height);
+    const code = window.jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'attemptBoth' });
     if (code && code.data){
-      const match = code.data.match(/[?&]pickupVerify=([^&]+)/);
-      if (match){
-        stopQrScanner();
-        const verifyToken = decodeURIComponent(match[1]);
-        document.getElementById('qrScannerVideo').style.display = 'none';
-        document.getElementById('qrScannerStatus').textContent = '';
-        const resultEl = document.getElementById('qrScanResultView');
-        resultEl.style.display = 'block';
-        resultEl.innerHTML = buildPickupVerifyHtml(verifyToken, true);
-        const jumpBtn = document.getElementById('pickupVerifyGotoRecordBtn');
-        if (jumpBtn){
-          jumpBtn.addEventListener('click', () => openRecord(jumpBtn.dataset.roomId));
-        }
+      const verifyToken = extractVerifyToken(code.data);
+      if (verifyToken){
+        showQrScanResult(verifyToken);
         return;
       }
       // scanned a QR but it's not one of ours; keep scanning
     }
     qrScanRafId = requestAnimationFrame(scanQrFrame);
   }
+
+  document.getElementById('qrManualSubmitBtn').addEventListener('click', () => {
+    const raw = document.getElementById('qrManualInput').value.trim();
+    if (!raw){ alert('請貼上或輸入 QR Code 裡的網址或代碼'); return; }
+    const verifyToken = extractVerifyToken(raw);
+    if (!verifyToken){ alert('看不出這是有效的接回代碼,請確認貼的內容正確'); return; }
+    showQrScanResult(verifyToken);
+  });
 
   document.getElementById('qrScannerBackBtn').addEventListener('click', () => {
     stopQrScanner();
