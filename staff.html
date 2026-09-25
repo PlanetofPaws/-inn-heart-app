@@ -176,9 +176,8 @@
       <button class="submit-btn" id="menuDaycareBtn" style="background:var(--pine);color:#F4F1E9;">安親照護紀錄</button>
       <button class="submit-btn" id="menuInhomeBtn" style="background:var(--card);color:var(--ink-soft);border:1px solid var(--line);">到府照護紀錄(即將上線)</button>
       <button class="submit-btn" id="menuHistoryBtn" style="background:var(--ochre);color:#2A2A2C;">歷史紀錄</button>
-      <button class="submit-btn" id="menuMembersBtn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);">會員資料管理</button>
-      <button class="submit-btn" id="menuPendingBindingsBtn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);position:relative;">
-        LINE 綁定審核<span id="pendingBindingsBadge" style="display:none;background:var(--danger);color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;margin-left:6px;">0</span>
+      <button class="submit-btn" id="menuMembersBtn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);position:relative;">
+        會員資料管理<span id="pendingBindingsBadge" style="display:none;background:var(--danger);color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;margin-left:6px;">0</span>
       </button>
       <div id="cameraSettingLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:8px;">設定小米 App 連結</div>
       <div id="staffManageLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:4px;">新增工作人員(管理者)</div>
@@ -193,16 +192,6 @@
       <h1>掃碼核對結果</h1>
     </div>
     <div id="pickupVerifyContent"></div>
-  </div>
-
-  <div class="screen" id="screenPendingBindings">
-    <div class="back-row" id="pendingBindingsBackBtn">← 返回選單</div>
-    <div class="topbar">
-      <div class="sub">(inn)heart · 工作人員後台</div>
-      <h1>LINE 綁定審核</h1>
-    </div>
-    <div style="padding:0 22px 8px;font-size:12px;color:var(--ink-soft);">這支電話已經有其他 LINE 帳號綁定過,家長又用新的 LINE 帳號輸入了同一支電話,需要你確認是不是同一家人再核准。</div>
-    <div id="pendingBindingsList" style="padding:10px 22px 20px;"></div>
   </div>
 
   <div class="screen" id="screenStaffManage">
@@ -378,6 +367,14 @@
     <div class="topbar">
       <div class="sub">(inn)heart · 工作人員後台</div>
       <h1>會員資料管理</h1>
+    </div>
+
+    <div id="pendingBindingsSection" style="display:none;padding:0 22px 16px;">
+      <div style="background:var(--card);border:1px solid var(--danger-soft);border-radius:14px;padding:14px;">
+        <div style="font-weight:700;font-size:12.5px;color:var(--danger);margin-bottom:2px;">🔔 LINE 綁定待審核</div>
+        <div style="font-size:10.5px;color:var(--ink-soft);margin-bottom:10px;">這支電話已經有其他 LINE 帳號綁定過,家長又用新的 LINE 帳號輸入了同一支電話,需要你確認是不是同一家人再核准。</div>
+        <div id="pendingBindingsList"></div>
+      </div>
     </div>
 
     <div class="member-search">
@@ -716,7 +713,8 @@
     </div>
     <div class="field">
       <button id="reprintPickupCardBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);width:100%;font-size:11px;margin-bottom:8px;">🖨️ 重新列印接回小卡</button>
-      <button id="resendPickupQrBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);width:100%;font-size:11px;">📱 傳送QR給家長LINE</button>
+      <button id="resendPickupQrBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);width:100%;font-size:11px;margin-bottom:8px;">📱 傳送QR給家長LINE</button>
+      <button id="confirmLineBoundBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);width:100%;font-size:11px;">✅ 已確認綁定此家長LINE</button>
     </div>
     <div class="field" id="changeRoomPanel" style="display:none;">
       <label>選擇要換到的空房</label>
@@ -1500,38 +1498,53 @@
   const LINE_PUSH_FUNCTION_URL = 'https://send-line-message-1090283293954.asia-east1.run.app';
   const STAFF_BASE_URL = 'https://planetofpaws.github.io/-inn-heart-app/staff.html';
 
-  async function sendLineImage(phone, imageUrl){
-    if (!phone) return;
+  async function sendLineMessagesToPhone(phone, messages){
+    if (!phone) return { sent: false, reason: 'no-phone' };
     const lineIds = await findLineBindingsForPhone(phone);
-    if (!lineIds.length) return; // parent hasn't bound LINE yet; the printed pickup card still covers this
-    await Promise.all(lineIds.map(lineUserId =>
+    if (!lineIds.length) return { sent: false, reason: 'not-bound' };
+    const results = await Promise.all(lineIds.map(lineUserId =>
       fetch(LINE_PUSH_FUNCTION_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lineUserId, imageUrl })
-      }).catch(() => {})
+        body: JSON.stringify({ lineUserId, messages })
+      }).then(r => r.ok).catch(() => false)
     ));
+    return { sent: results.every(ok => ok), reason: results.every(ok => ok) ? null : 'partial-failure' };
+  }
+
+  function buildPickupCardFlexMessage(qrImageUrl){
+    return {
+      type: 'flex',
+      altText: '(inn)heart 接回小卡',
+      contents: {
+        type: 'bubble',
+        hero: { type: 'image', url: qrImageUrl, size: 'full', aspectRatio: '1:1', aspectMode: 'fit', backgroundColor: '#FFFFFF' },
+        body: {
+          type: 'box',
+          layout: 'vertical',
+          contents: [
+            { type: 'text', text: '(inn)heart 接回小卡', weight: 'bold', size: 'md' },
+            { type: 'text', text: '接回寶貝時,請出示此 QR Code 給工作人員掃描核對', size: 'xs', color: '#888888', wrap: true, margin: 'sm' },
+            { type: 'text', text: '⚠️ 為了寶貝安全,條碼禁止隨意傳送或交付給非接送者的其他人。若條碼遺失,請務必立即主動告知,以便旅館更加嚴謹審核接送者身份。', size: 'xs', color: '#E57373', wrap: true, margin: 'md' }
+          ]
+        }
+      }
+    };
+  }
+
+  async function sendLineImage(phone, qrImageUrl){
+    return sendLineMessagesToPhone(phone, [buildPickupCardFlexMessage(qrImageUrl)]);
   }
 
   async function sendLineNotification(phone, message){
     if (!phone) { alert('這筆資料沒有手機號碼,無法發送。'); return; }
-    const lineIds = await findLineBindingsForPhone(phone);
-    if (!lineIds.length){
+    const result = await sendLineMessagesToPhone(phone, [{ type: 'text', text: message }]);
+    if (result.reason === 'not-bound'){
       alert('這位家長目前還沒有綁定 LINE,沒辦法直接發送。可以請他先用家長端的頁面綁定 LINE,或是自己手動聯絡。');
-      return;
-    }
-    try {
-      const results = await Promise.all(lineIds.map(lineUserId =>
-        fetch(LINE_PUSH_FUNCTION_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ lineUserId, message })
-        }).then(r => r.ok)
-      ));
-      if (results.every(ok => ok)) alert('已發送到家長的 LINE。');
-      else alert('部分發送失敗,建議改用複製訊息手動傳送確認。');
-    } catch (err) {
-      alert('發送失敗:' + err.message + '\n可以改用複製訊息手動傳送。');
+    } else if (result.sent){
+      alert('已發送到家長的 LINE。');
+    } else {
+      alert('部分發送失敗,建議改用複製訊息手動傳送確認。');
     }
   }
 
@@ -2023,6 +2036,7 @@
         <h1 style="font-size:18px;margin-bottom:4px;">(inn)heart 接回小卡</h1>
         <p style="font-size:12px;color:#888;margin-top:0;">接回寶貝時,請出示此卡讓工作人員掃描核對</p>
         <img src="${qrImageUrl}" style="width:260px;height:260px;margin:16px 0;">
+        <p style="font-size:11px;color:#E57373;text-align:left;border-top:1px solid #ddd;padding-top:10px;">⚠️ 為了寶貝安全,條碼禁止隨意傳送或交付給非接送者的其他人。若條碼遺失,請務必立即主動告知,以便旅館更加嚴謹審核接送者身份。</p>
       </div>
     `;
     window.print();
@@ -2081,6 +2095,17 @@
     if (!lineIds.length){ alert('這位家長目前還沒有綁定 LINE,沒辦法直接傳送,請改用列印小卡。'); return; }
     await sendLineImage(room.phone, qrImageUrl);
     alert('已傳送 QR Code 到家長的 LINE。');
+  });
+
+  document.getElementById('confirmLineBoundBtn').addEventListener('click', async () => {
+    const room = allRooms[currentRoomId];
+    if (!room.phone){ alert('這個房間沒有家長手機號碼。'); return; }
+    const lineIds = await findLineBindingsForPhone(room.phone);
+    if (!lineIds.length){ alert('這位家長目前還沒有綁定 LINE,請先請他用家長端頁面完成綁定,再按這顆按鈕發送確認訊息。'); return; }
+    const greeting = room.name + ' 寶貝已經綁定您的 LINE,之後只有這個 LINE 帳號才能查閱寶貝的照護紀錄,以及接收旅館發送的通知,其他人的 LINE 無法查看,請放心入住!';
+    const result = await sendLineMessagesToPhone(room.phone, [{ type: 'text', text: greeting }]);
+    if (result.sent) alert('已發送綁定確認訊息給家長。');
+    else alert('發送時發生問題,建議稍後再試一次或改用電話告知。');
   });
 
   document.getElementById('printBtn').addEventListener('click', () => {
@@ -4206,13 +4231,8 @@
     document.getElementById('manageSearchInput').value = '';
     currentMemberPhone = null;
     renderMemberManageList();
-  });
-
-  document.getElementById('menuPendingBindingsBtn').addEventListener('click', () => {
-    showScreen('screenPendingBindings');
     loadPendingBindings();
   });
-  document.getElementById('pendingBindingsBackBtn').addEventListener('click', () => showScreen('screenMenu'));
 
   async function refreshPendingBindingsBadge(){
     try {
@@ -4224,14 +4244,15 @@
   }
 
   async function loadPendingBindings(){
+    const sectionEl = document.getElementById('pendingBindingsSection');
     const listEl = document.getElementById('pendingBindingsList');
-    listEl.innerHTML = '<div class="status-msg">讀取中...</div>';
     try {
       const snap = await getDocs(collection(db, 'pendingLineBindings'));
       if (snap.empty){
-        listEl.innerHTML = '<div class="status-msg">目前沒有待審核的綁定申請。</div>';
+        sectionEl.style.display = 'none';
         return;
       }
+      sectionEl.style.display = 'block';
       const items = [];
       snap.forEach(d => items.push({ id: d.id, ...d.data() }));
       listEl.innerHTML = items.map(it => `
@@ -4267,6 +4288,7 @@
         });
       });
     } catch (err) {
+      sectionEl.style.display = 'block';
       listEl.innerHTML = '<div class="status-msg" style="color:var(--danger);">讀取失敗:' + err.message + '</div>';
     }
   }
