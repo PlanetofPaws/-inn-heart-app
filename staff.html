@@ -340,7 +340,23 @@
       <div class="area-chip active" data-area="cat">貓貓區 · 12 間</div>
       <div class="area-chip" data-area="dog">狗狗區 · 11 間</div>
     </div>
+    <div class="field">
+      <button id="scanPickupQrBtn" class="small-btn" style="background:var(--pine);color:#F4F1E9;width:100%;">📷 掃描接回 QR Code</button>
+    </div>
     <div class="room-grid" id="roomGrid"></div>
+  </div>
+
+  <div class="screen" id="screenQrScanner">
+    <div class="back-row" id="qrScannerBackBtn">← 返回房間列表</div>
+    <div class="topbar">
+      <div class="sub">(inn)heart · 工作人員後台</div>
+      <h1>掃描接回 QR Code</h1>
+    </div>
+    <div style="padding:0 22px;">
+      <video id="qrScannerVideo" style="width:100%;border-radius:16px;background:#000;" playsinline muted></video>
+      <div id="qrScannerStatus" style="text-align:center;font-size:12.5px;color:var(--ink-soft);margin-top:10px;">請將 QR Code 對準畫面</div>
+    </div>
+    <div id="qrScanResultView" style="display:none;"></div>
   </div>
 
   <div class="screen" id="screenHistorySearch">
@@ -372,31 +388,42 @@
     </div>
 
     <div class="field" id="manageEditPanel" style="display:none;">
-      <div class="loc" id="manageEditPhone" style="margin-bottom:10px;"></div>
-      <label>家長姓名</label>
-      <div style="display:flex;gap:8px;">
-        <input type="text" id="mhNameInput" placeholder="尚未填寫">
-        <button id="mhNameSaveBtn" style="background:var(--pine);color:#F4F1E9;border:none;border-radius:12px;padding:0 16px;font-size:12px;cursor:pointer;">儲存</button>
-      </div>
-      <label style="margin-top:12px;">變更手機號碼</label>
-      <div style="display:flex;gap:8px;">
-        <input type="text" id="mhNewPhoneInput" placeholder="輸入新的手機號碼">
-        <button id="mhPhoneChangeBtn" style="background:var(--ochre);color:#2A2A2C;border:none;border-radius:12px;padding:0 16px;font-size:12px;cursor:pointer;white-space:nowrap;">搬移資料</button>
-      </div>
-      <div style="font-size:10.5px;color:var(--ink-soft);margin-top:6px;">會把姓名、歷史紀錄搬到新號碼底下,並自動更新目前入住中的房間對應,原號碼會被刪除。</div>
+      <div class="loc" id="manageEditPhone" style="margin-bottom:14px;font-weight:700;font-size:14px;"></div>
 
-      <label style="margin-top:16px;">LINE 綁定狀態</label>
-      <div id="manageLineStatus" style="font-size:12px;color:var(--ink-soft);margin-bottom:8px;">讀取中...</div>
-      <button id="mhUnbindLineBtn" style="background:var(--danger-soft);color:var(--danger);border:none;border-radius:12px;padding:9px 16px;font-size:12px;cursor:pointer;width:100%;">解除 LINE 綁定(不影響入住紀錄)</button>
-      <div style="font-size:10.5px;color:var(--ink-soft);margin-top:6px;">只會解除 LINE 帳號跟這支手機的連結,家長之後要用可以重新用 LINE 綁定;不會刪除任何入住紀錄或姓名資料。</div>
-
-      <label style="margin-top:16px;">更改寶貝綁定的家長</label>
-      <input type="text" id="mhReassignPetName" placeholder="寶貝名字(需與紀錄中完全一致)">
-      <div style="display:flex;gap:8px;margin-top:8px;">
-        <input type="text" id="mhReassignNewPhone" placeholder="要轉移過去的新家長手機號碼">
-        <button id="mhReassignBtn" style="background:var(--danger-soft);color:var(--danger);border:none;border-radius:12px;padding:0 16px;font-size:12px;cursor:pointer;white-space:nowrap;">轉移</button>
+      <div style="background:var(--card);border-radius:14px;padding:14px;margin-bottom:12px;">
+        <div style="font-weight:700;font-size:12.5px;margin-bottom:8px;">👤 基本資料</div>
+        <label style="font-size:11px;">家長姓名</label>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="mhNameInput" placeholder="尚未填寫">
+          <button id="mhNameSaveBtn" style="background:var(--pine);color:#F4F1E9;border:none;border-radius:12px;padding:0 16px;font-size:11px;cursor:pointer;">儲存</button>
+        </div>
       </div>
-      <div style="font-size:10.5px;color:var(--ink-soft);margin-top:6px;">會把這隻寶貝底下的入住歷史紀錄跟照片,搬到新的手機號碼底下(其他寶貝不受影響);如果這隻寶貝目前正在住房中,也會一併更新。</div>
+
+      <div style="background:var(--card);border-radius:14px;padding:14px;margin-bottom:12px;">
+        <div style="font-weight:700;font-size:12.5px;margin-bottom:2px;">💬 LINE 綁定狀態</div>
+        <div id="manageLineStatus" style="font-size:11.5px;color:var(--ink-soft);margin-bottom:8px;">讀取中...</div>
+        <button id="mhUnbindLineBtn" style="background:var(--danger-soft);color:var(--danger);border:none;border-radius:12px;padding:9px 16px;font-size:11.5px;cursor:pointer;width:100%;">解除 LINE 綁定</button>
+        <div style="font-size:10px;color:var(--ink-soft);margin-top:6px;">只解除連結,不影響入住紀錄或姓名資料,家長可以重新綁定。</div>
+      </div>
+
+      <div style="background:var(--card);border-radius:14px;padding:14px;margin-bottom:12px;border:1px solid var(--danger-soft);">
+        <div style="font-weight:700;font-size:12.5px;margin-bottom:2px;color:var(--danger);">⚠️ 變更手機號碼(整支搬移)</div>
+        <div style="font-size:10px;color:var(--ink-soft);margin-bottom:8px;">會把這支電話底下所有寶貝的資料,搬到新號碼底下並保留合併,原號碼會被刪除。適用於「家長換手機」,不是換人帶寶貝來的情況。</div>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="mhNewPhoneInput" placeholder="輸入新的手機號碼">
+          <button id="mhPhoneChangeBtn" style="background:var(--danger);color:#fff;border:none;border-radius:12px;padding:0 16px;font-size:11px;cursor:pointer;white-space:nowrap;">搬移</button>
+        </div>
+      </div>
+
+      <div style="background:var(--card);border-radius:14px;padding:14px;margin-bottom:12px;border:1px solid var(--danger-soft);">
+        <div style="font-weight:700;font-size:12.5px;margin-bottom:2px;color:var(--danger);">⚠️ 更改單一寶貝的家長</div>
+        <div style="font-size:10px;color:var(--ink-soft);margin-bottom:8px;">只轉移「這一隻寶貝」到別的手機號碼底下,這支電話上其他寶貝不受影響。適用於「同一隻寶貝換了不同人帶來」的情況。</div>
+        <input type="text" id="mhReassignPetName" placeholder="寶貝名字(需與紀錄中完全一致)">
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <input type="text" id="mhReassignNewPhone" placeholder="要轉移過去的新家長手機號碼">
+          <button id="mhReassignBtn" style="background:var(--danger);color:#fff;border:none;border-radius:12px;padding:0 16px;font-size:11px;cursor:pointer;white-space:nowrap;">轉移</button>
+        </div>
+      </div>
     </div>
 
     <div class="divider" style="margin:20px 22px 0;">或從下方清單直接編輯</div>
@@ -688,7 +715,8 @@
       <button id="mergeRoomBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);flex:1;font-size:11px;padding:9px 6px;">🔗 合併房間</button>
     </div>
     <div class="field">
-      <button id="reprintPickupCardBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);width:100%;font-size:11px;">🎫 重新列印/傳送接回小卡</button>
+      <button id="reprintPickupCardBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);width:100%;font-size:11px;margin-bottom:8px;">🖨️ 重新列印接回小卡</button>
+      <button id="resendPickupQrBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);width:100%;font-size:11px;">📱 傳送QR給家長LINE</button>
     </div>
     <div class="field" id="changeRoomPanel" style="display:none;">
       <label>選擇要換到的空房</label>
@@ -1334,6 +1362,7 @@
   </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.js"></script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
   import {
@@ -1989,20 +2018,11 @@
   }
 
   function showPickupCard(roomId, qrImageUrl){
-    const room = allRooms[roomId];
     document.getElementById('printArea').innerHTML = `
       <div style="max-width:380px;margin:0 auto;text-align:center;font-family:'Noto Sans TC',sans-serif;">
         <h1 style="font-size:18px;margin-bottom:4px;">(inn)heart 接回小卡</h1>
         <p style="font-size:12px;color:#888;margin-top:0;">接回寶貝時,請出示此卡讓工作人員掃描核對</p>
-        ${room.avatarUrl ? '<img src="'+room.avatarUrl+'" style="width:90px;height:90px;border-radius:16px;object-fit:cover;margin:8px 0;">' : ''}
-        <h2 style="margin:4px 0;">${room.name}</h2>
-        <p style="font-size:13px;">${room.area === 'cat' ? '貓貓區' : '狗狗區'} ${room.no} 號房・入住時間 ${room.checkinDate || ''}</p>
-        <img src="${qrImageUrl}" style="width:220px;height:220px;margin:12px 0;">
-        <div style="text-align:left;font-size:13px;border-top:1px solid #ccc;padding-top:10px;margin-top:8px;">
-          <p>預計接回家長:${room.pickupName || '(未登記)'}</p>
-          <p>接回電話:${room.pickupPhone || '(未登記)'}</p>
-          <p>與送來者關係:${room.pickupRelation || '(未登記)'}</p>
-        </div>
+        <img src="${qrImageUrl}" style="width:260px;height:260px;margin:16px 0;">
       </div>
     `;
     window.print();
@@ -2033,8 +2053,7 @@
     window.print();
   }
 
-  document.getElementById('reprintPickupCardBtn').addEventListener('click', async () => {
-    const room = allRooms[currentRoomId];
+  async function ensurePickupQr(room){
     let qrImageUrl = room.qrImageUrl;
     if (!qrImageUrl || !room.verifyToken || !room.stayId || !room.verifyToken.endsWith(room.stayId)){
       // older record from before this feature existed, or token is stale: generate fresh
@@ -2045,8 +2064,23 @@
       room.verifyToken = verifyToken;
       room.qrImageUrl = qrImageUrl;
     }
+    return qrImageUrl;
+  }
+
+  document.getElementById('reprintPickupCardBtn').addEventListener('click', async () => {
+    const room = allRooms[currentRoomId];
+    const qrImageUrl = await ensurePickupQr(room);
     showPickupCard(currentRoomId, qrImageUrl);
-    sendLineImage(room.phone, qrImageUrl).catch(() => {});
+  });
+
+  document.getElementById('resendPickupQrBtn').addEventListener('click', async () => {
+    const room = allRooms[currentRoomId];
+    const qrImageUrl = await ensurePickupQr(room);
+    if (!room.phone){ alert('這個房間沒有家長手機號碼,無法傳送。'); return; }
+    const lineIds = await findLineBindingsForPhone(room.phone);
+    if (!lineIds.length){ alert('這位家長目前還沒有綁定 LINE,沒辦法直接傳送,請改用列印小卡。'); return; }
+    await sendLineImage(room.phone, qrImageUrl);
+    alert('已傳送 QR Code 到家長的 LINE。');
   });
 
   document.getElementById('printBtn').addEventListener('click', () => {
@@ -3990,9 +4024,21 @@
 
     const oldSnap = await getDoc(doc(db, 'members', currentMemberPhone));
     if (!oldSnap.exists()){ alert('找不到原本的資料,請重新查詢一次'); return; }
-    const memberData = oldSnap.data();
+    const oldData = oldSnap.data();
 
-    await setDoc(doc(db, 'members', newPhone), memberData);
+    // read the target phone's existing data first (it may already be a real customer with their own pets)
+    // and merge histories/photos together instead of overwriting, so nothing gets wiped out
+    const newSnap = await getDoc(doc(db, 'members', newPhone));
+    const newData = newSnap.exists() ? newSnap.data() : {};
+    const mergedHistory = [...(newData.history || []), ...(oldData.history || [])];
+    const mergedPetAvatars = { ...(oldData.petAvatars || {}), ...(newData.petAvatars || {}) };
+
+    await setDoc(doc(db, 'members', newPhone), {
+      updatedAt: serverTimestamp(),
+      name: newData.name || oldData.name || null,
+      history: mergedHistory,
+      petAvatars: mergedPetAvatars
+    }, { merge: true });
     await deleteDoc(doc(db, 'members', currentMemberPhone));
 
     // update any currently active room pointing at the old phone
@@ -4009,8 +4055,8 @@
       await setDoc(doc(db, 'lineBindings', id), { phone: newPhone });
     }
 
-    alert('已搬移完成' + (oldLineIds.length ? ',並一併更新了 ' + oldLineIds.length + ' 組 LINE 綁定' : '') + '。');
-    openManageEdit(newPhone, memberData);
+    alert('已搬移完成' + (newSnap.exists() ? '(目標號碼原本就有資料,已經合併保留,不會覆蓋掉)' : '') + (oldLineIds.length ? ',並一併更新了 ' + oldLineIds.length + ' 組 LINE 綁定' : '') + '。');
+    openManageEdit(newPhone, { name: newData.name || oldData.name || null, history: mergedHistory, petAvatars: mergedPetAvatars });
     await loadRooms();
     await renderMemberManageList();
   });
@@ -4050,35 +4096,107 @@
     }
   }
 
-  async function showPickupVerifyScreen(verifyToken){
-    showScreen('screenPickupVerify');
-    const contentEl = document.getElementById('pickupVerifyContent');
-    contentEl.innerHTML = '<div class="status-msg">核對中...</div>';
+  function buildPickupVerifyHtml(verifyToken, withJumpButton){
     const [roomId, stayId] = verifyToken.split('::');
     const room = allRooms[roomId];
-    if (room && room.stayId === stayId){
-      contentEl.innerHTML = `
-        <div class="hero" style="margin-bottom:6px;">
-          ${room.avatarUrl ? '<img src="'+room.avatarUrl+'" class="avatar" style="object-fit:cover;">' : '<div class="avatar"></div>'}
-          <div class="hero-text">
-            <p class="loc">${room.area === 'cat' ? '貓貓區' : '狗狗區'} ${room.no} 號房・目前在園中</p>
-            <h1>${room.name}</h1>
-          </div>
-        </div>
-        <div class="info-card"><div class="info-row"><div class="info-text">
-          <div class="info-label">入住時間</div><div class="info-value">${room.checkinDate || '(未登記)'}</div>
-        </div></div></div>
-        <div class="info-card"><div class="info-row"><div class="info-text">
-          <div class="info-label">預計接回家長</div><div class="info-value">${room.pickupName || '(未登記)'}・${room.pickupPhone || '(未登記)'}・${room.pickupRelation || '(未登記)'}</div>
-        </div></div></div>
-        <div style="padding:16px 22px;font-size:12.5px;color:var(--ink-soft);">請核對來人是否與登記的接回家長一致,如果不是本人,建議進一步確認關係再放行。</div>
-      `;
-    } else {
-      contentEl.innerHTML = '<div class="status-msg" style="color:var(--danger);">這張卡對應的入住紀錄已經結束、房間已經被新客人使用,或資料有誤,請直接以人工方式核對身份。</div>';
+    if (!(room && room.stayId === stayId)){
+      return '<div class="status-msg" style="color:var(--danger);">這張卡對應的入住紀錄已經結束、房間已經被新客人使用,或資料有誤,請直接以人工方式核對身份。</div>';
     }
+    return `
+      <div class="hero" style="margin-bottom:6px;">
+        ${room.avatarUrl ? '<img src="'+room.avatarUrl+'" class="avatar" style="object-fit:cover;">' : '<div class="avatar"></div>'}
+        <div class="hero-text">
+          <p class="loc">${room.area === 'cat' ? '貓貓區' : '狗狗區'} ${room.no} 號房・目前在園中</p>
+          <h1>${room.name}</h1>
+        </div>
+      </div>
+      <div class="info-card"><div class="info-row"><div class="info-text">
+        <div class="info-label">入住時間</div><div class="info-value">${room.checkinDate || '(未登記)'}</div>
+      </div></div></div>
+      <div class="info-card"><div class="info-row"><div class="info-text">
+        <div class="info-label">預計接回家長</div><div class="info-value">${room.pickupName || '(未登記)'}・${room.pickupPhone || '(未登記)'}・${room.pickupRelation || '(未登記)'}</div>
+      </div></div></div>
+      <div style="padding:16px 22px;font-size:12.5px;color:var(--ink-soft);">請核對來人是否與登記的接回家長一致,如果不是本人,建議進一步確認關係再放行。</div>
+      ${withJumpButton ? '<div class="field"><button id="pickupVerifyGotoRecordBtn" class="submit-btn" data-room-id="'+roomId+'">前往這隻寶貝的照護紀錄</button></div>' : ''}
+    `;
+  }
+
+  async function showPickupVerifyScreen(verifyToken){
+    showScreen('screenPickupVerify');
+    document.getElementById('pickupVerifyContent').innerHTML = buildPickupVerifyHtml(verifyToken, false);
   }
 
   document.getElementById('pickupVerifyBackBtn').addEventListener('click', () => { showScreen('screenMenu'); renderRooms(); });
+
+  // ---------- in-app QR scanner ----------
+  let qrScanStream = null;
+  let qrScanRafId = null;
+
+  document.getElementById('scanPickupQrBtn').addEventListener('click', async () => {
+    showScreen('screenQrScanner');
+    document.getElementById('qrScanResultView').style.display = 'none';
+    document.getElementById('qrScanResultView').innerHTML = '';
+    document.getElementById('qrScannerVideo').style.display = 'block';
+    document.getElementById('qrScannerStatus').textContent = '請將 QR Code 對準畫面';
+    try {
+      qrScanStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      const video = document.getElementById('qrScannerVideo');
+      video.srcObject = qrScanStream;
+      await video.play();
+      scanQrFrame();
+    } catch (err) {
+      document.getElementById('qrScannerStatus').textContent = '無法開啟相機:' + err.message + '(請確認已允許瀏覽器使用相機權限)';
+    }
+  });
+
+  function stopQrScanner(){
+    if (qrScanRafId) cancelAnimationFrame(qrScanRafId);
+    qrScanRafId = null;
+    if (qrScanStream){
+      qrScanStream.getTracks().forEach(t => t.stop());
+      qrScanStream = null;
+    }
+  }
+
+  function scanQrFrame(){
+    const video = document.getElementById('qrScannerVideo');
+    if (!video.videoWidth){
+      qrScanRafId = requestAnimationFrame(scanQrFrame);
+      return;
+    }
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const code = window.jsQR ? window.jsQR(imageData.data, imageData.width, imageData.height) : null;
+    if (code && code.data){
+      const match = code.data.match(/[?&]pickupVerify=([^&]+)/);
+      if (match){
+        stopQrScanner();
+        const verifyToken = decodeURIComponent(match[1]);
+        document.getElementById('qrScannerVideo').style.display = 'none';
+        document.getElementById('qrScannerStatus').textContent = '';
+        const resultEl = document.getElementById('qrScanResultView');
+        resultEl.style.display = 'block';
+        resultEl.innerHTML = buildPickupVerifyHtml(verifyToken, true);
+        const jumpBtn = document.getElementById('pickupVerifyGotoRecordBtn');
+        if (jumpBtn){
+          jumpBtn.addEventListener('click', () => openRecord(jumpBtn.dataset.roomId));
+        }
+        return;
+      }
+      // scanned a QR but it's not one of ours; keep scanning
+    }
+    qrScanRafId = requestAnimationFrame(scanQrFrame);
+  }
+
+  document.getElementById('qrScannerBackBtn').addEventListener('click', () => {
+    stopQrScanner();
+    showScreen('screenRooms');
+    renderRooms();
+  });
 
   document.getElementById('menuCareBtn').addEventListener('click', () => { showScreen('screenRooms'); renderRooms(); });
   document.getElementById('menuHistoryBtn').addEventListener('click', () => showScreen('screenHistorySearch'));
