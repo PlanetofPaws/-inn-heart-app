@@ -756,7 +756,10 @@
         <input type="checkbox" id="checkoutMihomeConfirm"> 已退出小米共享設備
       </label>
       <div id="checkoutLastTimesCard" style="background:var(--card);border-radius:14px;padding:12px 14px;margin-top:12px;font-size:12px;color:var(--ink-soft);"></div>
-      <label style="margin-top:12px;">交代給家長的特殊事項(選填)</label>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;">
+        <label style="margin:0;">交代給家長的特殊事項(選填)</label>
+        <button id="checkoutNoteSaveDraftBtn" type="button" style="background:var(--card);color:var(--ink-soft);border:1px solid var(--line);border-radius:10px;padding:4px 10px;font-size:10.5px;cursor:pointer;">暫存</button>
+      </div>
       <textarea id="checkoutSpecialNote" placeholder="例如:今天精神稍微差一點,回家後請多留意進食狀況..."></textarea>
       <div class="submit-row">
         <button class="submit-btn" id="checkoutConfirmBtn" style="background:var(--danger);opacity:0.5;" disabled>確認退房</button>
@@ -782,6 +785,7 @@
         <div class="cat-tab" data-sub="feedtoilet">進食與排泄評估</div>
         <div class="cat-tab" data-sub="sleep">睡眠評估</div>
         <div class="cat-tab" data-sub="activity">活動評估</div>
+        <div class="cat-tab" data-sub="incident" id="incidentSubTab">觸發情境紀錄</div>
         <div class="cat-tab" data-sub="medication">保健與用藥紀錄</div>
         <div class="cat-tab" data-sub="otherNote">其他</div>
       </div>
@@ -819,53 +823,41 @@
           <label style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:11.5px;color:var(--ink-soft);"><input type="checkbox" id="bcNoseHandled"> 已清潔</label>
         </div>
       </div>
-      <div class="sub-group" id="bcDogFields">
-        <div class="glabel-row"><span class="glabel" style="margin:0;">精神狀態</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
-        <div class="chip-row" data-group="bcSpiritState">
-          <div class="chip" data-val="活潑">活潑</div>
-          <div class="chip" data-val="一般">一般</div>
-          <div class="chip" data-val="較安靜">較安靜</div>
-          <div class="chip" data-val="休息或是睡眠較多">休息或是睡眠較多</div>
-          <div class="chip warn" data-val="反應異常">反應異常</div>
-        </div>
-        <input type="text" id="bcSpiritNote" placeholder="說明" style="margin-top:8px;display:none;">
-      </div>
       <div class="sub-group" id="bcDogFields2">
-        <div class="glabel-row"><span class="glabel" style="margin:0;">情緒狀態</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
-        <div class="chip-row" data-group="bcMoodState">
-          <div class="chip" data-val="愉悅">愉悅</div>
-          <div class="chip" data-val="穩定">穩定</div>
-          <div class="chip" data-val="放鬆">放鬆</div>
-          <div class="chip warn" data-val="緊張">緊張</div>
-          <div class="chip warn" data-val="不安">不安</div>
-          <div class="chip warn" data-val="抗拒">抗拒</div>
+        <div class="glabel-row"><span class="glabel" style="margin:0;">情緒狀態(可複選)</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
+        <div class="chip-row" data-multigroup="bcMoodState">
+          <div class="chip" data-val="身體放鬆">身體放鬆</div>
+          <div class="chip" data-val="尾巴自然輕鬆地擺動">尾巴自然輕鬆地擺動</div>
+          <div class="chip" data-val="打哈欠">打哈欠</div>
+          <div class="chip" data-val="舔鼻子">舔鼻子</div>
+          <div class="chip warn" data-val="轉頭迴避">轉頭迴避</div>
+          <div class="chip warn" data-val="低吼露牙">低吼露牙</div>
+          <div class="chip warn" data-val="過度喘氣">過度喘氣</div>
+          <div class="chip warn" data-val="坐立難安">坐立難安</div>
+          <div class="chip warn" data-val="夾尾＋眼神飄移">夾尾＋眼神飄移</div>
         </div>
       </div>
       <div class="sub-group" id="bcDogFields3">
-        <div class="glabel-row"><span class="glabel" style="margin:0;">互動反應</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
-        <div class="chip-row" data-group="bcInteraction">
-          <div class="chip" data-val="主動親近">主動親近</div>
-          <div class="chip" data-val="願意互動">願意互動</div>
-          <div class="chip" data-val="一般">一般</div>
-          <div class="chip warn" data-val="較少互動">較少互動</div>
-          <div class="chip warn" data-val="抗拒互動">抗拒互動</div>
+        <div class="glabel-row"><span class="glabel" style="margin:0;">環境適應力(可複選)</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
+        <div class="chip-row" data-multigroup="bcEnvAdapt">
+          <div class="chip" data-val="主動嗅聞探索環境">主動嗅聞探索環境</div>
+          <div class="chip" data-val="可安靜休息">可安靜休息</div>
+          <div class="chip warn" data-val="持續躲避">持續躲避</div>
+          <div class="chip warn" data-val="對聲音敏感左顧右看">對聲音敏感左顧右看</div>
+          <div class="chip warn" data-val="來回踱步">來回踱步</div>
+          <div class="chip warn" data-val="長時間吠叫">長時間吠叫</div>
+          <div class="chip warn" data-val="喘氣">喘氣</div>
+          <div class="chip warn" data-val="發抖">發抖</div>
         </div>
-        <input type="text" id="bcInteractionNote" placeholder="說明" style="margin-top:8px;display:none;">
       </div>
       <div class="sub-group" id="bcDogFields4">
-        <div class="glabel-row"><span class="glabel" style="margin:0;">異常行為狀況(可複選)</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
-        <div class="chip-row" data-multigroup="bcAbnormalType">
-          <div class="chip" data-val="無異常狀況">無異常狀況</div>
-          <div class="chip warn" data-val="持續踱步">持續踱步</div>
-          <div class="chip warn" data-val="焦慮繞圈">焦慮繞圈</div>
-          <div class="chip warn" data-val="持續嚎叫">持續嚎叫</div>
-          <div class="chip warn" data-val="哭泣">哭泣</div>
-          <div class="chip warn" data-val="抓門">抓門</div>
-          <div class="chip warn" data-val="過度舔毛">過度舔毛</div>
-          <div class="chip warn" data-val="無法安定">無法安定</div>
-          <div class="chip warn" data-val="其他">其他</div>
+        <div class="glabel-row"><span class="glabel" style="margin:0;">人犬互動(可複選)</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
+        <div class="chip-row" data-multigroup="bcDogInteraction">
+          <div class="chip" data-val="看到保母時主動接近">看到保母時主動接近</div>
+          <div class="chip" data-val="可接受撫摸">可接受撫摸</div>
+          <div class="chip warn" data-val="需要與保母保持距離">需要與保母保持距離</div>
+          <div class="chip warn" data-val="低吼警戒狀態">低吼警戒狀態</div>
         </div>
-        <textarea id="bcAbnormalNote" placeholder="詳細說明" style="margin-top:8px;"></textarea>
       </div>
 
       <div class="sub-group" id="bcCatFields" style="display:none;">
@@ -937,7 +929,7 @@
 
     <!-- 進食與排泄評估 -->
     <div class="cat-panel" data-panel="feedtoilet">
-      <div class="sub-group" id="ftFeedingBehaviorCat" style="display:none;">
+      <div class="sub-group" id="ftFeedingBehaviorCat">
         <div class="glabel-row"><span class="glabel" style="margin:0;">行為觀察(餵飯時)</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
         <div class="glabel" style="margin-bottom:6px;">行為反應</div>
         <div class="chip-row" data-group="ftFeedingBehavior">
@@ -1145,12 +1137,21 @@
           <div class="chip" data-val="訓練">訓練</div>
         </div>
       </div>
+      <div class="sub-group" id="actDogStatusWrap">
+        <span class="glabel">目前狀況</span>
+        <div class="chip-row" data-group="activityDogStatus">
+          <div class="chip" data-val="在房門口興奮期待活動">在房門口興奮期待活動</div>
+          <div class="chip" data-val="打開門後緩慢活動">打開門後緩慢活動</div>
+          <div class="chip warn" data-val="躲藏在角落，不勉強活動">躲藏在角落，不勉強活動</div>
+        </div>
+      </div>
       <div class="sub-group" id="actTypeDogWrap">
         <div class="glabel-row"><span class="glabel" style="margin:0;">類型(可複選)</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
-        <div class="chip-row" data-multigroup="activityType">
-          <div class="chip" data-val="散步">散步</div>
-          <div class="chip" data-val="玩耍">玩耍</div>
-          <div class="chip" data-val="訓練">訓練</div>
+        <div class="chip-row" data-multigroup="activityTypeDog">
+          <div class="chip" data-val="單獨戶外散步">單獨戶外散步</div>
+          <div class="chip" data-val="嗅聞活動">嗅聞活動</div>
+          <div class="chip" data-val="室內活動">室內活動</div>
+          <div class="chip" data-val="簡單訓練">簡單訓練</div>
         </div>
       </div>
       <div class="sub-group">
@@ -1168,17 +1169,39 @@
         </div>
         <input type="text" id="activityStateCatOther" placeholder="其他(自行登打)" style="margin-top:8px;">
       </div>
-      <div class="sub-group" id="actStateDogWrap">
-        <span class="glabel">活動狀態</span>
-        <div class="chip-row" data-group="activityState">
-          <div class="chip" data-val="興奮開心">興奮開心</div>
-          <div class="chip" data-val="正常">正常</div>
-          <div class="chip" data-val="溫和探索">溫和探索</div>
-          <div class="chip warn" data-val="頭低低憂鬱">頭低低憂鬱</div>
-          <div class="chip warn" data-val="緊張防衛">緊張防衛</div>
-          <div class="chip warn" data-val="抗拒活動">抗拒活動</div>
+      <div class="sub-group" id="actStateDogWalkWrap" style="display:none;">
+        <span class="glabel">狀態(單獨戶外散步)</span>
+        <div class="chip-row" data-multigroup="activityStateDogWalk">
+          <div class="chip" data-val="戶外活動牽繩穩定">戶外活動牽繩穩定</div>
+          <div class="chip warn" data-val="容易拉扯暴衝">容易拉扯暴衝</div>
+          <div class="chip warn" data-val="對路人敏感">對路人敏感</div>
+          <div class="chip warn" data-val="對犬敏感">對犬敏感</div>
         </div>
-        <input type="text" id="activityStateNote" placeholder="說明" style="margin-top:8px;display:none;">
+      </div>
+      <div class="sub-group" id="actStateDogSniffWrap" style="display:none;">
+        <span class="glabel">狀態(嗅聞活動)</span>
+        <div class="chip-row" data-multigroup="activityStateDogSniff">
+          <div class="chip" data-val="積極嗅聞">積極嗅聞</div>
+          <div class="chip warn" data-val="容易分心">容易分心</div>
+        </div>
+      </div>
+      <div class="sub-group" id="actStateDogIndoorWrap" style="display:none;">
+        <span class="glabel">狀態(室內活動)</span>
+        <div class="chip-row" data-multigroup="activityStateDogIndoor">
+          <div class="chip" data-val="穩定自由探索空間">穩定自由探索空間</div>
+          <div class="chip" data-val="於空間放鬆坐臥">於空間放鬆坐臥</div>
+          <div class="chip warn" data-val="短暫探索後走回房間">短暫探索後走回房間</div>
+          <div class="chip warn" data-val="原地不動">原地不動</div>
+          <div class="chip warn" data-val="躲在角落">躲在角落</div>
+        </div>
+      </div>
+      <div class="sub-group" id="actStateDogTrainWrap" style="display:none;">
+        <span class="glabel">狀態(訓練)</span>
+        <div class="chip-row" data-multigroup="activityStateDogTrain">
+          <div class="chip" data-val="訓練反應良好">訓練反應良好</div>
+          <div class="chip warn" data-val="容易分心">容易分心</div>
+        </div>
+        <input type="text" id="activityStateDogTrainOther" placeholder="其他(自行登打)" style="margin-top:8px;">
       </div>
       <div class="field">
         <label>備註說明</label>
@@ -1189,7 +1212,35 @@
         <input type="datetime-local" id="activityEntryTime">
       </div>
       <div class="submit-row">
-        <button class="small-btn" id="activitySubmitBtn" style="background:var(--pine);color:#F4F1E9;width:100%;">送出活動評估,並繼續填寫保健與用藥紀錄</button>
+        <button class="small-btn" id="activitySubmitBtn" style="background:var(--pine);color:#F4F1E9;width:100%;">送出活動評估,並繼續填寫下一步</button>
+      </div>
+    </div>
+
+    <!-- 觸發情境紀錄(狗狗限定) -->
+    <div class="cat-panel" data-panel="incident">
+      <div class="field">
+        <label>情境</label>
+        <textarea id="incidentSituationText" placeholder="發生了什麼情境..."></textarea>
+      </div>
+      <div class="field">
+        <label>反應</label>
+        <textarea id="incidentReactionText" placeholder="寶貝當下的反應..."></textarea>
+      </div>
+      <div class="field">
+        <label>處理</label>
+        <textarea id="incidentHandlingText" placeholder="當下怎麼處理..."></textarea>
+      </div>
+      <div class="field">
+        <label>結果</label>
+        <textarea id="incidentResultText" placeholder="處理後的結果..."></textarea>
+      </div>
+      <div class="field">
+        <label>紀錄時間</label>
+        <input type="datetime-local" id="incidentEntryTime">
+      </div>
+      <textarea id="incidentNoteText" style="display:none;"></textarea>
+      <div class="submit-row">
+        <button class="small-btn" id="incidentSubmitBtn" style="background:var(--pine);color:#F4F1E9;width:100%;">送出,並繼續填寫保健與用藥紀錄</button>
       </div>
     </div>
 
@@ -1317,7 +1368,6 @@
       <h2>入住紀錄</h2>
       <div class="day-tabs" id="dayTabs"></div>
       <div class="summary-strip" id="summaryStrip"></div>
-      <div id="moodRow" style="padding:0 22px 4px;font-size:11.5px;color:var(--ink-soft);display:flex;align-items:center;gap:6px;"></div>
       <div id="dayHighlight" style="padding:0 22px 12px;font-size:11.5px;color:var(--ink-soft);"></div>
       <div id="logList"><div class="empty-note">目前還沒有紀錄</div></div>
     </div>
@@ -1485,7 +1535,7 @@
         await setDoc(doc(db, 'rooms', id), {
           area: allRooms[id].area, no: allRooms[id].no,
           name: null, phone: null, stayId: null, items: null, notes: null, avatarUrl: null,
-          mergedRooms: null, mergedInto: null, hasEmergency: null,
+          mergedRooms: null, mergedInto: null, hasEmergency: null, pendingCheckoutNote: null,
           pendingDryGrams: 0, pendingWetGrams: 0, pendingFreshGrams: 0, pendingWaterMl: 0
         });
         await loadRooms();
@@ -1853,7 +1903,7 @@
     await setDoc(doc(db, 'rooms', id), {
       area: allRooms[id].area, no: allRooms[id].no,
       name: null, phone: null, stayId: null, items: null, notes: null, avatarUrl: null,
-      mergedRooms: null, mergedInto: null, hasEmergency: null,
+      mergedRooms: null, mergedInto: null, hasEmergency: null, pendingCheckoutNote: null,
       pendingDryGrams: 0, pendingWetGrams: 0, pendingFreshGrams: 0, pendingWaterMl: 0
     });
     await loadRooms();
@@ -2293,7 +2343,7 @@
       <div>🐾 最後一次排尿時間:<b style="color:var(--ink);">${lastPee ? (lastPee.dateStr + ' ' + lastPee.timeStr) : '這次入住沒有排尿紀錄'}</b></div>
       <div style="margin-top:4px;">💩 最後一次排便時間:<b style="color:var(--ink);">${lastPoop ? (lastPoop.dateStr + ' ' + lastPoop.timeStr) : '這次入住沒有排便紀錄'}</b></div>
     `;
-    document.getElementById('checkoutSpecialNote').value = '';
+    document.getElementById('checkoutSpecialNote').value = room.pendingCheckoutNote || '';
 
     document.getElementById('checkoutMihomeConfirm').checked = false;
     const confirmBtn = document.getElementById('checkoutConfirmBtn');
@@ -2309,6 +2359,20 @@
     document.getElementById('checkoutMihomeConfirm').addEventListener('change', checkAllDone);
     checkAllDone();
     document.getElementById('checkoutChecklistPanel').style.display = 'block';
+  });
+
+  document.getElementById('checkoutNoteSaveDraftBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('checkoutNoteSaveDraftBtn');
+    const note = document.getElementById('checkoutSpecialNote').value.trim();
+    try {
+      await updateDoc(doc(db, 'rooms', currentRoomId), { pendingCheckoutNote: note || null });
+      allRooms[currentRoomId].pendingCheckoutNote = note || null;
+      const original = btn.textContent;
+      btn.textContent = '已暫存 ✓';
+      setTimeout(() => { btn.textContent = original; }, 1500);
+    } catch (err) {
+      alert('暫存失敗:' + err.message);
+    }
   });
 
   function buildHomecomingReminder(area){
@@ -2368,14 +2432,24 @@
 
       // best-effort: send a warm homecoming reminder to the parent's LINE; never blocks checkout if it fails
       if (room.phone){
-        const reminderMessages = [{ type: 'text', text: buildHomecomingReminder(room.area) }];
+        const allEntries = Object.values(currentEntriesByDate).flat();
+        const sortedEntries = allEntries.slice().sort((a,b) => (b.createdAtMs||0) - (a.createdAtMs||0));
+        const lastPee = sortedEntries.find(e => (e.peeGrams||0) > 0 || (e.peeDiaperGrams||0) > 0 || (e.peeCount||0) > 0);
+        const lastPoop = sortedEntries.find(e => (e.poopGrams||0) > 0);
+        const lastTimesText = '🐾 離開前最後一次排尿時間:' + (lastPee ? (lastPee.dateStr + ' ' + lastPee.timeStr) : '這次入住沒有排尿紀錄') +
+          '\n💩 離開前最後一次排便時間:' + (lastPoop ? (lastPoop.dateStr + ' ' + lastPoop.timeStr) : '這次入住沒有排便紀錄') +
+          '\n\n提供給您參考,方便評估寶貝回家後的排泄狀況是否恢復正常。';
+        const reminderMessages = [
+          { type: 'text', text: buildHomecomingReminder(room.area) },
+          { type: 'text', text: lastTimesText }
+        ];
         if (specialNote) reminderMessages.push({ type: 'text', text: '📌 這次想特別提醒您:\n' + specialNote });
         sendLineMessagesToPhone(room.phone, reminderMessages).catch(() => {});
       }
 
       await setDoc(doc(db, 'rooms', currentRoomId), {
         area: room.area, no: room.no, name: null, phone: null, stayId: null, items: null, notes: null,
-        avatarUrl: null, mergedRooms: null, mergedInto: null, hasEmergency: null
+        avatarUrl: null, mergedRooms: null, mergedInto: null, hasEmergency: null, pendingCheckoutNote: null
       });
       document.getElementById('checkoutChecklistPanel').style.display = 'none';
       await loadRooms();
@@ -2478,8 +2552,12 @@
     submitAndChain(document.getElementById('ftSubmitBtn'), 'feedtoilet', 'sleep'));
   document.getElementById('sleepSubmitBtn').addEventListener('click', () =>
     submitAndChain(document.getElementById('sleepSubmitBtn'), 'sleep', 'activity'));
-  document.getElementById('activitySubmitBtn').addEventListener('click', () =>
-    submitAndChain(document.getElementById('activitySubmitBtn'), 'activity', 'medication'));
+  document.getElementById('activitySubmitBtn').addEventListener('click', () => {
+    const area = allRooms[currentRoomId] ? allRooms[currentRoomId].area : 'cat';
+    submitAndChain(document.getElementById('activitySubmitBtn'), 'activity', area === 'dog' ? 'incident' : 'medication');
+  });
+  document.getElementById('incidentSubmitBtn').addEventListener('click', () =>
+    submitAndChain(document.getElementById('incidentSubmitBtn'), 'incident', 'medication'));
   document.getElementById('medicationSubmitBtn').addEventListener('click', () =>
     submitAndChain(document.getElementById('medicationSubmitBtn'), 'medication', 'otherNote'));
   document.getElementById('otherNoteSubmitBtn').addEventListener('click', () => {
@@ -2499,18 +2577,6 @@
     chip.addEventListener('chipchange', () => {
       const isActive = chip.classList.contains('active');
       document.getElementById('bcSkinNote').style.display = (isActive && chip.dataset.val === '異常狀況') ? 'block' : 'none';
-    });
-  });
-  document.querySelectorAll('.chip-row[data-group="bcSpiritState"] .chip').forEach(chip => {
-    chip.addEventListener('chipchange', () => {
-      const isActive = chip.classList.contains('active');
-      document.getElementById('bcSpiritNote').style.display = (isActive && chip.dataset.val === '反應異常') ? 'block' : 'none';
-    });
-  });
-  document.querySelectorAll('.chip-row[data-group="bcInteraction"] .chip').forEach(chip => {
-    chip.addEventListener('chipchange', () => {
-      const isActive = chip.classList.contains('active');
-      document.getElementById('bcInteractionNote').style.display = (isActive && (chip.dataset.val === '較少互動' || chip.dataset.val === '抗拒互動')) ? 'block' : 'none';
     });
   });
   document.querySelectorAll('.chip-row[data-group="bcBehaviorLevel"] .chip').forEach(chip => {
@@ -2541,8 +2607,18 @@
     });
   }
 
-  wireExclusiveMultigroup('bcAbnormalType', '無異常狀況', () => {});
   wireExclusiveMultigroup('medObsType', '無明顯異狀', () => {});
+
+  function updateActivityDogStatePanels(){
+    const activeTypes = Array.from(document.querySelectorAll('.chip-row[data-multigroup="activityTypeDog"] .chip.active')).map(c => c.dataset.val);
+    document.getElementById('actStateDogWalkWrap').style.display = activeTypes.includes('單獨戶外散步') ? 'block' : 'none';
+    document.getElementById('actStateDogSniffWrap').style.display = activeTypes.includes('嗅聞活動') ? 'block' : 'none';
+    document.getElementById('actStateDogIndoorWrap').style.display = activeTypes.includes('室內活動') ? 'block' : 'none';
+    document.getElementById('actStateDogTrainWrap').style.display = activeTypes.includes('簡單訓練') ? 'block' : 'none';
+  }
+  document.querySelectorAll('.chip-row[data-multigroup="activityTypeDog"] .chip').forEach(chip => {
+    chip.addEventListener('click', () => setTimeout(updateActivityDogStatePanels, 0));
+  });
 
   wireExclusiveMultigroup('bcDischarge', '無', () => {
     document.getElementById('bcEyeDetail').style.display = document.querySelector('.chip-row[data-multigroup="bcDischarge"] .chip[data-val="眼屎"]').classList.contains('active') ? 'block' : 'none';
@@ -2603,12 +2679,6 @@
       });
     });
   });
-  document.querySelectorAll('.chip-row[data-group="activityState"] .chip').forEach(chip => {
-    chip.addEventListener('chipchange', () => {
-      const isActive = chip.classList.contains('active');
-      document.getElementById('activityStateNote').style.display = (isActive && chip.classList.contains('warn')) ? 'block' : 'none';
-    });
-  });
 
   function applyAreaVisibility(){
     const area = allRooms[currentRoomId] ? allRooms[currentRoomId].area : 'cat';
@@ -2616,18 +2686,18 @@
     document.getElementById('ftPeeDog').style.display = area === 'dog' ? 'block' : 'none';
     document.getElementById('ftPoopCat').style.display = area === 'cat' ? 'block' : 'none';
     document.getElementById('ftPoopDog').style.display = area === 'dog' ? 'block' : 'none';
-    document.getElementById('bcDogFields').style.display = area === 'dog' ? 'block' : 'none';
     document.getElementById('bcDogFields2').style.display = area === 'dog' ? 'block' : 'none';
     document.getElementById('bcDogFields3').style.display = area === 'dog' ? 'block' : 'none';
     document.getElementById('bcDogFields4').style.display = area === 'dog' ? 'block' : 'none';
     document.getElementById('bcCatFields').style.display = area === 'cat' ? 'block' : 'none';
     document.getElementById('bcCatFields2').style.display = area === 'cat' ? 'block' : 'none';
-    document.getElementById('ftFeedingBehaviorCat').style.display = area === 'cat' ? 'block' : 'none';
+    document.getElementById('ftFeedingBehaviorCat').style.display = 'block';
     document.getElementById('actCatStatusWrap').style.display = area === 'cat' ? 'block' : 'none';
     document.getElementById('actTypeCatWrap').style.display = area === 'cat' ? 'block' : 'none';
+    document.getElementById('actDogStatusWrap').style.display = area === 'dog' ? 'block' : 'none';
     document.getElementById('actTypeDogWrap').style.display = area === 'dog' ? 'block' : 'none';
     document.getElementById('actStateCatWrap').style.display = area === 'cat' ? 'block' : 'none';
-    document.getElementById('actStateDogWrap').style.display = area === 'dog' ? 'block' : 'none';
+    document.getElementById('incidentSubTab').style.display = area === 'dog' ? 'block' : 'none';
   }
 
   function resetPanelFields(panelId){
@@ -2677,15 +2747,12 @@
   function recomputeAllVisibility(){
     const skinActive = document.querySelector('.chip-row[data-group="bcSkin"] .chip.active');
     document.getElementById('bcSkinNote').style.display = (skinActive && skinActive.dataset.val === '異常狀況') ? 'block' : 'none';
-    const spiritActive = document.querySelector('.chip-row[data-group="bcSpiritState"] .chip.active');
-    document.getElementById('bcSpiritNote').style.display = (spiritActive && spiritActive.dataset.val === '反應異常') ? 'block' : 'none';
-    const interactionActive = document.querySelector('.chip-row[data-group="bcInteraction"] .chip.active');
-    document.getElementById('bcInteractionNote').style.display = (interactionActive && (interactionActive.dataset.val === '較少互動' || interactionActive.dataset.val === '抗拒互動')) ? 'block' : 'none';
     const behaviorLevelActive = document.querySelector('.chip-row[data-group="bcBehaviorLevel"] .chip.active');
     const behaviorLevelVal = behaviorLevelActive ? behaviorLevelActive.dataset.val : null;
     document.getElementById('bcBehaviorRelaxWrap').style.display = behaviorLevelVal === '放鬆' ? 'block' : 'none';
     document.getElementById('bcBehaviorMidWrap').style.display = behaviorLevelVal === '中度警戒' ? 'block' : 'none';
     document.getElementById('bcBehaviorHighWrap').style.display = behaviorLevelVal === '高度警戒' ? 'block' : 'none';
+    updateActivityDogStatePanels();
     const eyeChip = document.querySelector('.chip-row[data-multigroup="bcDischarge"] .chip[data-val="眼屎"]');
     const noseChip = document.querySelector('.chip-row[data-multigroup="bcDischarge"] .chip[data-val="鼻涕"]');
     document.getElementById('bcEyeDetail').style.display = (eyeChip && eyeChip.classList.contains('active')) ? 'block' : 'none';
@@ -2703,8 +2770,6 @@
     document.getElementById('medSupplementNote').style.display = (supChip && (supChip.dataset.val === '失敗' || supChip.dataset.val === '極度抗拒')) ? 'block' : 'none';
     const medChip = document.querySelector('.chip-row[data-group="medResult"] .chip.active');
     document.getElementById('medResultNote').style.display = (medChip && (medChip.dataset.val === '失敗' || medChip.dataset.val === '極度抗拒')) ? 'block' : 'none';
-    const actChip = document.querySelector('.chip-row[data-group="activityState"] .chip.active');
-    document.getElementById('activityStateNote').style.display = (actChip && actChip.classList.contains('warn')) ? 'block' : 'none';
     ['ci','rec'].forEach(prefix => {
       const catChip = document.querySelector('.chip-row[data-group="'+prefix+'MedCategory"] .chip.active');
       const oralWrap = document.getElementById(prefix + 'MedOralTypeWrap');
@@ -2764,7 +2829,7 @@
 
     const labelMap = {
       bodycheck: 'continueToFeedtoiletBtn', feedtoilet: 'ftSubmitBtn', sleep: 'sleepSubmitBtn',
-      activity: 'activitySubmitBtn', medication: 'medicationSubmitBtn', otherNote: 'otherNoteSubmitBtn'
+      activity: 'activitySubmitBtn', incident: 'incidentSubmitBtn', medication: 'medicationSubmitBtn', otherNote: 'otherNoteSubmitBtn'
     };
     const btnId = labelMap[panelId] || 'submitBtn';
     document.getElementById(btnId).textContent = '儲存修改';
@@ -2796,13 +2861,14 @@
     showPanel('bodycheck');
     resetPanelFields('bodycheck');
     resetPanelFields('feedtoilet');
-    ['sleep','activity','medication','otherNote','spOther'].forEach(resetPanelFields);
+    ['sleep','activity','incident','medication','otherNote','spOther'].forEach(resetPanelFields);
     document.getElementById('noteText').value = '';
     entryPhotos = [];
     document.getElementById('bcEntryTime').value = toDatetimeLocalValue(new Date());
     document.getElementById('ftEntryTime').value = toDatetimeLocalValue(new Date());
     document.getElementById('sleepEntryTime').value = toDatetimeLocalValue(new Date());
     document.getElementById('activityEntryTime').value = toDatetimeLocalValue(new Date());
+    document.getElementById('incidentEntryTime').value = toDatetimeLocalValue(new Date());
     document.getElementById('medicationEntryTime').value = toDatetimeLocalValue(new Date());
     document.getElementById('otherNoteEntryTime').value = toDatetimeLocalValue(new Date());
     applyAreaVisibility();
@@ -2818,7 +2884,7 @@
   });
   document.querySelectorAll('.chip-row[data-multigroup] .chip').forEach(chip => {
     const grp = chip.parentElement.dataset.multigroup;
-    if (['bcAbnormalType','bcDischarge','ftVomit','ftFood','medObsType'].includes(grp)) return;
+    if (['bcDischarge','ftVomit','ftFood','medObsType'].includes(grp)) return;
     chip.addEventListener('click', () => {
       chip.classList.toggle('active');
       chip.dispatchEvent(new Event('chipchange', { bubbles: true }));
@@ -2966,26 +3032,45 @@
   let currentSelectedDate = null;
 
   function computeEmergencyFlags(entries, room){
-    if (!room || room.area !== 'cat') return [];
+    if (!room || (room.area !== 'cat' && room.area !== 'dog')) return [];
     const flags = [];
     const now = Date.now();
     const checkinMs = room.checkinDate ? new Date(room.checkinDate.replace(' ', 'T')).getTime() : null;
     const stayIsOver24h = checkinMs && !isNaN(checkinMs) && (now - checkinMs) >= 24*3600*1000;
     const sorted = entries.slice().sort((a,b) => (b.createdAtMs||0) - (a.createdAtMs||0));
 
-    const latestBodycheck = sorted.find(e => e.panelId === 'bodycheck' && e.formSnapshot);
-    if (latestBodycheck){
-      const behavior = (latestBodycheck.formSnapshot.chips['bcBehaviorLevel'] || [])[0];
-      if (behavior === '高度警戒') flags.push('寶貝出現高度警戒的行為反應');
-      const breathing = (latestBodycheck.formSnapshot.chips['bcBreathing'] || [])[0];
-      if (breathing && breathing !== '呼吸平順') flags.push('呼吸狀態異常:' + breathing);
+    if (room.area === 'cat'){
+      const latestBodycheck = sorted.find(e => e.panelId === 'bodycheck' && e.formSnapshot);
+      if (latestBodycheck){
+        const behavior = (latestBodycheck.formSnapshot.chips['bcBehaviorLevel'] || [])[0];
+        if (behavior === '高度警戒') flags.push('寶貝出現高度警戒的行為反應');
+        const breathing = (latestBodycheck.formSnapshot.chips['bcBreathing'] || [])[0];
+        if (breathing && breathing !== '呼吸平順') flags.push('呼吸狀態異常:' + breathing);
+      }
+    } else {
+      const latestBodycheck = sorted.find(e => e.panelId === 'bodycheck' && e.formSnapshot);
+      const latestSleep = sorted.find(e => e.panelId === 'sleep' && e.formSnapshot);
+      const dogSignals = [];
+      if (latestBodycheck){
+        dogSignals.push(...(latestBodycheck.formSnapshot.chips['bcMoodState'] || []));
+        dogSignals.push(...(latestBodycheck.formSnapshot.chips['bcEnvAdapt'] || []));
+        dogSignals.push(...(latestBodycheck.formSnapshot.chips['bcDogInteraction'] || []));
+      }
+      if (latestSleep) dogSignals.push(...(latestSleep.formSnapshot.chips['sleepObserve'] || []));
+      const watchKeywords = ['踱步', '坐立難安', '無法入睡', '低吼', '喘氣'];
+      const matchedSignals = dogSignals.filter(s => watchKeywords.some(k => s.includes(k)));
+      if (matchedSignals.length) flags.push('行為觀察出現需留意的狀況:' + matchedSignals.join('、'));
     }
+
+    const poopColorField = room.area === 'cat' ? 'ftPoopCatColor' : 'ftPoopDogColor';
+    const peeColorField = room.area === 'cat' ? 'ftPeeCatColor' : 'ftPeeDogColor';
+    const poopTextureField = room.area === 'cat' ? 'ftPoopCatTexture' : 'ftPoopDogTexture';
 
     const latestFeedtoilet = sorted.find(e => e.panelId === 'feedtoilet' && e.formSnapshot);
     if (latestFeedtoilet){
-      const poopColor = (latestFeedtoilet.formSnapshot.chips['ftPoopCatColor'] || [])[0];
+      const poopColor = (latestFeedtoilet.formSnapshot.chips[poopColorField] || [])[0];
       if (poopColor === '異常') flags.push('排便顏色異常');
-      const peeColor = (latestFeedtoilet.formSnapshot.chips['ftPeeCatColor'] || [])[0];
+      const peeColor = (latestFeedtoilet.formSnapshot.chips[peeColorField] || [])[0];
       if (peeColor === '異常') flags.push('排尿顏色異常');
     }
 
@@ -2997,7 +3082,7 @@
         const vomitVals = e.formSnapshot.chips['ftVomit'] || [];
         if (vomitVals.some(v => v !== '無')) vomitCount++;
         if (vomitVals.includes('其他')) hasVomitOther = true;
-        const texture = (e.formSnapshot.chips['ftPoopCatTexture'] || [])[0];
+        const texture = (e.formSnapshot.chips[poopTextureField] || [])[0];
         if (texture === '腹瀉') diarrheaCount++;
       }
     });
@@ -3080,14 +3165,27 @@
     }
   }
 
-  const moodIconMap = { '活潑':'😄', '一般':'🙂', '較安靜':'😌', '休息或是睡眠較多':'😴', '反應異常':'⚠️' };
-
-  function computeMoodIcon(allEntries){
-    const bodychecks = allEntries.filter(e => e.panelId === 'bodycheck' && e.formSnapshot && e.formSnapshot.chips && e.formSnapshot.chips['bcSpiritState'] && e.formSnapshot.chips['bcSpiritState'].length)
+  const moodIconMap = {
+    '放鬆': '😌', '中度警戒': '😟', '高度警戒': '⚠️',
+    '身體放鬆': '😌', '尾巴自然輕鬆地擺動': '😊', '打哈欠': '🙂', '舔鼻子': '🙂',
+    '轉頭迴避': '😟', '低吼露牙': '⚠️', '過度喘氣': '⚠️', '坐立難安': '😟', '夾尾＋眼神飄移': '⚠️'
+  };
+  function computeMoodIcon(allEntries, area){
+    const bodychecks = allEntries.filter(e => e.panelId === 'bodycheck' && e.formSnapshot && e.formSnapshot.chips)
       .sort((a,b) => (b.createdAtMs || 0) - (a.createdAtMs || 0));
     if (!bodychecks.length) return null;
-    const spirit = bodychecks[0].formSnapshot.chips['bcSpiritState'][0];
-    return { icon: moodIconMap[spirit] || '🙂', label: spirit };
+    if (area === 'cat'){
+      const withLevel = bodychecks.find(e => e.formSnapshot.chips['bcBehaviorLevel'] && e.formSnapshot.chips['bcBehaviorLevel'].length);
+      if (!withLevel) return null;
+      const level = withLevel.formSnapshot.chips['bcBehaviorLevel'][0];
+      return { icon: moodIconMap[level] || '🙂', label: level };
+    }
+    const withMood = bodychecks.find(e => e.formSnapshot.chips['bcMoodState'] && e.formSnapshot.chips['bcMoodState'].length);
+    if (!withMood) return null;
+    const moods = withMood.formSnapshot.chips['bcMoodState'];
+    const warnOrder = ['低吼露牙','夾尾＋眼神飄移','過度喘氣','坐立難安','轉頭迴避'];
+    const chosen = warnOrder.find(w => moods.includes(w)) || moods[0];
+    return { icon: moodIconMap[chosen] || '🙂', label: chosen };
   }
 
   function computeTodayHighlight(dayEntries, area){
@@ -3126,10 +3224,6 @@
     const dayEntries = (currentEntriesByDate[currentSelectedDate] || []).slice().sort((a,b) => (b.createdAtMs || 0) - (a.createdAtMs || 0));
     const area = allRooms[currentRoomId] ? allRooms[currentRoomId].area : 'cat';
 
-    const allStayEntries = Object.values(currentEntriesByDate).flat();
-    const mood = computeMoodIcon(allStayEntries);
-    const moodRowEl = document.getElementById('moodRow');
-    moodRowEl.innerHTML = mood ? '<span style="font-size:18px;">' + mood.icon + '</span><span>目前精神狀態:' + mood.label + '</span>' : '';
     document.getElementById('dayHighlight').textContent = computeTodayHighlight(dayEntries, area);
 
     const totalGrams = dayEntries.reduce((s,e) => s + (e.grams || 0), 0);
@@ -3241,7 +3335,7 @@
   function txtVal(id){ return document.getElementById(id).value.trim(); }
 
   const panelLabels = {
-    bodycheck:'身心評估', feedtoilet:'進食與排泄評估', sleep:'睡眠評估', activity:'活動評估', medication:'保健與用藥紀錄', otherNote:'其他', spOther:'住宿／照護事件'
+    bodycheck:'身心評估', feedtoilet:'進食與排泄評估', sleep:'睡眠評估', activity:'活動評估', incident:'觸發情境紀錄', medication:'保健與用藥紀錄', otherNote:'其他', spOther:'住宿／照護事件'
   };
 
   function buildEntryFields(panelId){
@@ -3279,23 +3373,20 @@
         }
       }
       if (area === 'dog'){
-        const spirit = chipVal('bcSpiritState');
-        if (spirit){
-          parts.push('精神狀態' + spirit + (spirit === '反應異常' && txtVal('bcSpiritNote') ? '，' + txtVal('bcSpiritNote') : ''));
-          if (spirit === '反應異常') warn = true;
+        const moods = chipVals('bcMoodState');
+        if (moods.length){
+          parts.push('情緒觀察:' + moods.join('、'));
+          if (moods.some(m => ['轉頭迴避','低吼露牙','過度喘氣','坐立難安','夾尾＋眼神飄移'].includes(m))) warn = true;
         }
-        const mood = chipVal('bcMoodState');
-        if (mood){ parts.push('情緒' + mood); if (['緊張','不安','抗拒'].includes(mood)) warn = true; }
-        const interaction = chipVal('bcInteraction');
-        if (interaction){
-          const isWarnInter = interaction === '較少互動' || interaction === '抗拒互動';
-          parts.push('互動反應' + interaction + (isWarnInter && txtVal('bcInteractionNote') ? '，' + txtVal('bcInteractionNote') : ''));
-          if (isWarnInter) warn = true;
+        const envAdapt = chipVals('bcEnvAdapt');
+        if (envAdapt.length){
+          parts.push('環境適應力:' + envAdapt.join('、'));
+          if (envAdapt.some(v => ['持續躲避','對聲音敏感左顧右看','來回踱步','長時間吠叫','喘氣','發抖'].includes(v))) warn = true;
         }
-        const abnormalTypes = chipVals('bcAbnormalType');
-        if (abnormalTypes.length && !(abnormalTypes.length === 1 && abnormalTypes[0] === '無異常狀況')){
-          parts.push('出現' + abnormalTypes.join('、') + '的異常行為' + (txtVal('bcAbnormalNote') ? '，' + txtVal('bcAbnormalNote') : ''));
-          warn = true;
+        const dogInteraction = chipVals('bcDogInteraction');
+        if (dogInteraction.length){
+          parts.push('人犬互動:' + dogInteraction.join('、'));
+          if (dogInteraction.some(v => ['需要與保母保持距離','低吼警戒狀態'].includes(v))) warn = true;
         }
       } else {
         const breathing = chipVal('bcBreathing');
@@ -3322,7 +3413,7 @@
 
     if (panelId === 'feedtoilet'){
       noteFieldId = 'ftNoteText'; timeFieldId = 'ftEntryTime';
-      if (area === 'cat'){
+      {
         const feedBehavior = chipVal('ftFeedingBehavior');
         const feedBehaviorOther = txtVal('ftFeedingBehaviorOther');
         if (feedBehavior || feedBehaviorOther){
@@ -3468,17 +3559,58 @@
           if (stateCat === '有點怕怕的') warn = true;
         }
       } else {
-        const types = chipVals('activityType');
+        const dogStatus = chipVal('activityDogStatus');
+        if (dogStatus){ parts.push('目前狀況:' + dogStatus); if (dogStatus === '躲藏在角落，不勉強活動') warn = true; }
+        const types = chipVals('activityTypeDog');
         if (types.length) parts.push('進行了' + types.join('、') + (mins !== null ? '，約' + mins + '分鐘' : ''));
         else if (mins !== null) parts.push('活動時間約' + mins + '分鐘');
-        const state = chipVal('activityState');
-        if (state){
-          const isWarn = ['頭低低憂鬱','緊張防衛','抗拒活動'].includes(state);
-          parts.push('活動狀態' + state + (isWarn && txtVal('activityStateNote') ? '，' + txtVal('activityStateNote') : ''));
-          if (isWarn) warn = true;
+
+        if (types.includes('單獨戶外散步')){
+          const walkStates = chipVals('activityStateDogWalk');
+          if (walkStates.length){
+            parts.push('戶外散步狀態:' + walkStates.join('、'));
+            if (walkStates.some(v => ['容易拉扯暴衝','對路人敏感','對犬敏感'].includes(v))) warn = true;
+          }
+        }
+        if (types.includes('嗅聞活動')){
+          const sniffStates = chipVals('activityStateDogSniff');
+          if (sniffStates.length){
+            parts.push('嗅聞活動狀態:' + sniffStates.join('、'));
+            if (sniffStates.includes('容易分心')) warn = true;
+          }
+        }
+        if (types.includes('室內活動')){
+          const indoorStates = chipVals('activityStateDogIndoor');
+          if (indoorStates.length){
+            parts.push('室內活動狀態:' + indoorStates.join('、'));
+            if (indoorStates.some(v => ['短暫探索後走回房間','原地不動','躲在角落'].includes(v))) warn = true;
+          }
+        }
+        if (types.includes('簡單訓練')){
+          const trainStates = chipVals('activityStateDogTrain');
+          const trainOther = txtVal('activityStateDogTrainOther');
+          if (trainStates.length || trainOther){
+            parts.push('訓練狀態:' + [...trainStates, trainOther].filter(Boolean).join('、'));
+            if (trainStates.includes('容易分心')) warn = true;
+          }
         }
       }
       content = parts.join('，');
+    }
+
+    if (panelId === 'incident'){
+      noteFieldId = 'incidentNoteText'; timeFieldId = 'incidentEntryTime';
+      const situation = txtVal('incidentSituationText');
+      const reaction = txtVal('incidentReactionText');
+      const handling = txtVal('incidentHandlingText');
+      const result = txtVal('incidentResultText');
+      const bits = [];
+      if (situation) bits.push('情境:' + situation);
+      if (reaction) bits.push('反應:' + reaction);
+      if (handling) bits.push('處理:' + handling);
+      if (result) bits.push('結果:' + result);
+      content = bits.join('，');
+      if (situation || reaction) warn = true;
     }
 
     if (panelId === 'medication'){
@@ -3939,7 +4071,7 @@
       return;
     }
 
-    const mood = computeMoodIcon(entries);
+    const mood = computeMoodIcon(entries, h.area);
     document.getElementById('mhMoodRow').innerHTML = mood ? '<span style="font-size:18px;">' + mood.icon + '</span><span>目前精神狀態:' + mood.label + '</span>' : '';
     document.getElementById('mhHighlight').textContent = computeTodayHighlight(entries, h.area);
 
