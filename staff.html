@@ -143,6 +143,11 @@
     #printArea .pentry .ptime{font-weight:700;margin-right:8px;}
     #printArea .pentry .pcat{color:#666;font-size:10.5px;}
     #printArea .pentry .pcontent{margin-top:2px;}
+    #printArea .summary-page{page-break-before:always;}
+    #printArea .summary-table{width:100%;border-collapse:collapse;margin-top:10px;font-size:12px;}
+    #printArea .summary-table th, #printArea .summary-table td{border:1px solid #999;padding:8px 10px;text-align:left;vertical-align:top;color:#111;}
+    #printArea .summary-table th{width:32%;background:#f2f2f2;font-weight:700;}
+    #printArea .summary-table td{white-space:pre-line;}
   }
 </style>
 </head>
@@ -722,6 +727,22 @@
       <button id="roomManageToggleBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);flex:1;font-size:11px;padding:9px 6px;">🏠 房間管理</button>
       <button id="pickupCardToggleBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);flex:1;font-size:11px;padding:9px 6px;">🎫 接回小卡管理</button>
     </div>
+    <div class="field">
+      <button id="staySummaryToggleBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);width:100%;font-size:11px;padding:9px 6px;">📋 住宿重點摘要</button>
+    </div>
+    <div class="field" id="staySummaryPanelWrap" style="display:none;">
+      <div id="staySummaryLastCleanCard" style="background:var(--card);border-radius:14px;padding:12px 14px;font-size:12px;color:var(--ink-soft);margin-bottom:12px;"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <label style="margin:0;">本次住宿重點(自動彙整,可自行編輯)</label>
+        <button id="staySummaryRegenBtn" type="button" style="background:var(--card);color:var(--ink-soft);border:1px solid var(--line);border-radius:10px;padding:4px 10px;font-size:10.5px;cursor:pointer;">🔄 重新產生</button>
+      </div>
+      <textarea id="staySummaryAutoText" style="min-height:100px;"></textarea>
+      <label style="margin-top:12px;">特殊交代事項(選填,自行登打)</label>
+      <textarea id="staySummarySpecialText" placeholder="例如:今天精神稍微差一點,回家後請多留意進食狀況..."></textarea>
+      <div class="submit-row">
+        <button class="small-btn" id="staySummarySaveBtn" style="background:var(--pine);color:#fff;width:100%;">儲存住宿重點摘要</button>
+      </div>
+    </div>
     <div class="field" id="roomManagePanelWrap" style="display:none;">
       <div style="display:flex;gap:8px;">
         <button id="changeRoomBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);flex:1;font-size:11px;padding:9px 6px;">🔄 換房間</button>
@@ -756,11 +777,6 @@
         <input type="checkbox" id="checkoutMihomeConfirm"> 已退出小米共享設備
       </label>
       <div id="checkoutLastTimesCard" style="background:var(--card);border-radius:14px;padding:12px 14px;margin-top:12px;font-size:12px;color:var(--ink-soft);"></div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;">
-        <label style="margin:0;">交代給家長的特殊事項(選填)</label>
-        <button id="checkoutNoteSaveDraftBtn" type="button" style="background:var(--card);color:var(--ink-soft);border:1px solid var(--line);border-radius:10px;padding:4px 10px;font-size:10.5px;cursor:pointer;">暫存</button>
-      </div>
-      <textarea id="checkoutSpecialNote" placeholder="例如:今天精神稍微差一點,回家後請多留意進食狀況..."></textarea>
       <div class="submit-row">
         <button class="submit-btn" id="checkoutConfirmBtn" style="background:var(--danger);opacity:0.5;" disabled>確認退房</button>
       </div>
@@ -1404,6 +1420,7 @@
       <div class="back-row" id="mhDetailBackBtn">← 返回日期列表</div>
       <div id="mhItemsCard"></div>
       <div id="mhNotesCard"></div>
+      <div id="mhStaySummaryCard" style="display:none;"></div>
       <div class="summary-strip" id="mhSummaryStrip"></div>
       <div id="mhMoodRow" style="padding:0 22px 4px;font-size:11.5px;color:var(--ink-soft);display:flex;align-items:center;gap:6px;"></div>
       <div id="mhHighlight" style="padding:0 22px 12px;font-size:11.5px;color:var(--ink-soft);"></div>
@@ -1428,6 +1445,18 @@
     <div style="font-size:18px;font-weight:700;margin-bottom:10px;">⚠️ 緊急提醒</div>
     <div id="emergencyModalBody" style="font-size:13px;line-height:1.7;white-space:pre-line;"></div>
     <button id="emergencyModalCloseBtn" style="margin-top:18px;width:100%;padding:12px;border-radius:12px;border:none;background:#fff;color:var(--danger);font-weight:700;font-size:13.5px;cursor:pointer;">我知道了</button>
+  </div>
+</div>
+
+<div id="checkoutCopyModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:999;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:var(--card);color:var(--ink);border-radius:20px;padding:24px 22px;max-width:380px;width:100%;max-height:85vh;overflow-y:auto;">
+    <div style="font-size:16px;font-weight:700;margin-bottom:10px;">📋 住宿重點摘要(可複製手動傳送)</div>
+    <div style="font-size:11.5px;color:var(--ink-soft);margin-bottom:10px;">這段文字不會自動發送,退房溫馨提醒已經另外自動推播給家長了。這段是額外資訊,複製後可自行貼到 LINE 或其他管道傳給家長。</div>
+    <textarea id="checkoutCopyModalText" readonly style="width:100%;min-height:220px;font-size:12.5px;line-height:1.6;padding:10px;border-radius:12px;border:1px solid var(--line);background:#fff;color:var(--ink);"></textarea>
+    <div style="display:flex;gap:8px;margin-top:14px;">
+      <button id="checkoutCopyModalCopyBtn" style="flex:1;padding:12px;border-radius:12px;border:none;background:var(--pine);color:#fff;font-weight:700;font-size:13.5px;cursor:pointer;">複製文字</button>
+      <button id="checkoutCopyModalCloseBtn" style="flex:1;padding:12px;border-radius:12px;border:1px solid var(--line);background:#fff;color:var(--ink);font-weight:700;font-size:13.5px;cursor:pointer;">關閉</button>
+    </div>
   </div>
 </div>
 
@@ -13970,6 +13999,7 @@ var qrcode = function() {
           area: allRooms[id].area, no: allRooms[id].no,
           name: null, phone: null, stayId: null, items: null, notes: null, avatarUrl: null,
           mergedRooms: null, mergedInto: null, hasEmergency: null, pendingCheckoutNote: null,
+          staySummaryAuto: null, staySummarySpecialNote: null,
           pendingDryGrams: 0, pendingWetGrams: 0, pendingFreshGrams: 0, pendingWaterMl: 0
         });
         await loadRooms();
@@ -14281,6 +14311,7 @@ var qrcode = function() {
     document.getElementById('checkoutChecklistPanel').style.display = 'none';
     document.getElementById('roomManagePanelWrap').style.display = 'none';
     document.getElementById('pickupCardPanelWrap').style.display = 'none';
+    document.getElementById('staySummaryPanelWrap').style.display = 'none';
     showScreen('screenRecord');
     await renderLog();
   }
@@ -14352,6 +14383,7 @@ var qrcode = function() {
       area: allRooms[id].area, no: allRooms[id].no,
       name: null, phone: null, stayId: null, items: null, notes: null, avatarUrl: null,
       mergedRooms: null, mergedInto: null, hasEmergency: null, pendingCheckoutNote: null,
+          staySummaryAuto: null, staySummarySpecialNote: null,
       pendingDryGrams: 0, pendingWetGrams: 0, pendingFreshGrams: 0, pendingWaterMl: 0
     });
     await loadRooms();
@@ -14565,7 +14597,7 @@ var qrcode = function() {
     window.print();
   }
 
-  function printStay(meta, itemsText, notesText, entriesByDateObj){
+  function printStay(meta, itemsText, notesText, entriesByDateObj, staySummaryInfo){
     const dates = Object.keys(entriesByDateObj).sort();
     let daysHtml = '';
     dates.forEach(ds => {
@@ -14578,6 +14610,23 @@ var qrcode = function() {
     });
     if (!daysHtml) daysHtml = '<p>目前尚無紀錄</p>';
 
+    let summaryPageHtml = '';
+    if (staySummaryInfo){
+      const lct = staySummaryInfo.lastCleanTimes || {};
+      summaryPageHtml = `
+        <div class="summary-page">
+          <h1>(inn)heart 住宿重點摘要</h1>
+          <div class="meta">${meta}</div>
+          <table class="summary-table">
+            <tr><th>最後清潔尿尿時間</th><td>${lct.peeText || '這次入住沒有相關紀錄'}</td></tr>
+            <tr><th>最後清潔大便時間</th><td>${lct.poopText || '這次入住沒有相關紀錄'}</td></tr>
+            <tr><th>本次住宿重點</th><td>${staySummaryInfo.summaryAuto || '尚未填寫住宿重點摘要'}</td></tr>
+            <tr><th>特殊交代事項</th><td>${staySummaryInfo.specialNote || '無'}</td></tr>
+          </table>
+        </div>
+      `;
+    }
+
     document.getElementById('printArea').innerHTML = `
       <h1>(inn)heart 寶貝照護紀錄</h1>
       <div class="meta">${meta}<br>列印時間:${new Date().toLocaleString('zh-TW')}</div>
@@ -14586,6 +14635,7 @@ var qrcode = function() {
       <h2>特殊注意事項</h2>
       <p>${notesText}</p>
       ${daysHtml}
+      ${summaryPageHtml}
     `;
     window.print();
   }
@@ -14636,7 +14686,12 @@ var qrcode = function() {
     const itemsText = room.items ? [...room.items.list, ...(room.items.other ? ['其他:' + room.items.other] : [])].join('、') : '無';
     const notesText = room.notes ? [...room.notes.list, ...(room.notes.other ? ['其他:' + room.notes.other] : [])].join('、') : '無';
     const meta = `寶貝名字:${room.name}　|　房間:${room.area === 'cat' ? '貓貓區' : '狗狗區'} ${room.no} 號房<br>家長手機:${room.phone}　|　入住時間:${room.checkinDate || ''}`;
-    printStay(meta, itemsText, notesText, currentEntriesByDate);
+    const staySummaryInfo = {
+      lastCleanTimes: computeLastCleanTimes(Object.values(currentEntriesByDate).flat()),
+      summaryAuto: room.staySummaryAuto || null,
+      specialNote: room.staySummarySpecialNote || null
+    };
+    printStay(meta, itemsText, notesText, currentEntriesByDate, staySummaryInfo);
   });
 
   document.getElementById('roomManageToggleBtn').addEventListener('click', () => {
@@ -14785,15 +14840,11 @@ var qrcode = function() {
       ).join('');
     }
 
-    const allEntries = Object.values(currentEntriesByDate).flat();
-    const sortedEntries = allEntries.slice().sort((a,b) => (b.createdAtMs||0) - (a.createdAtMs||0));
-    const lastPee = sortedEntries.find(e => (e.peeGrams||0) > 0 || (e.peeDiaperGrams||0) > 0 || (e.peeCount||0) > 0);
-    const lastPoop = sortedEntries.find(e => (e.poopGrams||0) > 0);
+    const lastCleanTimes = computeLastCleanTimes(Object.values(currentEntriesByDate).flat());
     document.getElementById('checkoutLastTimesCard').innerHTML = `
-      <div>🐾 最後一次排尿時間:<b style="color:var(--ink);">${lastPee ? (lastPee.dateStr + ' ' + lastPee.timeStr) : '這次入住沒有排尿紀錄'}</b></div>
-      <div style="margin-top:4px;">💩 最後一次排便時間:<b style="color:var(--ink);">${lastPoop ? (lastPoop.dateStr + ' ' + lastPoop.timeStr) : '這次入住沒有排便紀錄'}</b></div>
+      <div>🚽 最後清潔尿尿時間:<b style="color:var(--ink);">${lastCleanTimes.peeText || '這次入住沒有相關紀錄'}</b></div>
+      <div style="margin-top:4px;">💩 最後清潔大便時間:<b style="color:var(--ink);">${lastCleanTimes.poopText || '這次入住沒有相關紀錄'}</b></div>
     `;
-    document.getElementById('checkoutSpecialNote').value = room.pendingCheckoutNote || '';
 
     document.getElementById('checkoutMihomeConfirm').checked = false;
     const confirmBtn = document.getElementById('checkoutConfirmBtn');
@@ -14811,17 +14862,44 @@ var qrcode = function() {
     document.getElementById('checkoutChecklistPanel').style.display = 'block';
   });
 
-  document.getElementById('checkoutNoteSaveDraftBtn').addEventListener('click', async () => {
-    const btn = document.getElementById('checkoutNoteSaveDraftBtn');
-    const note = document.getElementById('checkoutSpecialNote').value.trim();
+  document.getElementById('staySummaryToggleBtn').addEventListener('click', () => {
+    const wrap = document.getElementById('staySummaryPanelWrap');
+    const opening = wrap.style.display === 'none';
+    wrap.style.display = opening ? 'block' : 'none';
+    if (opening){
+      const room = allRooms[currentRoomId];
+      const lastCleanTimes = computeLastCleanTimes(Object.values(currentEntriesByDate).flat());
+      document.getElementById('staySummaryLastCleanCard').innerHTML = `
+        <div>🚽 最後清潔尿尿時間:<b style="color:var(--ink);">${lastCleanTimes.peeText || '這次入住沒有相關紀錄'}</b></div>
+        <div style="margin-top:4px;">💩 最後清潔大便時間:<b style="color:var(--ink);">${lastCleanTimes.poopText || '這次入住沒有相關紀錄'}</b></div>
+      `;
+      // if staff already saved a summary earlier this stay, keep showing their edited version;
+      // otherwise pre-fill with a freshly auto-generated one
+      document.getElementById('staySummaryAutoText').value = room.staySummaryAuto || buildStaySummaryAuto(Object.values(currentEntriesByDate).flat());
+      document.getElementById('staySummarySpecialText').value = room.staySummarySpecialNote || '';
+    }
+  });
+
+  document.getElementById('staySummaryRegenBtn').addEventListener('click', () => {
+    document.getElementById('staySummaryAutoText').value = buildStaySummaryAuto(Object.values(currentEntriesByDate).flat());
+  });
+
+  document.getElementById('staySummarySaveBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('staySummarySaveBtn');
+    const autoText = document.getElementById('staySummaryAutoText').value.trim();
+    const specialText = document.getElementById('staySummarySpecialText').value.trim();
     try {
-      await updateDoc(doc(db, 'rooms', currentRoomId), { pendingCheckoutNote: note || null });
-      allRooms[currentRoomId].pendingCheckoutNote = note || null;
+      await updateDoc(doc(db, 'rooms', currentRoomId), {
+        staySummaryAuto: autoText || null,
+        staySummarySpecialNote: specialText || null
+      });
+      allRooms[currentRoomId].staySummaryAuto = autoText || null;
+      allRooms[currentRoomId].staySummarySpecialNote = specialText || null;
       const original = btn.textContent;
-      btn.textContent = '已暫存 ✓';
+      btn.textContent = '已儲存 ✓';
       setTimeout(() => { btn.textContent = original; }, 1500);
     } catch (err) {
-      alert('暫存失敗:' + err.message);
+      alert('儲存失敗:' + err.message);
     }
   });
 
@@ -14832,6 +14910,23 @@ var qrcode = function() {
     return '🐱 寶貝回家囉｜返家小提醒\n回家後可能會出現躲藏、安靜、睡比較多、突然變黏或暫時不想互動的情況，先給牠一點空間，讓牠自己重新熟悉家裡的味道 🤎\n\n接下來 48 小時，可以在日常中留意：\n🍚 吃飯｜是否願意進食，食慾有沒有慢慢回到平常\n💧 水分｜是否有正常攝取水分，也可以一起觀察尿尿情況\n🚽 貓砂｜是否有正常尿尿、便便，有沒有頻繁進出貓砂盆\n😺 精神｜休息後是否仍能正常活動、探索\n🤎 行為｜是否慢慢恢復原本的生活節奏\n\n不需要因為牠一回家躲起來就緊張，重點是觀察牠是否正在慢慢恢復。\n\n若出現持續拒食、反覆嘔吐／腹瀉、明顯精神不佳、呼吸異常、疼痛，或一直進出貓砂盆卻無法正常排尿，建議儘早諮詢獸醫師。\n\n🤎 謝謝你讓我們陪寶貝度過這段小小的旅程，回家後就讓牠慢慢找回自己的節奏吧！';
   }
 
+  function buildCheckoutCopyText(room, lastCleanTimes, summaryAuto, specialNote){
+    const lines = [];
+    lines.push('📋 (inn)heart 住宿重點摘要｜' + (room.name || '寶貝'));
+    lines.push('');
+    lines.push('🚽 最後清潔尿尿時間:' + (lastCleanTimes.peeText || '這次入住沒有相關紀錄'));
+    lines.push('💩 最後清潔大便時間:' + (lastCleanTimes.poopText || '這次入住沒有相關紀錄'));
+    lines.push('');
+    lines.push('本次住宿重點:');
+    lines.push(summaryAuto || '這次住宿狀況穩定,沒有特別異常紀錄。');
+    if (specialNote){
+      lines.push('');
+      lines.push('特殊交代事項:');
+      lines.push(specialNote);
+    }
+    return lines.join('\n');
+  }
+
   document.getElementById('checkoutConfirmBtn').addEventListener('click', async () => {
     if (!confirm('確定要辦理退房嗎?退房後這次住宿的照片會自動刪除以節省空間,文字紀錄會保留。')) return;
     const confirmBtn = document.getElementById('checkoutConfirmBtn');
@@ -14840,7 +14935,10 @@ var qrcode = function() {
     confirmBtn.textContent = '退房處理中...';
     try {
       const room = allRooms[currentRoomId];
-      const specialNote = document.getElementById('checkoutSpecialNote').value.trim();
+      const allEntries = Object.values(currentEntriesByDate).flat();
+      const lastCleanTimes = computeLastCleanTimes(allEntries);
+      const summaryAuto = (room.staySummaryAuto && room.staySummaryAuto.trim()) || buildStaySummaryAuto(allEntries);
+      const specialNote = (room.staySummarySpecialNote && room.staySummarySpecialNote.trim()) || '';
 
       // these three are independent of each other, so run them at the same time instead of one after another
       const photoCleanupPromise = room.stayId
@@ -14865,7 +14963,10 @@ var qrcode = function() {
               checkedOutAt: new Date().toLocaleString('zh-TW'),
               avatarUrl: room.avatarUrl || null,
               items: room.items || null, notes: room.notes || null,
-              specialNote: specialNote || null
+              lastPeeCleanTime: lastCleanTimes.peeText || null,
+              lastPoopCleanTime: lastCleanTimes.poopText || null,
+              staySummaryAuto: summaryAuto || null,
+              staySummarySpecialNote: specialNote || null
             })
           }, { merge: true })
         : Promise.resolve();
@@ -14880,37 +14981,48 @@ var qrcode = function() {
       const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('退房逾時,請檢查網路連線後再試一次(如果房間已經清空一半,可以用房間卡片上的「重置」按鈕清乾淨)')), 20000));
       await Promise.race([Promise.all([photoCleanupPromise, historyWritePromise, mergeReleasePromise]), timeoutPromise]);
 
-      // best-effort: send a warm homecoming reminder to the parent's LINE; never blocks checkout if it fails
+      // best-effort: send the standard warm homecoming reminder to the parent's LINE; never blocks checkout if it fails.
+      // (this is the ONLY thing sent automatically — the fuller 住宿重點摘要 below is shown for staff to copy manually)
       if (room.phone){
-        const allEntries = Object.values(currentEntriesByDate).flat();
-        const sortedEntries = allEntries.slice().sort((a,b) => (b.createdAtMs||0) - (a.createdAtMs||0));
-        const lastPee = sortedEntries.find(e => (e.peeGrams||0) > 0 || (e.peeDiaperGrams||0) > 0 || (e.peeCount||0) > 0);
-        const lastPoop = sortedEntries.find(e => (e.poopGrams||0) > 0);
-        const lastTimesText = '🐾 離開前最後一次排尿時間:' + (lastPee ? (lastPee.dateStr + ' ' + lastPee.timeStr) : '這次入住沒有排尿紀錄') +
-          '\n💩 離開前最後一次排便時間:' + (lastPoop ? (lastPoop.dateStr + ' ' + lastPoop.timeStr) : '這次入住沒有排便紀錄') +
-          '\n\n提供給您參考,方便評估寶貝回家後的排泄狀況是否恢復正常。';
-        const reminderMessages = [
-          { type: 'text', text: buildHomecomingReminder(room.area) },
-          { type: 'text', text: lastTimesText }
-        ];
-        if (specialNote) reminderMessages.push({ type: 'text', text: '📌 這次想特別提醒您:\n' + specialNote });
-        sendLineMessagesToPhone(room.phone, reminderMessages).catch(() => {});
+        sendLineMessagesToPhone(room.phone, [{ type: 'text', text: buildHomecomingReminder(room.area) }]).catch(() => {});
       }
 
       await setDoc(doc(db, 'rooms', currentRoomId), {
         area: room.area, no: room.no, name: null, phone: null, stayId: null, items: null, notes: null,
-        avatarUrl: null, mergedRooms: null, mergedInto: null, hasEmergency: null, pendingCheckoutNote: null
+        avatarUrl: null, mergedRooms: null, mergedInto: null, hasEmergency: null, pendingCheckoutNote: null,
+        staySummaryAuto: null, staySummarySpecialNote: null
       });
       document.getElementById('checkoutChecklistPanel').style.display = 'none';
+      document.getElementById('staySummaryPanelWrap').style.display = 'none';
       await loadRooms();
       showScreen('screenRooms');
       renderRooms();
+
+      document.getElementById('checkoutCopyModalText').value = buildCheckoutCopyText(room, lastCleanTimes, summaryAuto, specialNote);
+      document.getElementById('checkoutCopyModal').style.display = 'flex';
     } catch (err) {
       alert('退房時發生錯誤:' + err.message + '\n請把這則訊息截圖回報。');
     } finally {
       confirmBtn.disabled = false;
       confirmBtn.textContent = originalText;
     }
+  });
+
+  document.getElementById('checkoutCopyModalCopyBtn').addEventListener('click', async () => {
+    const textEl = document.getElementById('checkoutCopyModalText');
+    try {
+      await navigator.clipboard.writeText(textEl.value);
+      const btn = document.getElementById('checkoutCopyModalCopyBtn');
+      const original = btn.textContent;
+      btn.textContent = '已複製 ✓';
+      setTimeout(() => { btn.textContent = original; }, 1500);
+    } catch (err) {
+      textEl.select();
+      alert('自動複製失敗,已幫你反白文字,請手動複製(Ctrl/Cmd+C)。');
+    }
+  });
+  document.getElementById('checkoutCopyModalCloseBtn').addEventListener('click', () => {
+    document.getElementById('checkoutCopyModal').style.display = 'none';
   });
 
   // ---------- session / sub-tab navigation ----------
@@ -15638,35 +15750,33 @@ var qrcode = function() {
     return { icon: moodIconMap[chosen] || '🙂', label: chosen };
   }
 
-  function computeTodayHighlight(dayEntries, area){
-    if (!dayEntries || !dayEntries.length) return '今日尚無紀錄';
-    if (area !== 'cat'){
-      const warnEntries = dayEntries.slice().sort((a,b) => (a.createdAtMs || 0) - (b.createdAtMs || 0)).filter(e => e.warn);
-      if (!warnEntries.length) return '📝 今日重點:狀況穩定,目前沒有異常紀錄';
-      const bits = warnEntries.slice(-3).map(e => (e.contentParts && e.contentParts[0]) || e.content).filter(Boolean);
-      return '📝 今日重點:' + bits.join('；');
-    }
+  // Tracks when staff actually CLEANED UP the pee/poop (i.e. when the toileting entry was logged),
+  // not necessarily the exact moment the pet went — labeled that way on purpose so parents don't
+  // read it as a precise biological-event timestamp.
+  function computeLastCleanTimes(allEntries){
+    const sorted = allEntries.slice().sort((a,b) => (b.createdAtMs||0) - (a.createdAtMs||0));
+    const lastPee = sorted.find(e => (e.peeGrams||0) > 0 || (e.peeDiaperGrams||0) > 0 || (e.peeCount||0) > 0);
+    const lastPoop = sorted.find(e => (e.poopGrams||0) > 0);
+    return {
+      peeText: lastPee ? (lastPee.dateStr + ' ' + lastPee.timeStr) : null,
+      poopText: lastPoop ? (lastPoop.dateStr + ' ' + lastPoop.timeStr) : null
+    };
+  }
+  function formatLastCleanLine(times){
+    return '🚽 最後清潔尿尿時間:' + (times.peeText || '這次入住沒有相關紀錄') + '　｜　💩 最後清潔大便時間:' + (times.poopText || '這次入住沒有相關紀錄');
+  }
 
-    // cat: build a genuine day summary instead of just listing warnings
-    const sorted = dayEntries.slice().sort((a,b) => (b.createdAtMs || 0) - (a.createdAtMs || 0));
-    const totalGrams = dayEntries.reduce((s,e) => s + (e.grams || 0), 0);
-    const totalWater = dayEntries.reduce((s,e) => s + (e.waterMl || 0), 0);
-
-    const latestBodycheck = sorted.find(e => e.panelId === 'bodycheck' && e.formSnapshot);
-    const bits = [];
-    bits.push('進食約' + totalGrams + 'g、飲水約' + totalWater + 'ml');
-    if (latestBodycheck){
-      const level = (latestBodycheck.formSnapshot.chips['bcBehaviorLevel'] || [])[0];
-      const breathing = (latestBodycheck.formSnapshot.chips['bcBreathing'] || [])[0];
-      const behaviorBits = [];
-      if (level) behaviorBits.push('目前行為反應' + level);
-      if (breathing && breathing !== '呼吸平順') behaviorBits.push('呼吸' + breathing);
-      if (behaviorBits.length) bits.push(behaviorBits.join('，'));
-    }
-    const warnCount = dayEntries.filter(e => e.warn).length;
-    bits.push(warnCount ? '今日有' + warnCount + '筆異常紀錄' : '狀況穩定');
-
-    return '📝 今日重點:' + bits.join('，');
+  // Builds a short, bullet-per-line auto summary from every entry flagged "warn" across the WHOLE
+  // stay (not just today), pulling only the first (most salient) clause of each entry rather than
+  // dumping the full text, so it stays skimmable.
+  function extractKeyPoint(entry){
+    const raw = (entry.contentParts && entry.contentParts.length) ? entry.contentParts[0] : (entry.content || '');
+    return raw.length > 24 ? raw.slice(0, 24) + '…' : raw;
+  }
+  function buildStaySummaryAuto(allEntries){
+    const warnEntries = allEntries.filter(e => e.warn).sort((a,b) => (a.createdAtMs||0) - (b.createdAtMs||0));
+    if (!warnEntries.length) return '這次住宿狀況穩定,沒有特別異常紀錄。';
+    return warnEntries.map(e => (e.dateStr || '') + ' ' + (e.timeStr || '') + ' ' + (e.cat || '') + '：' + extractKeyPoint(e)).join('\n');
   }
 
   function renderSelectedDay(){
@@ -15674,7 +15784,7 @@ var qrcode = function() {
     const dayEntries = (currentEntriesByDate[currentSelectedDate] || []).slice().sort((a,b) => (b.createdAtMs || 0) - (a.createdAtMs || 0));
     const area = allRooms[currentRoomId] ? allRooms[currentRoomId].area : 'cat';
 
-    document.getElementById('dayHighlight').textContent = computeTodayHighlight(dayEntries, area);
+    document.getElementById('dayHighlight').textContent = formatLastCleanLine(computeLastCleanTimes(Object.values(currentEntriesByDate).flat()));
 
     const totalGrams = dayEntries.reduce((s,e) => s + (e.grams || 0), 0);
     const totalWater = dayEntries.reduce((s,e) => s + (e.waterMl || 0), 0);
@@ -16475,10 +16585,23 @@ var qrcode = function() {
     document.getElementById('mhDetailView').style.display = 'block';
     document.getElementById('mhItemsCard').innerHTML = '';
     document.getElementById('mhNotesCard').innerHTML = '';
+    document.getElementById('mhStaySummaryCard').style.display = 'none';
+    document.getElementById('mhStaySummaryCard').innerHTML = '';
     document.getElementById('mhSummaryStrip').innerHTML = '';
     document.getElementById('mhMoodRow').innerHTML = '';
     document.getElementById('mhHighlight').textContent = '讀取中...';
     document.getElementById('mhTimeline').innerHTML = '';
+
+    // archived「住宿重點摘要」(saved at checkout time) — only present on stays recorded after this feature shipped
+    if (h.staySummaryAuto || h.staySummarySpecialNote || h.lastPeeCleanTime || h.lastPoopCleanTime){
+      const lines = [];
+      lines.push('🚽 最後清潔尿尿時間:' + (h.lastPeeCleanTime || '這次入住沒有相關紀錄'));
+      lines.push('💩 最後清潔大便時間:' + (h.lastPoopCleanTime || '這次入住沒有相關紀錄'));
+      if (h.staySummaryAuto) lines.push('\n📋 本次住宿重點:\n' + h.staySummaryAuto);
+      if (h.staySummarySpecialNote) lines.push('\n📌 特殊交代事項:\n' + h.staySummarySpecialNote);
+      document.getElementById('mhStaySummaryCard').style.display = 'block';
+      document.getElementById('mhStaySummaryCard').innerHTML = '<div class="info-card"><div class="info-row"><div class="info-text"><div class="info-label">住宿重點摘要</div><div class="info-value" style="white-space:pre-line;">' + lines.join('\n') + '</div></div></div></div>';
+    }
 
     // items / notes cards, preserved on the history record itself
     if (h.items && (h.items.list || []).length){
@@ -16521,7 +16644,7 @@ var qrcode = function() {
 
     const mood = computeMoodIcon(entries, h.area);
     document.getElementById('mhMoodRow').innerHTML = mood ? '<span style="font-size:18px;">' + mood.icon + '</span><span>目前精神狀態:' + mood.label + '</span>' : '';
-    document.getElementById('mhHighlight').textContent = computeTodayHighlight(entries, h.area);
+    document.getElementById('mhHighlight').textContent = '';
 
     const totalGrams = entries.reduce((s,e) => s + (e.grams || 0), 0);
     const totalWater = entries.reduce((s,e) => s + (e.waterMl || 0), 0);
@@ -16563,7 +16686,12 @@ var qrcode = function() {
       const meta = `寶貝名字:${h.petName}　|　房間:${h.area === 'cat' ? '貓貓區' : '狗狗區'} ${h.no} 號房<br>入住時間:${h.checkinDate || ''}　|　退房時間:${h.checkedOutAt}`;
       const itemsText = document.getElementById('mhItemsCard').textContent.trim() || '(未登記)';
       const notesText = document.getElementById('mhNotesCard').textContent.trim() || '(無)';
-      printStay(meta, itemsText, notesText, byDate);
+      const staySummaryInfo = {
+        lastCleanTimes: { peeText: h.lastPeeCleanTime || null, poopText: h.lastPoopCleanTime || null },
+        summaryAuto: h.staySummaryAuto || null,
+        specialNote: h.staySummarySpecialNote || null
+      };
+      printStay(meta, itemsText, notesText, byDate, staySummaryInfo);
     };
   }
 
