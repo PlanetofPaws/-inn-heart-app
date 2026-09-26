@@ -709,34 +709,20 @@
     return { icon: moodIconMap[spirit] || '🙂', label: spirit };
   }
 
-  function computeTodayHighlight(dayEntries, area){
-    if (!dayEntries || !dayEntries.length) return '今日尚無紀錄';
-    if (area !== 'cat'){
-      const warnEntries = dayEntries.slice().sort((a,b) => (a.createdAtMs || 0) - (b.createdAtMs || 0)).filter(e => e.warn);
-      if (!warnEntries.length) return '📝 今日重點:狀況穩定,目前沒有異常紀錄';
-      const bits = warnEntries.slice(-3).map(e => (e.contentParts && e.contentParts[0]) || e.content).filter(Boolean);
-      return '📝 今日重點:' + bits.join('；');
-    }
-
-    const sorted = dayEntries.slice().sort((a,b) => (b.createdAtMs || 0) - (a.createdAtMs || 0));
-    const totalGrams = dayEntries.reduce((s,e) => s + (e.grams || 0), 0);
-    const totalWater = dayEntries.reduce((s,e) => s + (e.waterMl || 0), 0);
-
-    const latestBodycheck = sorted.find(e => e.panelId === 'bodycheck' && e.formSnapshot);
-    const bits = [];
-    bits.push('進食約' + totalGrams + 'g、飲水約' + totalWater + 'ml');
-    if (latestBodycheck){
-      const level = (latestBodycheck.formSnapshot.chips['bcBehaviorLevel'] || [])[0];
-      const breathing = (latestBodycheck.formSnapshot.chips['bcBreathing'] || [])[0];
-      const behaviorBits = [];
-      if (level) behaviorBits.push('目前行為反應' + level);
-      if (breathing && breathing !== '呼吸平順') behaviorBits.push('呼吸' + breathing);
-      if (behaviorBits.length) bits.push(behaviorBits.join('，'));
-    }
-    const warnCount = dayEntries.filter(e => e.warn).length;
-    bits.push(warnCount ? '今日有' + warnCount + '筆異常紀錄' : '狀況穩定');
-
-    return '📝 今日重點:' + bits.join('，');
+  // Tracks when staff actually CLEANED UP the pee/poop (i.e. when the toileting entry was logged),
+  // not necessarily the exact moment the pet went — labeled that way on purpose so it's not read as
+  // a precise biological-event timestamp.
+  function computeLastCleanTimes(allEntries){
+    const sorted = allEntries.slice().sort((a,b) => (b.createdAtMs||0) - (a.createdAtMs||0));
+    const lastPee = sorted.find(e => (e.peeGrams||0) > 0 || (e.peeDiaperGrams||0) > 0 || (e.peeCount||0) > 0);
+    const lastPoop = sorted.find(e => (e.poopGrams||0) > 0);
+    return {
+      peeText: lastPee ? (lastPee.dateStr + ' ' + lastPee.timeStr) : null,
+      poopText: lastPoop ? (lastPoop.dateStr + ' ' + lastPoop.timeStr) : null
+    };
+  }
+  function formatLastCleanLine(times){
+    return '🚽 最後清潔尿尿時間:' + (times.peeText || '這次入住沒有相關紀錄') + '　｜　💩 最後清潔大便時間:' + (times.poopText || '這次入住沒有相關紀錄');
   }
 
   function renderSelectedDay(){
@@ -748,7 +734,7 @@
     const mood = computeMoodIcon(allStayEntries);
     const moodRowEl = document.getElementById('moodRow');
     moodRowEl.innerHTML = mood ? '<span style="font-size:18px;">' + mood.icon + '</span><span>目前精神狀態:' + mood.label + '</span>' : '';
-    document.getElementById('dayHighlight').textContent = computeTodayHighlight(dayEntries, area);
+    document.getElementById('dayHighlight').textContent = formatLastCleanLine(computeLastCleanTimes(allStayEntries));
 
     const totalGrams = dayEntries.reduce((s,e) => s + (e.grams || 0), 0);
     const totalWater = dayEntries.reduce((s,e) => s + (e.waterMl || 0), 0);
