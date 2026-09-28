@@ -721,12 +721,6 @@
     <div class="field">
       <button id="confirmLineBoundBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);width:100%;font-size:11px;">✅ 已確認綁定此家長LINE</button>
     </div>
-
-    <div class="field" style="display:flex;gap:8px;">
-      <button id="printBtn" class="small-btn" style="background:var(--ochre);flex:1;font-size:11px;padding:9px 6px;">匯出並列印紀錄</button>
-      <button id="roomManageToggleBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);flex:1;font-size:11px;padding:9px 6px;">🏠 房間管理</button>
-      <button id="pickupCardToggleBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);flex:1;font-size:11px;padding:9px 6px;">🎫 接回小卡管理</button>
-    </div>
     <div class="field">
       <button id="staySummaryToggleBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);width:100%;font-size:11px;padding:9px 6px;">📋 住宿重點摘要</button>
     </div>
@@ -742,6 +736,12 @@
       <div class="submit-row">
         <button class="small-btn" id="staySummarySaveBtn" style="background:var(--pine);color:#fff;width:100%;">儲存住宿重點摘要</button>
       </div>
+    </div>
+
+    <div class="field" style="display:flex;gap:8px;">
+      <button id="printBtn" class="small-btn" style="background:var(--ochre);flex:1;font-size:11px;padding:9px 6px;">匯出並列印紀錄</button>
+      <button id="roomManageToggleBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);flex:1;font-size:11px;padding:9px 6px;">🏠 房間管理</button>
+      <button id="pickupCardToggleBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);flex:1;font-size:11px;padding:9px 6px;">🎫 接回小卡管理</button>
     </div>
     <div class="field" id="roomManagePanelWrap" style="display:none;">
       <div style="display:flex;gap:8px;">
@@ -14031,7 +14031,30 @@ var qrcode = function() {
   }
 
   const LINE_PUSH_FUNCTION_URL = 'https://send-line-message-1090283293954.asia-east1.run.app';
+  // if the deployed Cloud Function's actual URL differs from this guess, update it here after deploying
+  const STAY_SUMMARY_FUNCTION_URL = 'https://generate-stay-summary-1090283293954.asia-east1.run.app';
   const STAFF_BASE_URL = 'https://planetofpaws.github.io/-inn-heart-app/staff.html';
+
+  async function generateAiStaySummary(allEntries, area, petName){
+    const sorted = allEntries.slice().sort((a,b) => (a.createdAtMs||0) - (b.createdAtMs||0));
+    const entriesPayload = sorted.map(e => ({
+      time: (e.dateStr || '') + ' ' + (e.timeStr || ''),
+      category: e.cat || '',
+      content: (e.contentParts && e.contentParts.length) ? e.contentParts.join('，') : (e.content || '')
+    })).filter(e => e.content);
+    if (!entriesPayload.length) throw new Error('這次住宿還沒有任何紀錄可以彙整');
+
+    const resp = await fetch(STAY_SUMMARY_FUNCTION_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ entries: entriesPayload, area, petName })
+    });
+    const data = await resp.json().catch(() => null);
+    if (!resp.ok || !data || !data.summary){
+      throw new Error((data && data.error) || ('伺服器回應 ' + resp.status));
+    }
+    return data.summary;
+  }
 
   function buildVerifyUrl(verifyToken){
     return STAFF_BASE_URL + '?pickupVerify=' + encodeURIComponent(verifyToken);
@@ -14862,6 +14885,28 @@ var qrcode = function() {
     document.getElementById('checkoutChecklistPanel').style.display = 'block';
   });
 
+  async function triggerAiStaySummary(){
+    const textEl = document.getElementById('staySummaryAutoText');
+    const btn = document.getElementById('staySummaryRegenBtn');
+    const room = allRooms[currentRoomId];
+    const allEntries = Object.values(currentEntriesByDate).flat();
+    const originalBtnText = btn.textContent;
+    textEl.value = 'AI 生成中,請稍候...';
+    textEl.disabled = true;
+    btn.disabled = true;
+    btn.textContent = '生成中...';
+    try {
+      textEl.value = await generateAiStaySummary(allEntries, room.area, room.name);
+    } catch (err) {
+      textEl.value = buildStaySummaryAuto(allEntries);
+      alert('AI 生成暫時失敗(' + err.message + '),已先用系統自動整理的版本代替,你可以直接編輯,或稍後再按「重新產生」試一次。');
+    } finally {
+      textEl.disabled = false;
+      btn.disabled = false;
+      btn.textContent = originalBtnText;
+    }
+  }
+
   document.getElementById('staySummaryToggleBtn').addEventListener('click', () => {
     const wrap = document.getElementById('staySummaryPanelWrap');
     const opening = wrap.style.display === 'none';
@@ -14869,19 +14914,20 @@ var qrcode = function() {
     if (opening){
       const room = allRooms[currentRoomId];
       const lastCleanTimes = computeLastCleanTimes(Object.values(currentEntriesByDate).flat());
-      document.getElementById('staySummaryLastCleanCard').innerHTML = `
-        <div>🚽 最後清潔尿尿時間:<b style="color:var(--ink);">${lastCleanTimes.peeText || '這次入住沒有相關紀錄'}</b></div>
-        <div style="margin-top:4px;">💩 最後清潔大便時間:<b style="color:var(--ink);">${lastCleanTimes.poopText || '這次入住沒有相關紀錄'}</b></div>
-      `;
-      // if staff already saved a summary earlier this stay, keep showing their edited version;
-      // otherwise pre-fill with a freshly auto-generated one
-      document.getElementById('staySummaryAutoText').value = room.staySummaryAuto || buildStaySummaryAuto(Object.values(currentEntriesByDate).flat());
+      document.getElementById('staySummaryLastCleanCard').innerHTML = formatLastCleanLine(lastCleanTimes);
       document.getElementById('staySummarySpecialText').value = room.staySummarySpecialNote || '';
+      // if staff already saved a summary earlier this stay, keep showing their edited version;
+      // otherwise ask the AI to generate a fresh one from the full care log
+      if (room.staySummaryAuto){
+        document.getElementById('staySummaryAutoText').value = room.staySummaryAuto;
+      } else {
+        triggerAiStaySummary();
+      }
     }
   });
 
   document.getElementById('staySummaryRegenBtn').addEventListener('click', () => {
-    document.getElementById('staySummaryAutoText').value = buildStaySummaryAuto(Object.values(currentEntriesByDate).flat());
+    triggerAiStaySummary();
   });
 
   document.getElementById('staySummarySaveBtn').addEventListener('click', async () => {
@@ -15763,12 +15809,16 @@ var qrcode = function() {
     };
   }
   function formatLastCleanLine(times){
-    return '🚽 最後清潔尿尿時間:' + (times.peeText || '這次入住沒有相關紀錄') + '　｜　💩 最後清潔大便時間:' + (times.poopText || '這次入住沒有相關紀錄');
+    return `
+      <div style="display:flex;gap:6px;"><span style="width:118px;flex-shrink:0;">🚽 最後清潔尿尿時間</span><span>:${times.peeText || '這次入住沒有相關紀錄'}</span></div>
+      <div style="display:flex;gap:6px;"><span style="width:118px;flex-shrink:0;">💩 最後清潔大便時間</span><span>:${times.poopText || '這次入住沒有相關紀錄'}</span></div>
+    `;
   }
 
-  // Builds a short, bullet-per-line auto summary from every entry flagged "warn" across the WHOLE
-  // stay (not just today), pulling only the first (most salient) clause of each entry rather than
-  // dumping the full text, so it stays skimmable.
+  // Mechanical fallback used only when the AI summary (generateAiStaySummary, called from the
+  // 住宿重點摘要 panel) is unavailable — e.g. the Cloud Function isn't deployed yet, or the call
+  // failed. Builds a short, bullet-per-line summary from every entry flagged "warn" across the
+  // WHOLE stay, pulling only the first (most salient) clause of each entry rather than the full text.
   function extractKeyPoint(entry){
     const raw = (entry.contentParts && entry.contentParts.length) ? entry.contentParts[0] : (entry.content || '');
     return raw.length > 24 ? raw.slice(0, 24) + '…' : raw;
@@ -15784,7 +15834,7 @@ var qrcode = function() {
     const dayEntries = (currentEntriesByDate[currentSelectedDate] || []).slice().sort((a,b) => (b.createdAtMs || 0) - (a.createdAtMs || 0));
     const area = allRooms[currentRoomId] ? allRooms[currentRoomId].area : 'cat';
 
-    document.getElementById('dayHighlight').textContent = formatLastCleanLine(computeLastCleanTimes(Object.values(currentEntriesByDate).flat()));
+    document.getElementById('dayHighlight').innerHTML = formatLastCleanLine(computeLastCleanTimes(Object.values(currentEntriesByDate).flat()));
 
     const totalGrams = dayEntries.reduce((s,e) => s + (e.grams || 0), 0);
     const totalWater = dayEntries.reduce((s,e) => s + (e.waterMl || 0), 0);
