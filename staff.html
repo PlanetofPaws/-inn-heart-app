@@ -14301,6 +14301,10 @@ var qrcode = function() {
       qrImageUrl: qrImageUrl
     });
 
+    // Show the print dialog immediately once the room doc is saved, instead of making
+    // staff wait through the member-doc save + full room-list reload + record render first.
+    showPickupCard(currentRoomId, verifyToken);
+
     await setDoc(doc(db, 'members', phone), {
       updatedAt: serverTimestamp(),
       ...(document.getElementById('ciMemberName').value.trim() ? { name: document.getElementById('ciMemberName').value.trim() } : {}),
@@ -14309,7 +14313,6 @@ var qrcode = function() {
 
     await loadRooms();
     openRecord(currentRoomId);
-    showPickupCard(currentRoomId, verifyToken);
     // Pickup card is no longer auto-sent to LINE at check-in.
     // Staff can send it manually afterward via the "接回小卡管理" panel (resendPickupQrBtn).
   });
@@ -14669,30 +14672,39 @@ var qrcode = function() {
     window.print();
   }
 
-  async function ensurePickupQr(room){
-    let qrImageUrl = room.qrImageUrl;
-    if (!qrImageUrl || !room.verifyToken || !room.stayId || !room.verifyToken.endsWith(room.stayId)){
-      // older record from before this feature existed, or token is stale: generate fresh
-      const verifyToken = currentRoomId + '::' + room.stayId;
-      const verifyUrl = STAFF_BASE_URL + '?pickupVerify=' + encodeURIComponent(verifyToken);
-      qrImageUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=360x360&data=' + encodeURIComponent(verifyUrl);
-      await updateDoc(doc(db, 'rooms', currentRoomId), { verifyToken, qrImageUrl });
-      room.verifyToken = verifyToken;
-      room.qrImageUrl = qrImageUrl;
-    }
-    return { qrImageUrl, verifyToken: room.verifyToken };
+  // Synchronous, network-free: figures out the verify token/QR image URL to use right now
+  // from whatever is already cached locally, so callers never have to wait on Firestore
+  // (which can hang for a long time on the venue's flaky wifi) before printing or showing a card.
+  function getPickupQr(room){
+    const isFresh = room.qrImageUrl && room.verifyToken && room.stayId && room.verifyToken.endsWith(room.stayId);
+    if (isFresh) return { qrImageUrl: room.qrImageUrl, verifyToken: room.verifyToken, stale: false };
+    const verifyToken = currentRoomId + '::' + room.stayId;
+    const verifyUrl = STAFF_BASE_URL + '?pickupVerify=' + encodeURIComponent(verifyToken);
+    const qrImageUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=360x360&data=' + encodeURIComponent(verifyUrl);
+    return { qrImageUrl, verifyToken, stale: true };
   }
 
-  document.getElementById('reprintPickupCardBtn').addEventListener('click', async () => {
+  // Best-effort save of a freshly-generated token to Firestore, done in the background so a
+  // slow/unstable connection never blocks the staff member from printing or sending right away.
+  function persistPickupQrInBackground(room, verifyToken, qrImageUrl){
+    updateDoc(doc(db, 'rooms', currentRoomId), { verifyToken, qrImageUrl }).then(() => {
+      room.verifyToken = verifyToken;
+      room.qrImageUrl = qrImageUrl;
+    }).catch(() => {});
+  }
+
+  document.getElementById('reprintPickupCardBtn').addEventListener('click', () => {
     const room = allRooms[currentRoomId];
-    const { verifyToken } = await ensurePickupQr(room);
+    const { verifyToken, qrImageUrl, stale } = getPickupQr(room);
     showPickupCard(currentRoomId, verifyToken);
+    if (stale) persistPickupQrInBackground(room, verifyToken, qrImageUrl);
   });
 
   document.getElementById('resendPickupQrBtn').addEventListener('click', async () => {
     const room = allRooms[currentRoomId];
-    const { qrImageUrl, verifyToken } = await ensurePickupQr(room);
     if (!room.phone){ alert('這個房間沒有家長手機號碼,無法傳送。'); return; }
+    const { verifyToken, qrImageUrl, stale } = getPickupQr(room);
+    if (stale) persistPickupQrInBackground(room, verifyToken, qrImageUrl);
     const lineIds = await findLineBindingsForPhone(room.phone);
     if (!lineIds.length){ alert('這位家長目前還沒有綁定 LINE,沒辦法直接傳送,請改用列印小卡。'); return; }
     await sendLineImage(room.phone, qrImageUrl, verifyToken);
