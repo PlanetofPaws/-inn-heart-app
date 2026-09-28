@@ -482,6 +482,10 @@
       </div>
     </div>
     <div class="field">
+      <label>預計接回時間</label>
+      <input type="datetime-local" id="ciPickupTime">
+    </div>
+    <div class="field">
       <label>寶貝大頭照</label>
       <div id="ciAvatarNote" style="font-size:11px;color:var(--ink-soft);margin-bottom:8px;"></div>
       <img id="ciAvatarPreview" style="display:none;width:88px;height:88px;border-radius:16px;object-fit:cover;margin-bottom:8px;">
@@ -14269,6 +14273,8 @@ var qrcode = function() {
     const pickupPhone = document.getElementById('ciPickupPhone').value.trim();
     const pickupRelationChip = document.querySelector('.chip-row[data-group="ciPickupRelation"] .chip.active');
     const pickupRelation = pickupRelationChip ? pickupRelationChip.dataset.val : '';
+    const pickupTimeRaw = document.getElementById('ciPickupTime').value;
+    const pickupTimeDisplay = pickupTimeRaw ? new Date(pickupTimeRaw).toLocaleString('zh-TW', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }) : '';
     const verifyToken = currentRoomId + '::' + stayId;
     const verifyUrl = STAFF_BASE_URL + '?pickupVerify=' + encodeURIComponent(verifyToken);
     const qrImageUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=360x360&data=' + encodeURIComponent(verifyUrl);
@@ -14290,6 +14296,7 @@ var qrcode = function() {
       pickupName: pickupName || null,
       pickupPhone: pickupPhone || null,
       pickupRelation: pickupRelation || null,
+      pickupTime: pickupTimeDisplay || null,
       verifyToken: verifyToken,
       qrImageUrl: qrImageUrl
     });
@@ -14303,9 +14310,8 @@ var qrcode = function() {
     await loadRooms();
     openRecord(currentRoomId);
     showPickupCard(currentRoomId, verifyToken);
-
-    // best-effort: send the QR code to the parent's LINE if they've already bound one
-    sendLineImage(phone, qrImageUrl, verifyToken).catch(() => {});
+    // Pickup card is no longer auto-sent to LINE at check-in.
+    // Staff can send it manually afterward via the "接回小卡管理" panel (resendPickupQrBtn).
   });
 
   // ---------- record page ----------
@@ -16957,6 +16963,9 @@ var qrcode = function() {
       </div></div></div>
       <div class="info-card"><div class="info-row"><div class="info-text">
         <div class="info-label">預計接回家長</div><div class="info-value">${room.pickupName || '(未登記)'}・${room.pickupPhone || '(未登記)'}・${room.pickupRelation || '(未登記)'}</div>
+      </div></div></div>
+      <div class="info-card"><div class="info-row"><div class="info-text">
+        <div class="info-label">預計接回時間</div><div class="info-value">${room.pickupTime || '(未登記)'}</div>
       </div></div></div>
       <div style="padding:16px 22px;font-size:12.5px;color:var(--ink-soft);">請核對來人是否與登記的接回家長一致,如果不是本人,建議進一步確認關係再放行。</div>
       ${withJumpButton ? '<div class="field"><button id="pickupVerifyGotoRecordBtn" class="submit-btn" data-room-id="'+roomId+'">前往這隻寶貝的照護紀錄</button></div>' : ''}
