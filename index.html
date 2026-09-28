@@ -722,7 +722,10 @@
     };
   }
   function formatLastCleanLine(times){
-    return '🚽 最後清潔尿尿時間:' + (times.peeText || '這次入住沒有相關紀錄') + '　｜　💩 最後清潔大便時間:' + (times.poopText || '這次入住沒有相關紀錄');
+    return `
+      <div style="display:flex;gap:6px;"><span style="width:118px;flex-shrink:0;">🚽 最後清潔尿尿時間</span><span>:${times.peeText || '這次入住沒有相關紀錄'}</span></div>
+      <div style="display:flex;gap:6px;"><span style="width:118px;flex-shrink:0;">💩 最後清潔大便時間</span><span>:${times.poopText || '這次入住沒有相關紀錄'}</span></div>
+    `;
   }
 
   function renderSelectedDay(){
@@ -734,7 +737,7 @@
     const mood = computeMoodIcon(allStayEntries);
     const moodRowEl = document.getElementById('moodRow');
     moodRowEl.innerHTML = mood ? '<span style="font-size:18px;">' + mood.icon + '</span><span>目前精神狀態:' + mood.label + '</span>' : '';
-    document.getElementById('dayHighlight').textContent = formatLastCleanLine(computeLastCleanTimes(allStayEntries));
+    document.getElementById('dayHighlight').innerHTML = formatLastCleanLine(computeLastCleanTimes(allStayEntries));
 
     const totalGrams = dayEntries.reduce((s,e) => s + (e.grams || 0), 0);
     const totalWater = dayEntries.reduce((s,e) => s + (e.waterMl || 0), 0);
