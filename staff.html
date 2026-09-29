@@ -185,7 +185,7 @@
         會員資料管理<span id="pendingBindingsBadge" style="display:none;background:var(--danger);color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;margin-left:6px;">0</span>
       </button>
       <div id="cameraSettingLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:8px;">設定小米 App 連結</div>
-      <div id="staffManageLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:4px;">新增工作人員(管理者)</div>
+      <div id="staffManageLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:4px;">管理員後台</div>
       <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:20px;">版本 2026-09-21-daycare1</div>
     </div>
   </div>
@@ -203,20 +203,39 @@
     <div class="back-row" id="staffManageBackBtn">← 返回選單</div>
     <div class="topbar">
       <div class="sub">(inn)heart · 工作人員後台</div>
-      <h1>新增工作人員</h1>
+      <h1>管理員後台</h1>
     </div>
     <div class="field" id="staffPasswordPanel">
       <label>管理者密碼</label>
       <input type="password" id="staffAdminPassword" placeholder="請輸入管理者密碼">
       <div class="submit-row"><button class="submit-btn" id="staffPasswordSubmit">確認</button></div>
     </div>
-    <div class="field" id="staffAddPanel" style="display:none;">
-      <label>員工登入信箱(要跟他 Google 登入用的信箱完全一致)</label>
-      <input type="text" id="staffNewEmail" placeholder="例如：xup6j03t4x@gmail.com">
-      <label style="margin-top:12px;">員工姓名(選填,方便自己辨識)</label>
-      <input type="text" id="staffNewName" placeholder="例如：小美">
-      <div class="submit-row"><button class="submit-btn" id="staffAddSubmit">新增這位員工</button></div>
-      <div style="font-size:10.5px;color:var(--ink-soft);margin-top:8px;">新增後,這位員工用這組信箱登入 Google 就能直接進入後台,不需要再去 Firebase 後台手動加。</div>
+
+    <div id="staffAddPanel" style="display:none;">
+      <div class="field">
+        <label style="font-size:14px;font-weight:700;">👤 新增工作人員</label>
+        <label style="margin-top:10px;">員工登入信箱(要跟他 Google 登入用的信箱完全一致)</label>
+        <input type="text" id="staffNewEmail" placeholder="例如：xup6j03t4x@gmail.com">
+        <label style="margin-top:12px;">員工姓名(選填,方便自己辨識)</label>
+        <input type="text" id="staffNewName" placeholder="例如：小美">
+        <div class="submit-row"><button class="submit-btn" id="staffAddSubmit">新增這位員工</button></div>
+        <div style="font-size:10.5px;color:var(--ink-soft);margin-top:8px;">新增後,這位員工用這組信箱登入 Google 就能直接進入後台,不需要再去 Firebase 後台手動加。</div>
+      </div>
+
+      <div class="field">
+        <label style="font-size:14px;font-weight:700;">🏠 房間管理</label>
+        <div class="chip-row" data-group="roomAdminArea" style="margin-top:8px;">
+          <div class="chip active" data-val="cat">貓貓區</div>
+          <div class="chip" data-val="dog">狗狗區</div>
+        </div>
+        <div id="roomAdminList" style="display:flex;flex-direction:column;gap:8px;margin-top:12px;"></div>
+        <label style="margin-top:14px;">新增房間</label>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="roomAdminNewLabel" placeholder="房間名稱(選填,不填就自動編號)" style="flex:1;">
+          <button class="small-btn" id="roomAdminAddBtn" style="background:var(--pine);color:#fff;white-space:nowrap;">➕ 新增</button>
+        </div>
+        <div style="font-size:10.5px;color:var(--ink-soft);margin-top:8px;">改名字只是換個顯示用的名稱,不影響原本的房間資料;刪除只能刪目前沒有寶貝入住的空房。</div>
+      </div>
     </div>
   </div>
 
@@ -13952,6 +13971,12 @@ var qrcode = function() {
   let currentStaffName = '';
 
   function roomId(area, no){ return area + '-' + no; }
+  // A room's display label: whatever custom name staff gave it via 房間管理, falling back to
+  // the plain "N 號房" numbering when no custom label has been set.
+  function roomLabel(room){
+    if (!room) return '';
+    return (room.label && room.label.trim()) || (room.no + ' 號房');
+  }
 
   async function ensureRoomsSeeded(){
     const snap = await getDocs(collection(db, 'rooms'));
@@ -13972,24 +13997,34 @@ var qrcode = function() {
     snap.forEach(d => { allRooms[d.id] = d.data(); });
   }
 
+  function updateAreaChipCounts(){
+    const catCount = Object.values(allRooms).filter(r => r.area === 'cat').length;
+    const dogCount = Object.values(allRooms).filter(r => r.area === 'dog').length;
+    const catChip = document.querySelector('.area-chip[data-area="cat"]');
+    const dogChip = document.querySelector('.area-chip[data-area="dog"]');
+    if (catChip) catChip.textContent = '貓貓區 · ' + catCount + ' 間';
+    if (dogChip) dogChip.textContent = '狗狗區 · ' + dogCount + ' 間';
+  }
+
   function renderRooms(){
     const grid = document.getElementById('roomGrid');
-    const count = currentArea === 'cat' ? 12 : 11;
+    updateAreaChipCounts();
+    const rooms = Object.values(allRooms).filter(r => r.area === currentArea).sort((a, b) => a.no - b.no);
     let html = '';
-    for (let i = 1; i <= count; i++){
-      const id = roomId(currentArea, i);
-      const room = allRooms[id] || {name:null};
+    rooms.forEach(room => {
+      const id = roomId(room.area, room.no);
+      const label = roomLabel(room);
       if (room.mergedInto){
         const primary = allRooms[room.mergedInto];
-        const label = primary ? '併入' + primary.no + '號房' : '已合併';
-        html += `<div class="room-btn" data-id="${id}" data-merged-into="${room.mergedInto}" style="opacity:0.6;position:relative;"><div class="no">${i} 號房</div><div class="name">🔗 ${label}</div><div class="force-reset" data-id="${id}" style="position:absolute;top:2px;right:4px;font-size:8px;color:var(--ink-soft);text-decoration:underline;opacity:0.7;">重置</div></div>`;
+        const mergedLabel = primary ? '併入' + roomLabel(primary) : '已合併';
+        html += `<div class="room-btn" data-id="${id}" data-merged-into="${room.mergedInto}" style="opacity:0.6;position:relative;"><div class="no">${label}</div><div class="name">🔗 ${mergedLabel}</div><div class="force-reset" data-id="${id}" style="position:absolute;top:2px;right:4px;font-size:8px;color:var(--ink-soft);text-decoration:underline;opacity:0.7;">重置</div></div>`;
       } else if (!room.name){
-        html += `<div class="room-btn" data-id="${id}" data-empty="1"><div class="no">${i} 號房</div><div class="name">＋ 新入住</div></div>`;
+        html += `<div class="room-btn" data-id="${id}" data-empty="1"><div class="no">${label}</div><div class="name">＋ 新入住</div></div>`;
       } else {
         const emergencyBadge = room.hasEmergency ? '<span style="position:absolute;top:2px;right:6px;font-size:14.5px;">⚠️</span>' : '';
-        html += `<div class="room-btn" data-id="${id}" style="position:relative;border:${room.hasEmergency ? '2px solid var(--danger)' : 'none'};">${emergencyBadge}<div class="no">${i} 號房</div><div class="name">${room.name}</div></div>`;
+        html += `<div class="room-btn" data-id="${id}" style="position:relative;border:${room.hasEmergency ? '2px solid var(--danger)' : 'none'};">${emergencyBadge}<div class="no">${label}</div><div class="name">${room.name}</div></div>`;
       }
-    }
+    });
     grid.innerHTML = html;
     grid.querySelectorAll('.force-reset').forEach(link => {
       link.addEventListener('click', async (ev) => {
@@ -14110,7 +14145,7 @@ var qrcode = function() {
   function openCheckin(id){
     currentRoomId = id;
     const room = allRooms[id];
-    document.getElementById('ciLoc').textContent = (room.area === 'cat' ? '貓貓區' : '狗狗區') + ' · ' + room.no + ' 號房';
+    document.getElementById('ciLoc').textContent = (room.area === 'cat' ? '貓貓區' : '狗狗區') + ' · ' + roomLabel(room);
     document.getElementById('ciPetName').value = '';
     document.getElementById('ciMemberNo').value = '';
     document.getElementById('ciMemberName').value = '';
@@ -14295,7 +14330,7 @@ var qrcode = function() {
   async function openRecord(id){
     currentRoomId = id;
     const room = allRooms[id];
-    document.getElementById('recordLoc').textContent = (room.area === 'cat' ? '貓貓區' : '狗狗區') + ' · ' + room.no + ' 號房';
+    document.getElementById('recordLoc').textContent = (room.area === 'cat' ? '貓貓區' : '狗狗區') + ' · ' + roomLabel(room);
     document.getElementById('recordName').textContent = room.name;
     document.getElementById('recordMember').textContent = '家長 ' + room.phone;
     const avatarEl = document.getElementById('recordAvatar');
@@ -14700,7 +14735,7 @@ var qrcode = function() {
     const room = allRooms[currentRoomId];
     const itemsText = room.items ? [...room.items.list, ...(room.items.other ? ['其他:' + room.items.other] : [])].join('、') : '無';
     const notesText = room.notes ? [...room.notes.list, ...(room.notes.other ? ['其他:' + room.notes.other] : [])].join('、') : '無';
-    const meta = `寶貝名字:${room.name}　|　房間:${room.area === 'cat' ? '貓貓區' : '狗狗區'} ${room.no} 號房<br>家長手機:${room.phone}　|　入住時間:${room.checkinDate || ''}`;
+    const meta = `寶貝名字:${room.name}　|　房間:${room.area === 'cat' ? '貓貓區' : '狗狗區'} ${roomLabel(room)}<br>家長手機:${room.phone}　|　入住時間:${room.checkinDate || ''}`;
     const staySummaryInfo = {
       lastCleanTimes: computeLastCleanTimes(Object.values(currentEntriesByDate).flat()),
       summaryAuto: room.staySummaryAuto || null,
@@ -14731,7 +14766,7 @@ var qrcode = function() {
       listEl.innerHTML = '<div class="status-msg">目前沒有同區的空房可以換</div>';
     } else {
       listEl.innerHTML = emptyRooms.map(r =>
-        `<div class="chip" data-room-id="${roomId(r.area, r.no)}">${r.area === 'cat' ? '貓' : '狗'}・${r.no}號房</div>`
+        `<div class="chip" data-room-id="${roomId(r.area, r.no)}">${r.area === 'cat' ? '貓' : '狗'}・${roomLabel(r)}</div>`
       ).join('');
       listEl.querySelectorAll('.chip').forEach(chip => {
         chip.addEventListener('click', async () => {
@@ -14788,7 +14823,7 @@ var qrcode = function() {
       listEl.innerHTML = '<div class="status-msg">目前沒有同區的空房可以合併</div>';
     } else {
       listEl.innerHTML = emptyRooms.map(r =>
-        `<div class="chip" data-room-id="${roomId(r.area, r.no)}">${r.area === 'cat' ? '貓' : '狗'}・${r.no}號房</div>`
+        `<div class="chip" data-room-id="${roomId(r.area, r.no)}">${r.area === 'cat' ? '貓' : '狗'}・${roomLabel(r)}</div>`
       ).join('');
       listEl.querySelectorAll('.chip').forEach(chip => {
         chip.addEventListener('click', async () => {
@@ -14819,7 +14854,7 @@ var qrcode = function() {
     infoEl.style.display = 'block';
     listEl.innerHTML = merged.map(rid => {
       const r = allRooms[rid];
-      const label = r ? (r.area === 'cat' ? '貓' : '狗') + '・' + r.no + '號房' : rid;
+      const label = r ? (r.area === 'cat' ? '貓' : '狗') + '・' + roomLabel(r) : rid;
       return `<div class="chip warn" data-room-id="${rid}">${label} · 取消合併</div>`;
     }).join('');
     listEl.querySelectorAll('.chip').forEach(chip => {
@@ -16909,7 +16944,7 @@ var qrcode = function() {
       <div class="hero" style="margin-bottom:6px;">
         ${room.avatarUrl ? '<img src="'+room.avatarUrl+'" class="avatar" style="object-fit:cover;">' : '<div class="avatar"></div>'}
         <div class="hero-text">
-          <p class="loc">${room.area === 'cat' ? '貓貓區' : '狗狗區'} ${room.no} 號房・目前在園中</p>
+          <p class="loc">${room.area === 'cat' ? '貓貓區' : '狗狗區'} ${roomLabel(room)}・目前在園中</p>
           <h1>${room.name}</h1>
         </div>
       </div>
@@ -17137,6 +17172,7 @@ var qrcode = function() {
     if (!entered || entered !== correctPassword){ alert('密碼錯誤。'); return; }
     document.getElementById('staffPasswordPanel').style.display = 'none';
     document.getElementById('staffAddPanel').style.display = 'block';
+    renderRoomAdminList();
   });
 
   document.getElementById('staffAddSubmit').addEventListener('click', async () => {
@@ -17151,6 +17187,78 @@ var qrcode = function() {
     } catch (err) {
       alert('新增失敗:' + err.message + '\n請確認 Firestore 規則已經開放 allowedStaff 的寫入權限(需要更新規則,詳見說明)。');
     }
+  });
+
+  // ---------- admin: room management (rename / add / delete rooms in the home-screen grid) ----------
+  let roomAdminArea = 'cat';
+
+  function renderRoomAdminList(){
+    const listEl = document.getElementById('roomAdminList');
+    const rooms = Object.values(allRooms).filter(r => r.area === roomAdminArea).sort((a, b) => a.no - b.no);
+    if (!rooms.length){
+      listEl.innerHTML = '<div class="status-msg">這區目前沒有房間</div>';
+      return;
+    }
+    listEl.innerHTML = rooms.map(r => {
+      const id = roomId(r.area, r.no);
+      const occupied = !!(r.name || r.mergedInto);
+      const safeLabel = roomLabel(r).replace(/"/g, '&quot;');
+      return `
+        <div class="room-admin-row" data-id="${id}" style="display:flex;align-items:center;gap:6px;background:var(--card);border-radius:10px;padding:8px 10px;">
+          <input type="text" class="room-admin-label-input" data-id="${id}" value="${safeLabel}" style="flex:1;font-size:12px;padding:6px 8px;">
+          <button class="room-admin-save small-btn" data-id="${id}" style="font-size:10.5px;padding:7px 9px;background:var(--pine);color:#fff;white-space:nowrap;">儲存</button>
+          <button class="room-admin-delete small-btn" data-id="${id}" ${occupied ? 'disabled' : ''} style="font-size:10.5px;padding:7px 9px;white-space:nowrap;background:var(--danger-soft);color:var(--danger);${occupied ? 'opacity:0.4;' : ''}">刪除</button>
+        </div>`;
+    }).join('');
+
+    listEl.querySelectorAll('.room-admin-save').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.id;
+        const input = listEl.querySelector('.room-admin-label-input[data-id="' + id + '"]');
+        const newLabel = input.value.trim();
+        await updateDoc(doc(db, 'rooms', id), { label: newLabel || null });
+        await loadRooms();
+        renderRoomAdminList();
+        renderRooms();
+        alert('已更新房間名稱。');
+      });
+    });
+    listEl.querySelectorAll('.room-admin-delete').forEach(btn => {
+      if (btn.disabled) return;
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.id;
+        if (!confirm('確定要刪除「' + roomLabel(allRooms[id]) + '」嗎?這個動作無法復原。')) return;
+        await deleteDoc(doc(db, 'rooms', id));
+        await loadRooms();
+        renderRoomAdminList();
+        renderRooms();
+      });
+    });
+  }
+
+  document.querySelectorAll('.chip-row[data-group="roomAdminArea"] .chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.chip-row[data-group="roomAdminArea"] .chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      roomAdminArea = chip.dataset.val;
+      renderRoomAdminList();
+    });
+  });
+
+  document.getElementById('roomAdminAddBtn').addEventListener('click', async () => {
+    const roomsInArea = Object.values(allRooms).filter(r => r.area === roomAdminArea);
+    const nextNo = roomsInArea.length ? Math.max(...roomsInArea.map(r => r.no)) + 1 : 1;
+    const label = document.getElementById('roomAdminNewLabel').value.trim();
+    const id = roomId(roomAdminArea, nextNo);
+    await setDoc(doc(db, 'rooms', id), {
+      area: roomAdminArea, no: nextNo, label: label || null,
+      name: null, phone: null, stayId: null, items: null, notes: null
+    });
+    document.getElementById('roomAdminNewLabel').value = '';
+    await loadRooms();
+    renderRoomAdminList();
+    renderRooms();
+    alert('已新增房間。');
   });
 
   document.getElementById('roomsBackBtn').addEventListener('click', () => showScreen('screenMenu'));
