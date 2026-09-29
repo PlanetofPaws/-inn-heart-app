@@ -730,11 +730,8 @@
     </div>
     <div class="field" id="staySummaryPanelWrap" style="display:none;">
       <div id="staySummaryLastCleanCard" style="background:var(--card);border-radius:14px;padding:12px 14px;font-size:12px;color:var(--ink-soft);margin-bottom:12px;"></div>
-      <div style="display:flex;align-items:center;justify-content:space-between;">
-        <label style="margin:0;">本次住宿重點(自動彙整,可自行編輯)</label>
-        <button id="staySummaryRegenBtn" type="button" style="background:var(--card);color:var(--ink-soft);border:1px solid var(--line);border-radius:10px;padding:4px 10px;font-size:10.5px;cursor:pointer;">🔄 重新產生</button>
-      </div>
-      <textarea id="staySummaryAutoText" style="min-height:100px;"></textarea>
+      <label>本次住宿重點(自行登打)</label>
+      <textarea id="staySummaryAutoText" placeholder="例如:這次住宿情緒穩定、食慾正常,9/25發現耳朵有破皮已留意..." style="min-height:100px;"></textarea>
       <label style="margin-top:12px;">特殊交代事項(選填,自行登打)</label>
       <textarea id="staySummarySpecialText" placeholder="例如:今天精神稍微差一點,回家後請多留意進食狀況..."></textarea>
       <div class="submit-row">
@@ -14035,30 +14032,7 @@ var qrcode = function() {
   }
 
   const LINE_PUSH_FUNCTION_URL = 'https://send-line-message-1090283293954.asia-east1.run.app';
-  // if the deployed Cloud Function's actual URL differs from this guess, update it here after deploying
-  const STAY_SUMMARY_FUNCTION_URL = 'https://generate-stay-summary-1090283293954.asia-east1.run.app';
   const STAFF_BASE_URL = 'https://planetofpaws.github.io/-inn-heart-app/staff.html';
-
-  async function generateAiStaySummary(allEntries, area, petName){
-    const sorted = allEntries.slice().sort((a,b) => (a.createdAtMs||0) - (b.createdAtMs||0));
-    const entriesPayload = sorted.map(e => ({
-      time: (e.dateStr || '') + ' ' + (e.timeStr || ''),
-      category: e.cat || '',
-      content: (e.contentParts && e.contentParts.length) ? e.contentParts.join('，') : (e.content || '')
-    })).filter(e => e.content);
-    if (!entriesPayload.length) throw new Error('這次住宿還沒有任何紀錄可以彙整');
-
-    const resp = await fetch(STAY_SUMMARY_FUNCTION_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ entries: entriesPayload, area, petName })
-    });
-    const data = await resp.json().catch(() => null);
-    if (!resp.ok || !data || !data.summary){
-      throw new Error((data && data.error) || ('伺服器回應 ' + resp.status));
-    }
-    return data.summary;
-  }
 
   function buildVerifyUrl(verifyToken){
     return STAFF_BASE_URL + '?pickupVerify=' + encodeURIComponent(verifyToken);
@@ -14903,28 +14877,6 @@ var qrcode = function() {
     document.getElementById('checkoutChecklistPanel').style.display = 'block';
   });
 
-  async function triggerAiStaySummary(){
-    const textEl = document.getElementById('staySummaryAutoText');
-    const btn = document.getElementById('staySummaryRegenBtn');
-    const room = allRooms[currentRoomId];
-    const allEntries = Object.values(currentEntriesByDate).flat();
-    const originalBtnText = btn.textContent;
-    textEl.value = 'AI 生成中,請稍候...';
-    textEl.disabled = true;
-    btn.disabled = true;
-    btn.textContent = '生成中...';
-    try {
-      textEl.value = await generateAiStaySummary(allEntries, room.area, room.name);
-    } catch (err) {
-      textEl.value = buildStaySummaryAuto(allEntries);
-      alert('AI 生成暫時失敗(' + err.message + '),已先用系統自動整理的版本代替,你可以直接編輯,或稍後再按「重新產生」試一次。');
-    } finally {
-      textEl.disabled = false;
-      btn.disabled = false;
-      btn.textContent = originalBtnText;
-    }
-  }
-
   document.getElementById('staySummaryToggleBtn').addEventListener('click', () => {
     const wrap = document.getElementById('staySummaryPanelWrap');
     const opening = wrap.style.display === 'none';
@@ -14934,18 +14886,9 @@ var qrcode = function() {
       const lastCleanTimes = computeLastCleanTimes(Object.values(currentEntriesByDate).flat());
       document.getElementById('staySummaryLastCleanCard').innerHTML = formatLastCleanLine(lastCleanTimes);
       document.getElementById('staySummarySpecialText').value = room.staySummarySpecialNote || '';
-      // if staff already saved a summary earlier this stay, keep showing their edited version;
-      // otherwise ask the AI to generate a fresh one from the full care log
-      if (room.staySummaryAuto){
-        document.getElementById('staySummaryAutoText').value = room.staySummaryAuto;
-      } else {
-        triggerAiStaySummary();
-      }
+      // staff type this in themselves — just show whatever was saved earlier this stay (if anything)
+      document.getElementById('staySummaryAutoText').value = room.staySummaryAuto || '';
     }
-  });
-
-  document.getElementById('staySummaryRegenBtn').addEventListener('click', () => {
-    triggerAiStaySummary();
   });
 
   document.getElementById('staySummarySaveBtn').addEventListener('click', async () => {
@@ -15833,10 +15776,10 @@ var qrcode = function() {
     `;
   }
 
-  // Mechanical fallback used only when the AI summary (generateAiStaySummary, called from the
-  // 住宿重點摘要 panel) is unavailable — e.g. the Cloud Function isn't deployed yet, or the call
-  // failed. Builds a short, bullet-per-line summary from every entry flagged "warn" across the
-  // WHOLE stay, pulling only the first (most salient) clause of each entry rather than the full text.
+  // Mechanical fallback used only at checkout, if staff never typed anything into the
+  // 住宿重點摘要 field themselves. Builds a short, bullet-per-line summary from every entry
+  // flagged "warn" across the WHOLE stay, pulling only the first (most salient) clause of
+  // each entry rather than the full text.
   function extractKeyPoint(entry){
     const raw = (entry.contentParts && entry.contentParts.length) ? entry.contentParts[0] : (entry.content || '');
     return raw.length > 24 ? raw.slice(0, 24) + '…' : raw;
