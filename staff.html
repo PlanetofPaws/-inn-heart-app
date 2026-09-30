@@ -260,40 +260,109 @@
       <h1>今日安親報到</h1>
     </div>
     <div class="field">
+      <label>寶貝種類</label>
+      <div class="chip-row" data-group="dcArea">
+        <div class="chip" data-val="cat">貓貓</div>
+        <div class="chip" data-val="dog">狗狗</div>
+      </div>
+    </div>
+    <div class="field">
       <label>寶貝名字</label>
-      <input type="text" id="dcPetName">
+      <input type="text" id="dcPetName" placeholder="例如：可可">
     </div>
     <div class="field">
       <label>家長手機</label>
-      <input type="text" id="dcMemberNo">
+      <input type="text" id="dcMemberNo" placeholder="例如：0912345678">
     </div>
     <div class="field">
+      <label>家長姓名</label>
+      <input type="text" id="dcMemberName" placeholder="例如：陳小姐">
+    </div>
+    <div class="field">
+      <label>入托時間</label>
+      <input type="datetime-local" id="dcCheckinTimeInput">
+    </div>
+    <div class="field">
+      <label>預計離托時間</label>
+      <input type="datetime-local" id="dcExpectedCheckoutTime">
+    </div>
+    <div class="field">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <label style="margin:0;">接回家長姓名</label>
+        <button type="button" id="dcPickupNameSameBtn" style="background:var(--card);color:var(--ink-soft);border:1px solid var(--line);border-radius:10px;padding:4px 10px;font-size:10.5px;cursor:pointer;">同上</button>
+      </div>
+      <input type="text" id="dcPickupName" placeholder="例如：陳小姐(可與送來者相同)">
+    </div>
+    <div class="field">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <label style="margin:0;">接回家長電話</label>
+        <button type="button" id="dcPickupPhoneSameBtn" style="background:var(--card);color:var(--ink-soft);border:1px solid var(--line);border-radius:10px;padding:4px 10px;font-size:10.5px;cursor:pointer;">同上</button>
+      </div>
+      <input type="text" id="dcPickupPhone" placeholder="例如：0912345678">
+    </div>
+    <div class="field">
+      <label>與送來者的關係</label>
+      <div class="chip-row" data-group="dcPickupRelation">
+        <div class="chip" data-val="本人">本人</div>
+        <div class="chip" data-val="配偶">配偶</div>
+        <div class="chip" data-val="家人">家人</div>
+        <div class="chip" data-val="朋友">朋友</div>
+        <div class="chip" data-val="保母">保母</div>
+        <div class="chip" data-val="其他">其他</div>
+      </div>
+    </div>
+    <div class="field">
+      <label>寶貝照片</label>
       <img id="dcAvatarPreview" style="display:none;width:80px;height:80px;border-radius:16px;object-fit:cover;margin-bottom:8px;">
       <div id="dcAvatarNote" style="font-size:10.5px;color:var(--ink-soft);margin-bottom:6px;"></div>
-      <label>大頭照(選填,若之前上傳過會自動帶入)</label>
-      <input type="file" id="dcAvatarInput" accept="image/*">
-    </div>
-    <div class="sub-group">
-      <span class="glabel">精神/活力</span>
-      <div class="chip-row" data-group="dcSpirit">
-        <div class="chip" data-val="正常">正常</div>
-        <div class="chip warn" data-val="異常">異常</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <label class="photo-btn-like" style="display:inline-block;border:1px dashed var(--line);background:var(--card);border-radius:12px;padding:10px 16px;font-size:11.5px;color:var(--ink-soft);cursor:pointer;">
+          上傳 / 更換照片
+          <input type="file" accept="image/*" id="dcAvatarInput" style="display:none;">
+        </label>
+        <label class="photo-btn-like" style="display:inline-block;border:1px dashed var(--line);background:var(--card);border-radius:12px;padding:10px 16px;font-size:11.5px;color:var(--ink-soft);cursor:pointer;">
+          📸 立即拍攝
+          <input type="file" accept="image/*" capture="environment" id="dcAvatarCaptureInput" style="display:none;">
+        </label>
       </div>
-    </div>
-    <div class="sub-group">
-      <span class="glabel">是否有外傷</span>
-      <div class="chip-row" data-group="dcInjury">
-        <div class="chip" data-val="無">無</div>
-        <div class="chip warn" data-val="有">有</div>
-      </div>
-      <input type="text" id="dcInjuryNote" placeholder="說明" style="margin-top:8px;display:none;">
     </div>
     <div class="field">
-      <label>備註(選填)</label>
-      <textarea id="dcCheckinNote"></textarea>
+      <label>本次攜帶物品</label>
+      <div class="chip-row" data-multigroup="dcItems">
+        <div class="chip" data-val="飼料">飼料</div>
+        <div class="chip" data-val="零食">零食</div>
+        <div class="chip" data-val="藥品">藥品</div>
+        <div class="chip" data-val="保健食品">保健食品</div>
+        <div class="chip" data-val="睡墊/毯子">睡墊/毯子</div>
+        <div class="chip" data-val="玩具">玩具</div>
+        <div class="chip" data-val="外出籠">外出籠</div>
+      </div>
+      <input type="text" id="dcItemsOther" placeholder="其他(自行填寫)" style="margin-top:8px;">
+    </div>
+    <div class="divider">晨間報到檢查</div>
+    <div class="sub-group">
+      <span class="glabel">精神狀況</span>
+      <div class="chip-row" data-group="dcSpirit">
+        <div class="chip" data-val="活力充沛">活力充沛</div>
+        <div class="chip" data-val="穩定平靜">穩定平靜</div>
+        <div class="chip warn" data-val="稍微緊張/害羞">稍微緊張/害羞</div>
+        <div class="chip warn" data-val="精神疲倦">精神疲倦</div>
+      </div>
+    </div>
+    <div class="sub-group">
+      <span class="glabel">身體檢查</span>
+      <div class="chip-row" data-group="dcInjury">
+        <div class="chip" data-val="正常無異狀">正常無異狀</div>
+        <div class="chip warn" data-val="異常">異常</div>
+      </div>
+      <input type="text" id="dcInjuryNote" placeholder="說明,例如：眼屎、腳掌傷口、皮膚紅腫" style="margin-top:8px;display:none;">
+    </div>
+    <div class="field">
+      <label>家長特別交代事項(選填)</label>
+      <textarea id="dcCheckinNote" placeholder="例如：藥物施用、餵食提醒、關節狀況等"></textarea>
     </div>
     <div class="submit-row">
-      <button class="submit-btn" id="dcCheckinSubmitBtn">完成報到</button>
+      <button class="submit-btn" id="dcCheckinSubmitBtn" style="background:var(--pine);color:#F4F1E9;">完成報到並綁定家長</button>
     </div>
   </div>
 
@@ -312,11 +381,15 @@
     <div class="field">
       <label>時段紀錄(點選要登打的時段)</label>
       <div class="chip-row" id="dcSlotTabs" style="flex-wrap:wrap;">
-        <div class="chip active" data-slot="上午放風">上午放風</div>
+        <div class="chip active" data-slot="🍱飲食與排泄">🍱飲食與排泄</div>
+        <div class="chip" data-slot="🐕社交與行為觀察">🐕社交與行為觀察</div>
+        <div class="chip" data-slot="🎯散步時段">🎯散步時段</div>
         <div class="chip" data-slot="午餐時間">午餐時間</div>
-        <div class="chip" data-slot="午休安撫">午休安撫</div>
-        <div class="chip" data-slot="下午放風">下午放風</div>
-        <div class="chip warn" data-slot="其他異常">其他異常</div>
+        <div class="chip" data-slot="💤休息與情緒調節">💤休息與情緒調節</div>
+        <div class="chip" data-slot="🐾環境刺激與社交反應">🐾環境刺激與社交反應</div>
+        <div class="chip" data-slot="疲勞度與回家狀態">疲勞度與回家狀態</div>
+        <div class="chip" data-slot="🎯每日訓練">🎯每日訓練</div>
+        <div class="chip warn" data-slot="⚠️特殊事件">⚠️特殊事件</div>
       </div>
     </div>
 
@@ -325,6 +398,34 @@
     <div class="today-section">
       <h2>今日紀錄</h2>
       <div id="dcLogList"><div class="empty-note">目前還沒有紀錄</div></div>
+    </div>
+
+    <div class="field">
+      <button id="dcConfirmLineBoundBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);width:100%;font-size:11px;">✅ 已確認綁定此家長LINE</button>
+    </div>
+    <div class="field">
+      <button id="dcStaySummaryToggleBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);width:100%;font-size:11px;padding:9px 6px;">📋 日托重點摘要</button>
+    </div>
+    <div class="field" id="dcStaySummaryPanelWrap" style="display:none;">
+      <div id="dcStaySummaryLastCleanCard" style="background:var(--card);border-radius:14px;padding:12px 14px;font-size:12px;color:var(--ink-soft);margin-bottom:12px;"></div>
+      <label>本次日托重點(自行登打)</label>
+      <textarea id="dcStaySummaryAutoText" placeholder="例如:今天情緒穩定、食慾正常,散步時對路人有點警戒已留意..." style="min-height:100px;"></textarea>
+      <label style="margin-top:12px;">特殊交代事項(選填,自行登打)</label>
+      <textarea id="dcStaySummarySpecialText" placeholder="例如:今天精神稍微差一點,回家後請多留意進食狀況..."></textarea>
+      <div class="submit-row">
+        <button class="small-btn" id="dcStaySummarySaveBtn" style="background:var(--pine);color:#fff;width:100%;">儲存日托重點摘要</button>
+      </div>
+    </div>
+
+    <div class="field" style="display:flex;gap:8px;">
+      <button id="dcPrintBtn" class="small-btn" style="background:var(--ochre);flex:1;font-size:11px;padding:9px 6px;">匯出並列印紀錄</button>
+      <button id="dcPickupCardToggleBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);flex:1;font-size:11px;padding:9px 6px;">🎫 接回小卡管理</button>
+    </div>
+    <div class="field" id="dcPickupCardPanelWrap" style="display:none;">
+      <div style="display:flex;gap:8px;">
+        <button id="dcReprintPickupCardBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);flex:1;font-size:11px;padding:9px 6px;">🖨️ 重新列印小卡</button>
+        <button id="dcResendPickupQrBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);flex:1;font-size:11px;padding:9px 6px;">📱 傳送小卡給家長</button>
+      </div>
     </div>
 
     <div class="field" id="dcCheckoutPanel" style="display:none;">
@@ -339,6 +440,20 @@
     </div>
     <div class="field">
       <button class="small-btn" id="dcCheckoutBtn" style="background:var(--danger);width:100%;">辦理離店</button>
+    </div>
+  </div>
+
+  <div id="dcCheckoutReminderModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:999;align-items:center;justify-content:center;padding:20px;">
+    <div style="background:#fff;border-radius:18px;padding:20px;max-width:420px;width:100%;max-height:85vh;overflow-y:auto;">
+      <div style="font-size:16px;font-weight:700;margin-bottom:4px;">🏠 返家小叮嚀｜勾選要傳送的項目</div>
+      <div style="font-size:11px;color:var(--ink-soft);margin-bottom:12px;">勾選完畢後按「複製文字」,再手動貼到LINE傳給家長即可,系統不會自動傳送。</div>
+      <div id="dcReminderChecklist" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;"></div>
+      <div class="divider" style="margin:4px 0 10px;">📋 日托重點摘要(一併附上)</div>
+      <textarea id="dcCheckoutCopyModalText" readonly style="width:100%;min-height:160px;font-size:12.5px;line-height:1.6;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);"></textarea>
+      <div style="display:flex;gap:10px;margin-top:14px;">
+        <button id="dcCheckoutCopyModalCopyBtn" style="flex:1;padding:12px;border-radius:12px;border:none;background:var(--pine);color:#fff;font-weight:700;font-size:13.5px;cursor:pointer;">複製文字</button>
+        <button id="dcCheckoutCopyModalCloseBtn" style="flex:1;padding:12px;border-radius:12px;border:1px solid var(--line);background:#fff;color:var(--ink);font-weight:700;font-size:13.5px;cursor:pointer;">關閉</button>
+      </div>
     </div>
   </div>
 
@@ -482,11 +597,17 @@
       <input type="datetime-local" id="ciCheckinTime">
     </div>
     <div class="field">
-      <label>預計接回的家長姓名</label>
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <label style="margin:0;">預計接回的家長姓名</label>
+        <button type="button" id="ciPickupNameSameBtn" style="background:var(--card);color:var(--ink-soft);border:1px solid var(--line);border-radius:10px;padding:4px 10px;font-size:10.5px;cursor:pointer;">同上</button>
+      </div>
       <input type="text" id="ciPickupName" placeholder="例如：陳小姐(可與送來者相同)">
     </div>
     <div class="field">
-      <label>預計接回的家長電話</label>
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <label style="margin:0;">預計接回的家長電話</label>
+        <button type="button" id="ciPickupPhoneSameBtn" style="background:var(--card);color:var(--ink-soft);border:1px solid var(--line);border-radius:10px;padding:4px 10px;font-size:10.5px;cursor:pointer;">同上</button>
+      </div>
       <input type="text" id="ciPickupPhone" placeholder="例如：0912345678">
     </div>
     <div class="field">
@@ -508,10 +629,16 @@
       <label>寶貝大頭照</label>
       <div id="ciAvatarNote" style="font-size:11px;color:var(--ink-soft);margin-bottom:8px;"></div>
       <img id="ciAvatarPreview" style="display:none;width:88px;height:88px;border-radius:16px;object-fit:cover;margin-bottom:8px;">
-      <label class="photo-btn-like" style="display:inline-block;border:1px dashed var(--line);background:var(--card);border-radius:12px;padding:10px 16px;font-size:11.5px;color:var(--ink-soft);cursor:pointer;">
-        上傳 / 更換照片
-        <input type="file" accept="image/*" id="ciAvatarInput" style="display:none;">
-      </label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <label class="photo-btn-like" style="display:inline-block;border:1px dashed var(--line);background:var(--card);border-radius:12px;padding:10px 16px;font-size:11.5px;color:var(--ink-soft);cursor:pointer;">
+          上傳 / 更換照片
+          <input type="file" accept="image/*" id="ciAvatarInput" style="display:none;">
+        </label>
+        <label class="photo-btn-like" style="display:inline-block;border:1px dashed var(--line);background:var(--card);border-radius:12px;padding:10px 16px;font-size:11.5px;color:var(--ink-soft);cursor:pointer;">
+          📸 立即拍攝
+          <input type="file" accept="image/*" capture="environment" id="ciAvatarCaptureInput" style="display:none;">
+        </label>
+      </div>
     </div>
 
     <div class="field">
@@ -14189,8 +14316,14 @@ var qrcode = function() {
   document.getElementById('ciMemberNo').addEventListener('blur', tryPrefillCiAvatar);
   document.getElementById('ciPetName').addEventListener('blur', tryPrefillCiAvatar);
 
-  document.getElementById('ciAvatarInput').addEventListener('change', (e) => {
-    const file = e.target.files[0];
+  document.getElementById('ciPickupNameSameBtn').addEventListener('click', () => {
+    document.getElementById('ciPickupName').value = document.getElementById('ciMemberName').value;
+  });
+  document.getElementById('ciPickupPhoneSameBtn').addEventListener('click', () => {
+    document.getElementById('ciPickupPhone').value = document.getElementById('ciMemberNo').value;
+  });
+
+  function handleCiAvatarFile(file){
     if (!file) return;
     ciNewAvatarFile = file;
     const reader = new FileReader();
@@ -14200,6 +14333,12 @@ var qrcode = function() {
       document.getElementById('ciAvatarNote').textContent = '將使用這張新照片。';
     };
     reader.readAsDataURL(file);
+  }
+  document.getElementById('ciAvatarInput').addEventListener('change', (e) => {
+    handleCiAvatarFile(e.target.files[0]);
+  });
+  document.getElementById('ciAvatarCaptureInput').addEventListener('change', (e) => {
+    handleCiAvatarFile(e.target.files[0]);
   });
 
   document.getElementById('ciBackBtn').addEventListener('click', () => showScreen('screenRooms'));
@@ -14702,6 +14841,21 @@ var qrcode = function() {
     }).catch(() => {});
   }
 
+  // Same idea as getPickupQr/persistPickupQrInBackground above, but for daycare check-ins.
+  // Each daycare visit is its own Firestore doc (no room reuse to worry about), so the token
+  // is just a stable 'dc::<docId>' — no separate stay-id component needed.
+  function getDaycarePickupQr(record, id){
+    const verifyToken = 'dc::' + id;
+    const isFresh = record.qrImageUrl && record.verifyToken === verifyToken;
+    if (isFresh) return { qrImageUrl: record.qrImageUrl, verifyToken, stale: false };
+    const verifyUrl = STAFF_BASE_URL + '?pickupVerify=' + encodeURIComponent(verifyToken);
+    const qrImageUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=360x360&data=' + encodeURIComponent(verifyUrl);
+    return { qrImageUrl, verifyToken, stale: true };
+  }
+  function persistDaycarePickupQrInBackground(id, verifyToken, qrImageUrl){
+    updateDoc(doc(db, 'daycare', id), { verifyToken, qrImageUrl }).catch(() => {});
+  }
+
   document.getElementById('reprintPickupCardBtn').addEventListener('click', () => {
     const room = allRooms[currentRoomId];
     const { verifyToken, qrImageUrl, stale } = getPickupQr(room);
@@ -15175,6 +15329,7 @@ var qrcode = function() {
 
   // ---------- shared: inline photo mini-buttons ----------
   document.querySelectorAll('.mini-photo-input').forEach(inp => wirePhotoInput(inp));
+  addPhotoCaptureButtons();
 
   // ---------- bodycheck field toggles (fixed: react on the click itself, not one click late) ----------
   document.querySelectorAll('.chip-row[data-group="bcSkin"] .chip').forEach(chip => {
@@ -15316,14 +15471,37 @@ var qrcode = function() {
     scope.querySelectorAll('input[type=checkbox]').forEach(i => i.checked = false);
     scope.querySelectorAll('.detail-card, [id$="Wrap"], [id$="Detail"]').forEach(el => { if (el.style) el.style.display = 'none'; });
     scope.querySelectorAll('.photo-mini').forEach(pm => {
+      const isCapture = pm.classList.contains('photo-mini-capture');
       pm.innerHTML = '';
-      pm.appendChild(document.createTextNode('📷'));
+      pm.appendChild(document.createTextNode(isCapture ? '📸' : '📷'));
       const inp = document.createElement('input');
       inp.type = 'file'; inp.accept = 'image/*'; inp.className = 'mini-photo-input'; inp.style.display = 'none';
+      if (isCapture) inp.capture = 'environment';
       pm.appendChild(inp);
       wirePhotoInput(inp);
     });
     if (panelId === 'feedtoilet') applyAreaVisibility();
+  }
+
+  // Adds a second "📸 立即拍攝" mini-button right next to every existing inline
+  // "📷 上傳照片" mini-button in the care-log panels, so staff can either pick an
+  // existing photo or jump straight to the camera. Runs once at startup; resetPanelFields
+  // (above) knows to keep rebuilding these capture twins correctly via the
+  // "photo-mini-capture" marker class.
+  function addPhotoCaptureButtons(){
+    document.querySelectorAll('label.photo-mini').forEach(pm => {
+      if (pm.classList.contains('photo-mini-capture')) return;
+      if (pm.nextElementSibling && pm.nextElementSibling.classList && pm.nextElementSibling.classList.contains('photo-mini-capture')) return;
+      const twin = document.createElement('label');
+      twin.className = 'photo-mini photo-mini-capture';
+      twin.appendChild(document.createTextNode('📸'));
+      const inp = document.createElement('input');
+      inp.type = 'file'; inp.accept = 'image/*'; inp.capture = 'environment';
+      inp.className = 'mini-photo-input';
+      twin.appendChild(inp);
+      pm.insertAdjacentElement('afterend', twin);
+      wirePhotoInput(inp);
+    });
   }
 
   function captureFormSnapshot(panelId){
@@ -16934,7 +17112,37 @@ var qrcode = function() {
     }
   }
 
-  function buildPickupVerifyHtml(verifyToken, withJumpButton){
+  async function buildDaycarePickupVerifyHtml(verifyToken, withJumpButton){
+    const id = verifyToken.slice(4);
+    const snap = await getDoc(doc(db, 'daycare', id));
+    if (!snap.exists() || snap.data().status !== 'active'){
+      return '<div class="status-msg" style="color:var(--danger);">這張卡對應的安親紀錄已經結束,或資料有誤,請直接以人工方式核對身份。</div>';
+    }
+    const dc = snap.data();
+    return `
+      <div class="hero" style="margin-bottom:6px;">
+        ${dc.avatarUrl ? '<img src="'+dc.avatarUrl+'" class="avatar" style="object-fit:cover;">' : '<div class="avatar"></div>'}
+        <div class="hero-text">
+          <p class="loc">安親照護・目前在園中</p>
+          <h1>${dc.name}</h1>
+        </div>
+      </div>
+      <div class="info-card"><div class="info-row"><div class="info-text">
+        <div class="info-label">入托時間</div><div class="info-value">${dc.checkinTime || '(未登記)'}</div>
+      </div></div></div>
+      <div class="info-card"><div class="info-row"><div class="info-text">
+        <div class="info-label">預計接回家長</div><div class="info-value">${dc.pickupName || '(未登記)'}・${dc.pickupPhone || '(未登記)'}・${dc.pickupRelation || '(未登記)'}</div>
+      </div></div></div>
+      <div class="info-card"><div class="info-row"><div class="info-text">
+        <div class="info-label">預計接回時間</div><div class="info-value">${dc.pickupTimeDisplay || '(未登記)'}</div>
+      </div></div></div>
+      <div style="padding:16px 22px;font-size:12.5px;color:var(--ink-soft);">請核對來人是否與登記的接回家長一致,如果不是本人,建議進一步確認關係再放行。</div>
+      ${withJumpButton ? '<div class="field"><button id="pickupVerifyGotoRecordBtn" class="submit-btn" data-daycare-id="'+id+'">前往這隻寶貝的安親紀錄</button></div>' : ''}
+    `;
+  }
+
+  async function buildPickupVerifyHtml(verifyToken, withJumpButton){
+    if (verifyToken.startsWith('dc::')) return buildDaycarePickupVerifyHtml(verifyToken, withJumpButton);
     const [roomId, stayId] = verifyToken.split('::');
     const room = allRooms[roomId];
     if (!(room && room.stayId === stayId)){
@@ -16964,7 +17172,7 @@ var qrcode = function() {
 
   async function showPickupVerifyScreen(verifyToken){
     showScreen('screenPickupVerify');
-    document.getElementById('pickupVerifyContent').innerHTML = buildPickupVerifyHtml(verifyToken, false);
+    document.getElementById('pickupVerifyContent').innerHTML = await buildPickupVerifyHtml(verifyToken, false);
   }
 
   document.getElementById('pickupVerifyBackBtn').addEventListener('click', () => { showScreen('screenMenu'); renderRooms(); });
@@ -17018,17 +17226,20 @@ var qrcode = function() {
     }
   }
 
-  function showQrScanResult(verifyToken){
+  async function showQrScanResult(verifyToken){
     stopQrScanner();
     document.getElementById('qrScannerVideo').style.display = 'none';
     document.getElementById('qrScannerStatus').textContent = '';
     document.getElementById('qrManualInputWrap').style.display = 'none';
     const resultEl = document.getElementById('qrScanResultView');
     resultEl.style.display = 'block';
-    resultEl.innerHTML = buildPickupVerifyHtml(verifyToken, true);
+    resultEl.innerHTML = await buildPickupVerifyHtml(verifyToken, true);
     const jumpBtn = document.getElementById('pickupVerifyGotoRecordBtn');
     if (jumpBtn){
-      jumpBtn.addEventListener('click', () => openRecord(jumpBtn.dataset.roomId));
+      jumpBtn.addEventListener('click', () => {
+        if (jumpBtn.dataset.daycareId){ showScreen('screenDaycareList'); openDaycareRecord(jumpBtn.dataset.daycareId); }
+        else { openRecord(jumpBtn.dataset.roomId); }
+      });
     }
   }
 
@@ -17367,9 +17578,23 @@ var qrcode = function() {
 
   // ================= 安親照護 (daycare) =================
   let currentDaycareId = null;
+  let currentDaycareArea = 'cat';
+  function isDcCat(){ return currentDaycareArea === 'cat'; }
+  // Separate from boarding's `entryPhotos` so mid-flight photo picks on one side never leak
+  // into the other. Aggregates across every 📷/📸 icon tapped in the current daycare panel;
+  // submitDcSlotEntry uploads and attaches them to the entry, then clears this array.
+  let dcEntryPhotos = [];
+  function wirePhotoInputDc(inp){
+    inp.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      dcEntryPhotos.push(file);
+      inp.closest('.photo-mini').firstChild.textContent = '✅';
+    });
+  }
   let dcAvatarFile = null;
   let dcExistingAvatarUrl = null;
-  let dcCurrentSlot = '上午放風';
+  let dcCurrentSlot = '🍱飲食與排泄';
 
   document.getElementById('menuDaycareBtn').addEventListener('click', () => { showScreen('screenDaycareList'); loadDaycareList(); });
   document.getElementById('menuInhomeBtn').addEventListener('click', () => alert('到府照護紀錄即將上線,敬請期待!'));
@@ -17406,8 +17631,14 @@ var qrcode = function() {
   document.getElementById('daycareNewBtn').addEventListener('click', () => {
     document.getElementById('dcPetName').value = '';
     document.getElementById('dcMemberNo').value = '';
+    document.getElementById('dcMemberName').value = '';
+    document.getElementById('dcCheckinTimeInput').value = toDatetimeLocalValue(new Date());
+    document.getElementById('dcExpectedCheckoutTime').value = '';
+    document.getElementById('dcPickupName').value = '';
+    document.getElementById('dcPickupPhone').value = '';
     document.getElementById('dcAvatarPreview').style.display = 'none';
     document.getElementById('dcAvatarNote').textContent = '';
+    document.getElementById('dcItemsOther').value = '';
     document.getElementById('dcCheckinNote').value = '';
     document.getElementById('dcInjuryNote').value = '';
     document.getElementById('dcInjuryNote').style.display = 'none';
@@ -17417,12 +17648,22 @@ var qrcode = function() {
     showScreen('screenDaycareCheckin');
   });
 
+  document.getElementById('dcPickupNameSameBtn').addEventListener('click', () => {
+    document.getElementById('dcPickupName').value = document.getElementById('dcMemberName').value;
+  });
+  document.getElementById('dcPickupPhoneSameBtn').addEventListener('click', () => {
+    document.getElementById('dcPickupPhone').value = document.getElementById('dcMemberNo').value;
+  });
+
   async function tryPrefillDcAvatar(){
     const phone = document.getElementById('dcMemberNo').value.trim();
     const petName = document.getElementById('dcPetName').value.trim();
     if (!phone || !petName || dcAvatarFile) return;
     const snap = await getDoc(doc(db, 'members', phone));
     if (!snap.exists()) return;
+    if (snap.data().name && !document.getElementById('dcMemberName').value.trim()){
+      document.getElementById('dcMemberName').value = snap.data().name;
+    }
     const petAvatarUrl = snap.data().petAvatars && snap.data().petAvatars[petName];
     if (petAvatarUrl){
       dcExistingAvatarUrl = petAvatarUrl;
@@ -17433,20 +17674,33 @@ var qrcode = function() {
   }
   document.getElementById('dcMemberNo').addEventListener('blur', tryPrefillDcAvatar);
   document.getElementById('dcPetName').addEventListener('blur', tryPrefillDcAvatar);
-  document.getElementById('dcAvatarInput').addEventListener('change', (e) => {
-    if (e.target.files[0]){ dcAvatarFile = e.target.files[0]; document.getElementById('dcAvatarNote').textContent = '將使用這次新上傳的照片。'; }
-  });
+  function handleDcAvatarFile(file){
+    if (!file) return;
+    dcAvatarFile = file;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      document.getElementById('dcAvatarPreview').src = ev.target.result;
+      document.getElementById('dcAvatarPreview').style.display = 'block';
+      document.getElementById('dcAvatarNote').textContent = '將使用這張新照片。';
+    };
+    reader.readAsDataURL(file);
+  }
+  document.getElementById('dcAvatarInput').addEventListener('change', (e) => handleDcAvatarFile(e.target.files[0]));
+  document.getElementById('dcAvatarCaptureInput').addEventListener('change', (e) => handleDcAvatarFile(e.target.files[0]));
 
   document.querySelectorAll('.chip-row[data-group="dcInjury"] .chip').forEach(chip => {
     chip.addEventListener('chipchange', () => {
       const isActive = chip.classList.contains('active');
-      document.getElementById('dcInjuryNote').style.display = (isActive && chip.dataset.val === '有') ? 'block' : 'none';
+      document.getElementById('dcInjuryNote').style.display = (isActive && chip.dataset.val === '異常') ? 'block' : 'none';
     });
   });
 
   document.getElementById('dcCheckinSubmitBtn').addEventListener('click', () => guardedSubmit(document.getElementById('dcCheckinSubmitBtn'), '送出', async () => {
     const name = document.getElementById('dcPetName').value.trim();
     const phone = document.getElementById('dcMemberNo').value.trim();
+    const memberName = document.getElementById('dcMemberName').value.trim();
+    const area = chipVal('dcArea');
+    if (!area){ throw new Error('請選擇寶貝種類(貓貓/狗狗)'); }
     if (!name || !phone){ throw new Error('請填寫寶貝名字跟家長手機'); }
 
     let avatarUrl = dcExistingAvatarUrl;
@@ -17459,31 +17713,57 @@ var qrcode = function() {
     // always upsert the member record so this customer shows up in 會員資料管理 and 歷史查詢, even with no photo
     await setDoc(doc(db, 'members', phone), {
       updatedAt: serverTimestamp(),
+      ...(memberName ? { name: memberName } : {}),
       ...(avatarUrl ? { petAvatars: { [name]: avatarUrl } } : {})
     }, { merge: true });
 
-    const spirit = chipVal('dcSpirit') || '正常';
-    const injury = chipVal('dcInjury') || '無';
+    const spirit = chipVal('dcSpirit') || '穩定平靜';
+    const injury = chipVal('dcInjury') || '正常無異狀';
     const injuryNote = document.getElementById('dcInjuryNote').value.trim();
     const checkinNote = document.getElementById('dcCheckinNote').value.trim();
+    const itemsList = chipVals('dcItems');
+    const itemsOther = document.getElementById('dcItemsOther').value.trim();
+    const pickupName = document.getElementById('dcPickupName').value.trim();
+    const pickupPhone = document.getElementById('dcPickupPhone').value.trim();
+    const pickupRelation = chipVal('dcPickupRelation') || '';
+    const checkinTimeRaw = document.getElementById('dcCheckinTimeInput').value;
+    const checkinDt = checkinTimeRaw ? new Date(checkinTimeRaw) : new Date();
+    const expectedCheckoutRaw = document.getElementById('dcExpectedCheckoutTime').value;
+    const pickupTimeDisplay = expectedCheckoutRaw ? new Date(expectedCheckoutRaw).toLocaleString('zh-TW', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '';
     const now = new Date();
 
     const docRef = await addDoc(collection(db, 'daycare'), {
-      name, phone, avatarUrl: avatarUrl || null,
-      checkinDate: dateStrOf(now),
-      checkinTime: now.toTimeString().slice(0,5),
+      name, phone, memberName: memberName || '', avatarUrl: avatarUrl || null, area,
+      checkinDate: dateStrOf(checkinDt),
+      checkinTime: checkinDt.toTimeString().slice(0,5),
       status: 'active',
-      spirit, injury, injuryNote: injury === '有' ? injuryNote : '',
+      spirit, injury, injuryNote: injury === '異常' ? injuryNote : '',
       checkinNote,
+      items: { list: itemsList, other: itemsOther },
+      pickupName, pickupPhone, pickupRelation,
+      pickupTimeRaw: expectedCheckoutRaw || '', pickupTimeDisplay,
       entries: [],
+      pendingDryGrams: 0, pendingWetGrams: 0, pendingFreshGrams: 0, pendingWaterMl: 0,
       createdAtMs: now.getTime()
     });
+
+    // Print the pickup card right away (locally-generated QR, no wait on Firestore) so the
+    // parent can leave with it immediately; the token gets persisted in the background.
+    const dcRecord = { qrImageUrl: null, verifyToken: null };
+    const { verifyToken, qrImageUrl } = getDaycarePickupQr(dcRecord, docRef.id);
+    showPickupCard(docRef.id, verifyToken);
+    persistDaycarePickupQrInBackground(docRef.id, verifyToken, qrImageUrl);
 
     await openDaycareRecord(docRef.id);
   }));
 
   const dcSlotFieldMap = {
-    '上午放風': 'walk', '下午放風': 'walk', '午餐時間': 'meal', '午休安撫': 'rest', '其他異常': 'other'
+    '🍱飲食與排泄': 'feedtoilet',
+    '🐕社交與行為觀察': 'social',
+    '🎯散步時段': 'walk', '午餐時間': 'meal', '💤休息與情緒調節': 'rest',
+    '🐾環境刺激與社交反應': 'reactivity', '疲勞度與回家狀態': 'postwalk',
+    '🎯每日訓練': 'training',
+    '⚠️特殊事件': 'special'
   };
 
   function renderSlotForm(slot){
@@ -17491,18 +17771,221 @@ var qrcode = function() {
     document.querySelectorAll('#dcSlotTabs .chip').forEach(c => c.classList.toggle('active', c.dataset.slot === slot));
     const area = document.getElementById('dcSlotFormArea');
     const kind = dcSlotFieldMap[slot];
-    if (kind === 'walk'){
+    if (kind === 'feedtoilet'){
+      const isCat = currentDaycareArea === 'cat';
       area.innerHTML = `
         <div class="sub-group">
-          <span class="glabel">互動狀況</span>
-          <div class="chip-row" data-group="dcWalkState">
-            <div class="chip" data-val="佳">佳</div>
-            <div class="chip" data-val="普通">普通</div>
-            <div class="chip warn" data-val="緊繃">緊繃</div>
+          <div class="glabel-row"><span class="glabel" style="margin:0;">嘔吐(異常可複選)</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
+          <div class="chip-row" data-multigroup="dcFtVomit">
+            <div class="chip" data-val="無">無</div>
+            <div class="chip warn" data-val="吐毛">吐毛</div>
+            <div class="chip warn" data-val="吐食物">吐食物</div>
+            <div class="chip warn" data-val="吐水">吐水</div>
+            <div class="chip warn" data-val="其他">其他</div>
+          </div>
+          <input type="text" id="dcFtVomitNote" placeholder="說明" style="margin-top:8px;display:none;">
+        </div>
+
+        <div class="sub-group">
+          <div class="glabel-row"><span class="glabel" style="margin:0;">正餐(可複選)</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
+          <div class="chip-row" data-multigroup="dcFtFood">
+            <div class="chip" data-val="乾糧">乾糧</div>
+            <div class="chip" data-val="濕食">濕食</div>
+            <div class="chip" data-val="鮮食">鮮食</div>
+          </div>
+        </div>
+        <div class="detail-card" id="dcFtDryDetail" style="display:none;">
+          <div class="detail-card-title">乾糧</div>
+          <div class="three-col">
+            <div><label class="glabel">餵食(g)</label><input type="number" min="0" id="dcFtDryFed" placeholder="這次加了多少"></div>
+            <div><label class="glabel">剩餘棄置(g)</label><input type="number" min="0" id="dcFtDryDiscard" placeholder="倒掉的剩餘量"></div>
+            <div><label class="glabel">剩餘保留(g)</label><input type="number" min="0" id="dcFtDryKeep" placeholder="留著的剩餘量"></div>
+          </div>
+          <div style="font-size:10.5px;color:var(--ink-soft);margin-top:6px;">剩餘棄置 = 這次把之前留下的量倒掉不要了;剩餘保留 = 留著繼續給,會自動跟這次的餵食量加在一起。兩者擇一填寫即可,系統會自動算出這段時間吃了多少。</div>
+        </div>
+        <div class="detail-card" id="dcFtWetDetail" style="display:none;">
+          <div class="detail-card-title">濕食</div>
+          <div class="two-col">
+            <div><label class="glabel">餵食(g)</label><input type="number" min="0" id="dcFtWetGrams"></div>
+            <div><label class="glabel">剩餘棄置(g)</label><input type="number" min="0" id="dcFtWetLeftover"></div>
+          </div>
+        </div>
+        <div class="detail-card" id="dcFtFreshDetail" style="display:none;">
+          <div class="detail-card-title">鮮食</div>
+          <div class="two-col">
+            <div><label class="glabel">餵食(g)</label><input type="number" min="0" id="dcFtFreshGrams"></div>
+            <div><label class="glabel">剩餘棄置(g)</label><input type="number" min="0" id="dcFtFreshLeftover"></div>
+          </div>
+        </div>
+
+        <div class="sub-group">
+          <div class="glabel-row"><span class="glabel" style="margin:0;">獎勵零食</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
+          <input type="text" id="dcFtSnackItem" placeholder="項目,例如:肉泥" style="margin-bottom:8px;">
+          <input type="text" id="dcFtSnackTiming" placeholder="給予時機,例如:訓練獎勵/安撫用" style="margin-bottom:8px;">
+          <div class="chip-row" data-group="dcFtSnackReaction">
+            <div class="chip" data-val="非常積極">非常積極</div>
+            <div class="chip" data-val="一般">一般</div>
+            <div class="chip warn" data-val="無反應">無反應</div>
+          </div>
+        </div>
+
+        <div class="sub-group">
+          <div class="glabel-row"><span class="glabel" style="margin:0;">飲水紀錄</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
+          <div class="two-col">
+            <div><label class="glabel">給水量(ML)</label><input type="number" min="0" id="dcFtWaterGiveMl"></div>
+            <div><label class="glabel">棄置剩餘水量(ML)</label><input type="number" min="0" id="dcFtWaterDiscardMl"></div>
+          </div>
+          <div style="font-size:10.5px;color:var(--ink-soft);margin-top:6px;">今日飲水量 = 上次給水量 − 這次棄置剩餘量,自動累計</div>
+        </div>
+
+        ${isCat ? `
+        <div class="sub-group">
+          <div class="glabel-row"><span class="glabel" style="margin:0;">排尿紀錄</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
+          <label style="display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:11.5px;color:var(--ink-soft);"><input type="checkbox" id="dcFtPeeCatNone"> 目前無尿尿,待追蹤</label>
+          <input type="number" min="0" id="dcFtPeeCatGrams" placeholder="重量(含貓砂,g)">
+          <div class="glabel" style="margin-top:10px;">顏色</div>
+          <div class="chip-row" data-group="dcFtPeeCatColor">
+            <div class="chip" data-val="正常">正常</div>
+            <div class="chip warn" data-val="異常">異常</div>
+          </div>
+        </div>
+        <div class="sub-group">
+          <div class="glabel-row"><span class="glabel" style="margin:0;">排便紀錄</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
+          <label style="display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:11.5px;color:var(--ink-soft);"><input type="checkbox" id="dcFtPoopCatNone"> 目前無便便,待追蹤</label>
+          <input type="number" min="0" id="dcFtPoopCatGrams" placeholder="重量(含貓砂,g)">
+          <div class="glabel" style="margin-top:10px;">顏色</div>
+          <div class="chip-row" data-group="dcFtPoopCatColor">
+            <div class="chip" data-val="正常">正常</div>
+            <div class="chip warn" data-val="異常">異常</div>
+          </div>
+          <div class="glabel" style="margin-top:10px;">性質</div>
+          <div class="chip-row" data-group="dcFtPoopCatTexture">
+            <div class="chip warn" data-val="偏硬">偏硬</div>
+            <div class="chip" data-val="正常">正常</div>
+            <div class="chip warn" data-val="軟便">軟便</div>
+            <div class="chip warn" data-val="腹瀉">腹瀉</div>
+          </div>
+        </div>
+        ` : `
+        <div class="sub-group">
+          <div class="glabel-row"><span class="glabel" style="margin:0;">排尿紀錄</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
+          <label style="display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:11.5px;color:var(--ink-soft);"><input type="checkbox" id="dcFtPeeDogNone"> 目前無尿尿,待追蹤</label>
+          <div class="chip-row" data-group="dcFtPeeDogType">
+            <div class="chip" data-val="尿布墊">尿布墊</div>
+            <div class="chip" data-val="戶外">戶外</div>
+          </div>
+          <div id="dcFtPeeDogPadWrap" style="display:none;margin-top:8px;"><input type="number" min="0" id="dcFtPeeDogPadGrams" placeholder="重量(已扣除尿布墊,g)"></div>
+          <div id="dcFtPeeDogOutWrap" style="display:none;margin-top:8px;"><input type="number" min="0" id="dcFtPeeDogOutCount" placeholder="次數"></div>
+          <div class="glabel" style="margin-top:10px;">顏色</div>
+          <div class="chip-row" data-group="dcFtPeeDogColor">
+            <div class="chip" data-val="正常">正常</div>
+            <div class="chip warn" data-val="異常">異常</div>
+          </div>
+        </div>
+        <div class="sub-group">
+          <div class="glabel-row"><span class="glabel" style="margin:0;">排便紀錄</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
+          <label style="display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:11.5px;color:var(--ink-soft);"><input type="checkbox" id="dcFtPoopDogNone"> 目前無便便,待追蹤</label>
+          <div class="two-col">
+            <div><label class="glabel">尿布墊(已扣除,g)</label><input type="number" min="0" id="dcFtPoopDogPadGrams"></div>
+            <div><label class="glabel">戶外(g)</label><input type="number" min="0" id="dcFtPoopDogOutGrams"></div>
+          </div>
+          <div class="glabel" style="margin-top:10px;">顏色</div>
+          <div class="chip-row" data-group="dcFtPoopDogColor">
+            <div class="chip" data-val="正常">正常</div>
+            <div class="chip warn" data-val="異常">異常</div>
+          </div>
+          <div class="glabel" style="margin-top:10px;">性質</div>
+          <div class="chip-row" data-group="dcFtPoopDogTexture">
+            <div class="chip warn" data-val="偏硬">偏硬</div>
+            <div class="chip" data-val="正常">正常</div>
+            <div class="chip warn" data-val="軟便">軟便</div>
+            <div class="chip warn" data-val="腹瀉">腹瀉</div>
+          </div>
+        </div>
+        `}
+        <div class="field"><label>備註說明</label><textarea id="dcFtNoteText"></textarea></div>
+        <div class="submit-row"><button class="submit-btn" id="dcSlotSubmitBtn">送出飲食與排泄紀錄</button></div>
+      `;
+      document.querySelectorAll('.chip-row[data-multigroup="dcFtVomit"] .chip').forEach(chip => {
+        chip.addEventListener('chipchange', () => {
+          const vomits = chipVals('dcFtVomit');
+          document.getElementById('dcFtVomitNote').style.display = (vomits.length && !vomits.includes('無')) ? 'block' : 'none';
+        });
+      });
+      document.querySelectorAll('.chip-row[data-multigroup="dcFtFood"] .chip').forEach(chip => {
+        chip.addEventListener('chipchange', () => {
+          const foods = chipVals('dcFtFood');
+          document.getElementById('dcFtDryDetail').style.display = foods.includes('乾糧') ? 'block' : 'none';
+          document.getElementById('dcFtWetDetail').style.display = foods.includes('濕食') ? 'block' : 'none';
+          document.getElementById('dcFtFreshDetail').style.display = foods.includes('鮮食') ? 'block' : 'none';
+        });
+      });
+      if (!isCat){
+        document.querySelectorAll('.chip-row[data-group="dcFtPeeDogType"] .chip').forEach(chip => {
+          chip.addEventListener('chipchange', () => {
+            const t = chipVal('dcFtPeeDogType');
+            document.getElementById('dcFtPeeDogPadWrap').style.display = t === '尿布墊' ? 'block' : 'none';
+            document.getElementById('dcFtPeeDogOutWrap').style.display = t === '戶外' ? 'block' : 'none';
+          });
+        });
+      }
+    } else if (kind === 'walk'){
+      area.innerHTML = `
+        <div class="sub-group">
+          <span class="glabel">共幾分鐘</span>
+          <input type="number" min="0" id="dcWalkMinutes" placeholder="例如:20">
+        </div>
+        <div class="sub-group">
+          <span class="glabel">天氣／氣溫</span>
+          <div class="chip-row" data-group="dcWalkWeather">
+            <div class="chip" data-val="晴天">晴天</div>
+            <div class="chip" data-val="陰天">陰天</div>
+            <div class="chip warn" data-val="微雨">微雨</div>
+          </div>
+        </div>
+        <div class="sub-group">
+          <span class="glabel">路線類型</span>
+          <div class="chip-row" data-group="dcWalkRoute">
+            <div class="chip" data-val="園區周邊街區">園區周邊街區</div>
+            <div class="chip" data-val="公園草地">公園草地</div>
+            <div class="chip" data-val="靜巷/安靜路線">靜巷/安靜路線</div>
+            <div class="chip" data-val="探索性新路線">探索性新路線</div>
+          </div>
+        </div>
+        <div class="sub-group">
+          <span class="glabel">散步中補水</span>
+          <div class="two-col">
+            <div><label class="glabel">次數</label><input type="number" min="0" id="dcWalkWaterCount"></div>
+            <div><label class="glabel">飲水量(ML)</label><input type="number" min="0" id="dcWalkWaterMl"></div>
+          </div>
+        </div>
+        <div class="divider" style="margin:16px 0 10px;">散步中紀錄</div>
+        <div class="sub-group">
+          <span class="glabel">牽繩鬆緊度</span>
+          <div class="chip-row" data-group="dcWalkLeash">
+            <div class="chip" data-val="全程鬆繩隨行">全程鬆繩隨行</div>
+            <div class="chip" data-val="偶爾拉緊/探索">偶爾拉緊/探索</div>
+            <div class="chip warn" data-val="頻繁暴衝/拉扯牽繩">頻繁暴衝/拉扯牽繩</div>
+          </div>
+        </div>
+        <div class="sub-group">
+          <span class="glabel">嗅聞品質</span>
+          <div class="chip-row" data-group="dcWalkSniff">
+            <div class="chip" data-val="高品質慢嗅聞">高品質慢嗅聞</div>
+            <div class="chip" data-val="快速掃描">快速掃描</div>
+            <div class="chip warn" data-val="無視環境">無視環境</div>
+          </div>
+        </div>
+        <div class="sub-group">
+          <span class="glabel">探索動機</span>
+          <div class="chip-row" data-group="dcWalkMotivation">
+            <div class="chip" data-val="好奇且放鬆">好奇且放鬆</div>
+            <div class="chip warn" data-val="警覺性高/頻繁抬頭張望">警覺性高/頻繁抬頭張望</div>
+            <div class="chip warn" data-val="抗拒向前/停滯不前">抗拒向前/停滯不前</div>
           </div>
         </div>
         <div class="field"><label>說明(選填)</label><textarea id="dcWalkNote"></textarea></div>
-        <div class="submit-row"><button class="submit-btn" id="dcSlotSubmitBtn">送出這筆紀錄</button></div>
+        <div class="submit-row"><button class="submit-btn" id="dcSlotSubmitBtn">送出散步時段紀錄</button></div>
       `;
     } else if (kind === 'meal'){
       area.innerHTML = `
@@ -17522,34 +18005,380 @@ var qrcode = function() {
           document.getElementById('dcMealLeftoverWrap').style.display = (chip.classList.contains('active') && chip.dataset.val === '剩餘') ? 'block' : 'none';
         });
       });
+    } else if (kind === 'social'){
+      area.innerHTML = `
+        <div class="divider" style="margin:0 0 10px;">同類互動(${isDcCat() ? '貓貓' : '犬隻'}社交能力)</div>
+        <div class="sub-group">
+          <span class="glabel">社交意願</span>
+          <div class="chip-row" data-group="dcSocialWillingness">
+            <div class="chip" data-val="主動友善">主動友善</div>
+            <div class="chip" data-val="被動接受">被動接受</div>
+            <div class="chip warn" data-val="保持距離/獨行">保持距離/獨行</div>
+            <div class="chip warn" data-val="警戒/防禦行為">警戒/防禦行為</div>
+          </div>
+          <input type="text" id="dcSocialWillingnessOther" placeholder="其他(自行登打)" style="margin-top:8px;">
+        </div>
+        <div class="sub-group">
+          <span class="glabel">互動表現</span>
+          <div class="chip-row" data-group="dcSocialInteraction">
+            <div class="chip" data-val="玩耍拉扯/追逐">玩耍拉扯/追逐</div>
+            <div class="chip" data-val="互相嗅聞後離開">互相嗅聞後離開</div>
+            <div class="chip warn" data-val="避開其他毛孩">避開其他毛孩</div>
+            <div class="chip warn" data-val="需要個別隔離">需要個別隔離</div>
+          </div>
+          <input type="text" id="dcSocialInteractionOther" placeholder="其他(自行登打)" style="margin-top:8px;">
+        </div>
+        <div class="sub-group">
+          <span class="glabel">玩耍風格</span>
+          <div class="chip-row" data-group="dcPlayStyle">
+            <div class="chip" data-val="溫和輕柔">溫和輕柔</div>
+            <div class="chip" data-val="熱情奔放">熱情奔放</div>
+            <div class="chip warn" data-val="容易過度興奮">容易過度興奮</div>
+          </div>
+        </div>
+        <div class="divider" style="margin:16px 0 10px;">人類互動(對訓練師/照護員)</div>
+        <div class="sub-group">
+          <span class="glabel">親人程度</span>
+          <div class="chip-row" data-group="dcHumanAffinity">
+            <div class="chip" data-val="主動討摸/黏人">主動討摸/黏人</div>
+            <div class="chip" data-val="聽從指令">聽從指令</div>
+            <div class="chip" data-val="觀察中/保持距離">觀察中/保持距離</div>
+            <div class="chip warn" data-val="對特定動作敏感">對特定動作敏感</div>
+          </div>
+          <input type="text" id="dcHumanAffinityOther" placeholder="其他(自行登打)" style="margin-top:8px;">
+        </div>
+        <div class="sub-group">
+          <span class="glabel">環境適應</span>
+          <div class="chip-row" data-group="dcSocialEnvAdapt">
+            <div class="chip" data-val="迅速融入環境">迅速融入環境</div>
+            <div class="chip warn" data-val="前1-2小時較緊張,隨後放鬆">前1-2小時較緊張,隨後放鬆</div>
+            <div class="chip warn" data-val="全天警覺性高">全天警覺性高</div>
+          </div>
+          <input type="text" id="dcSocialEnvAdaptOther" placeholder="其他(自行登打)" style="margin-top:8px;">
+        </div>
+        <div class="field"><label>備註說明</label><textarea id="dcSocialNoteText"></textarea></div>
+        <div class="submit-row"><button class="submit-btn" id="dcSlotSubmitBtn">送出社交與行為觀察</button></div>
+      `;
     } else if (kind === 'rest'){
       area.innerHTML = `
         <div class="sub-group">
-          <span class="glabel">睡眠與休息狀態</span>
+          <span class="glabel">午休息狀態</span>
           <div class="chip-row" data-group="dcRestState">
-            <div class="chip" data-val="平穩">平穩</div>
-            <div class="chip warn" data-val="躁動">躁動</div>
+            <div class="chip" data-val="迅速入睡/深層睡眠">迅速入睡/深層睡眠</div>
+            <div class="chip" data-val="躺下休息但保持警覺">躺下休息但保持警覺</div>
+            <div class="chip warn" data-val="踱步/無法沉靜">踱步/無法沉靜</div>
           </div>
         </div>
-        <div class="submit-row"><button class="submit-btn" id="dcSlotSubmitBtn">送出這筆紀錄</button></div>
+        <div class="sub-group">
+          <div class="glabel-row"><span class="glabel" style="margin:0;">減壓活動提供(可複選)</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
+          <div class="chip-row" data-multigroup="dcDecompressActivity">
+            <div class="chip" data-val="嗅聞墊/藏食玩具">嗅聞墊/藏食玩具</div>
+            <div class="chip" data-val="舔食墊">舔食墊</div>
+            <div class="chip" data-val="啃咬耐咬玩具">啃咬耐咬玩具</div>
+            <div class="chip" data-val="輕柔按摩放鬆">輕柔按摩放鬆</div>
+          </div>
+        </div>
+        <div class="field"><label>備註說明</label><textarea id="dcRestNoteText"></textarea></div>
+        <div class="submit-row"><button class="submit-btn" id="dcSlotSubmitBtn">送出休息與情緒調節紀錄</button></div>
       `;
-    } else {
+    } else if (kind === 'reactivity'){
+      function reactBlock(title, hint, encounterGroup, encounterOpts, responseGroup, responseOpts, actionGroup, actionOpts){
+        return `
+          <div class="divider" style="margin:16px 0 10px;">${title}</div>
+          ${hint ? '<div style="font-size:10.5px;color:var(--ink-soft);margin-bottom:8px;">' + hint + '</div>' : ''}
+          <div class="sub-group">
+            <span class="glabel">遇到狀況</span>
+            <div class="chip-row" data-multigroup="${encounterGroup}">
+              ${encounterOpts.map(v => '<div class="chip" data-val="'+v+'">'+v+'</div>').join('')}
+            </div>
+          </div>
+          <div class="sub-group">
+            <span class="glabel">反應與肢體語言(可複選)</span>
+            <div class="chip-row" data-multigroup="${responseGroup}">
+              ${responseOpts.map(v => '<div class="chip'+(v.startsWith('好奇')||v.startsWith('主動')||v.startsWith('毫無')||v.startsWith('順利')?'':' warn')+'" data-val="'+v+'">'+v+'</div>').join('')}
+            </div>
+          </div>
+          <div class="sub-group">
+            <span class="glabel">訓練師/照護員處置(可複選)</span>
+            <div class="chip-row" data-multigroup="${actionGroup}">
+              ${actionOpts.map(v => '<div class="chip" data-val="'+v+'">'+v+'</div>').join('')}
+            </div>
+          </div>
+        `;
+      }
+      area.innerHTML = `
+        ${reactBlock('同類(其他狗狗)', '', 'dcReactPeerEncounter', ['無遇到','遠距離看到','近距離交會'],
+          'dcReactPeerResponse', ['好奇看著/放鬆','身體僵硬/凝視','低吼/吠叫/暴衝','避開/躲藏'],
+          'dcReactPeerAction', ['零食轉移焦點','增加距離繞道','停下等待對方通過','順利和平交會'])}
+        ${reactBlock('人類(路人/小孩)', '', 'dcReactHumanEncounter', ['無遇到','遠距離看到','近距離交會'],
+          'dcReactHumanResponse', ['主動討摸/搖尾巴','無視/冷漠通過','警戒避開','吠叫/撲人'],
+          'dcReactHumanAction', ['獎勵冷靜行為','保持安全距離','提示路人勿摸'])}
+        ${reactBlock('交通工具/噪音', '', 'dcReactNoiseEncounter', ['車輛/機車','工地施工聲','雷聲/喇叭聲'],
+          'dcReactNoiseResponse', ['毫無影響','耳朵向後/貼地','試圖逃跑/爆衝','停在原地發抖'],
+          'dcReactNoiseAction', ['快速離開現場','蹲下安撫/給予獎勵','帶至安靜區域'])}
+        <div class="field"><label>備註說明</label><textarea id="dcReactNoteText"></textarea></div>
+        <div class="submit-row"><button class="submit-btn" id="dcSlotSubmitBtn">送出環境刺激與社交反應紀錄</button></div>
+      `;
+    } else if (kind === 'postwalk'){
       area.innerHTML = `
         <div class="sub-group">
-          <span class="glabel">狀況(可複選)</span>
-          <div class="chip-row" data-multigroup="dcOtherType">
-            <div class="chip warn" data-val="咬傷">咬傷</div>
-            <div class="chip warn" data-val="緊迫">緊迫</div>
-            <div class="chip warn" data-val="嘔吐">嘔吐</div>
-            <div class="chip warn" data-val="其他">其他</div>
+          <span class="glabel">散步結束時體能狀態</span>
+          <div class="chip-row" data-group="dcPostwalkState">
+            <div class="chip" data-val="恰到好處">恰到好處(腳步放緩、神情輕鬆、舌頭微吐)</div>
+            <div class="chip warn" data-val="運動量不足">運動量不足(回室內仍精力旺盛、踱步、找東西咬)</div>
+            <div class="chip warn" data-val="過度疲勞/過熱">過度疲勞/過熱(劇烈喘氣、大量流口水、拖著腳走)</div>
           </div>
         </div>
-        <div class="field"><label>說明</label><textarea id="dcOtherNote" placeholder="請輸入詳細說明..."></textarea></div>
-        <div class="submit-row"><button class="submit-btn" id="dcSlotSubmitBtn" style="background:var(--danger);">送出這筆紀錄</button></div>
+        <div class="sub-group">
+          <div class="glabel-row"><span class="glabel" style="margin:0;">回家後的照護(可複選)</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
+          <div class="chip-row" data-multigroup="dcPostwalkCare">
+            <div class="chip" data-val="已完成擦腳/檢查腳掌">已完成擦腳/檢查腳掌</div>
+            <div class="chip" data-val="已補充水分">已補充水分</div>
+            <div class="chip" data-val="梳理身上草屑/檢查有無壁蝨">梳理身上草屑/檢查有無壁蝨</div>
+          </div>
+        </div>
+        <div class="field"><label>備註說明</label><textarea id="dcPostwalkNoteText"></textarea></div>
+        <div class="submit-row"><button class="submit-btn" id="dcSlotSubmitBtn">送出疲勞度與回家狀態評估</button></div>
       `;
+    } else if (kind === 'training'){
+      area.innerHTML = `
+        <div class="field"><label>訓練項目</label><input type="text" id="dcTrainingItem" placeholder="例如:坐下、等待、社交減敏"></div>
+        <div class="sub-group">
+          <span class="glabel">學習態度</span>
+          <div class="chip-row" data-group="dcTrainingAttitude">
+            <div class="chip" data-val="專注力佳">專注力佳</div>
+            <div class="chip warn" data-val="容易受干擾">容易受干擾</div>
+            <div class="chip warn" data-val="學習動機較低">學習動機較低</div>
+          </div>
+        </div>
+        <div class="field"><label>備註說明</label><textarea id="dcTrainingNote" placeholder="訓練與活動表現評估的補充說明"></textarea></div>
+        <div class="submit-row"><button class="submit-btn" id="dcSlotSubmitBtn">送出每日訓練紀錄</button></div>
+      `;
+    } else if (kind === 'special'){
+      area.innerHTML = `
+        <div style="font-size:10.5px;color:var(--ink-soft);margin-bottom:10px;">先選事件分類,下方會出現對應的登打欄位。「第一次的成功」也值得紀錄,不只有負面突發狀況。</div>
+        <div class="sub-group">
+          <span class="glabel">事件分類</span>
+          <div class="chip-row" data-group="dcSpecialCategory" style="flex-wrap:wrap;">
+            <div class="chip warn" data-val="衝突與攻擊">1. 衝突與攻擊事件</div>
+            <div class="chip warn" data-val="健康意外">2. 突發健康與意外受傷</div>
+            <div class="chip warn" data-val="異物吞食">3. 異物吞食</div>
+            <div class="chip warn" data-val="情緒壓力">4. 極端情緒與壓力反應</div>
+            <div class="chip warn" data-val="走失設備">5. 走失風險與設備異常</div>
+            <div class="chip" data-val="正面突破">6. 行為重大突破與正面轉折</div>
+          </div>
+        </div>
+
+        <div class="detail-card" id="dcSpecialConflictDetail" style="display:none;">
+          <div class="detail-card-title">衝突與攻擊事件</div>
+          <div class="sub-group">
+            <span class="glabel">類型</span>
+            <div class="chip-row" data-group="dcConflictType">
+              <div class="chip warn" data-val="毛孩間衝突">毛孩間衝突(低吼警告/空咬/打架拉扯)</div>
+              <div class="chip warn" data-val="對人攻擊或防禦">對人攻擊或防禦行為</div>
+            </div>
+          </div>
+          <div id="dcConflictPeerWrap" style="display:none;">
+            <div class="sub-group">
+              <span class="glabel">導火線(可複選)</span>
+              <div class="chip-row" data-multigroup="dcConflictTrigger">
+                <div class="chip" data-val="搶玩具">搶玩具</div>
+                <div class="chip" data-val="搶食物">搶食物</div>
+                <div class="chip" data-val="過度靠近休息區">過度靠近休息區</div>
+                <div class="chip" data-val="走道交會">走道交會</div>
+              </div>
+            </div>
+            <div class="field"><label>雙方毛孩姓名</label><input type="text" id="dcConflictNames" placeholder="例如:可可、豆豆"></div>
+            <div class="sub-group">
+              <span class="glabel">現場處置方式(可複選)</span>
+              <div class="chip-row" data-multigroup="dcConflictAction">
+                <div class="chip" data-val="聲音介入">聲音介入</div>
+                <div class="chip" data-val="擋板隔離">擋板隔離</div>
+                <div class="chip" data-val="拉開">拉開</div>
+              </div>
+            </div>
+            <div class="sub-group">
+              <span class="glabel">是否受傷</span>
+              <div class="chip-row" data-group="dcConflictInjured">
+                <div class="chip" data-val="無">無</div>
+                <div class="chip warn" data-val="有">有</div>
+              </div>
+            </div>
+          </div>
+          <div id="dcConflictHumanWrap" style="display:none;">
+            <div class="sub-group">
+              <span class="glabel">類型(可複選)</span>
+              <div class="chip-row" data-multigroup="dcConflictHumanType">
+                <div class="chip" data-val="護物護食拒絕靠近">護物護食拒絕靠近</div>
+                <div class="chip" data-val="護身體特定部位">護身體特定部位</div>
+                <div class="chip" data-val="穿戴設備時的防禦行為">穿戴設備時的防禦行為</div>
+              </div>
+            </div>
+            <div class="field"><label>觸發動作</label><input type="text" id="dcConflictHumanTrigger" placeholder="例如:準備繫牽繩、拿走玩具"></div>
+            <div class="field"><label>前兆訊號</label><input type="text" id="dcConflictHumanSign" placeholder="例如:肢體僵硬、側目凝視"></div>
+            <div class="field"><label>工作人員回應方式</label><input type="text" id="dcConflictHumanResponse"></div>
+          </div>
+        </div>
+
+        <div class="detail-card" id="dcSpecialHealthDetail" style="display:none;">
+          <div class="detail-card-title">突發身體健康與意外受傷</div>
+          <div class="sub-group">
+            <span class="glabel">類型</span>
+            <div class="chip-row" data-group="dcHealthType">
+              <div class="chip warn" data-val="急性身體不適">急性身體不適</div>
+              <div class="chip warn" data-val="外傷與意外">外傷與意外</div>
+            </div>
+          </div>
+          <div id="dcHealthAcuteWrap" style="display:none;">
+            <div class="sub-group">
+              <span class="glabel">狀況(可複選)</span>
+              <div class="chip-row" data-multigroup="dcHealthAcuteType">
+                <div class="chip warn" data-val="突然劇烈嘔吐">突然劇烈嘔吐</div>
+                <div class="chip warn" data-val="急性腹瀉/血便">急性腹瀉/血便</div>
+                <div class="chip warn" data-val="突發性癲癇發作">突發性癲癇發作</div>
+                <div class="chip warn" data-val="呼吸急促/喘不過氣">呼吸急促/喘不過氣</div>
+                <div class="chip warn" data-val="中暑徵兆">中暑徵兆</div>
+              </div>
+            </div>
+            <div class="field"><label>嘔吐物內容(若有)</label><input type="text" id="dcHealthVomitContent" placeholder="例如:未消化食物、黃水、異物"></div>
+          </div>
+          <div id="dcHealthInjuryWrap" style="display:none;">
+            <div class="sub-group">
+              <span class="glabel">狀況(可複選)</span>
+              <div class="chip-row" data-multigroup="dcHealthInjuryType">
+                <div class="chip warn" data-val="指甲斷裂/流血">指甲斷裂/流血</div>
+                <div class="chip warn" data-val="腳掌墊磨破">腳掌墊磨破</div>
+                <div class="chip warn" data-val="眼角/耳朵/皮膚擦傷或咬傷">眼角/耳朵/皮膚擦傷或咬傷</div>
+              </div>
+            </div>
+          </div>
+          <div class="field"><label>發現時間</label><input type="text" id="dcHealthFoundTime" placeholder="例如:14:20"></div>
+          <div class="field"><label>傷口位置與大小(可搭配照片)</label><input type="text" id="dcHealthWoundDesc"></div>
+          <div class="field"><label>第一時間急救處置</label><input type="text" id="dcHealthFirstAid" placeholder="例如:清洗消毒、止血、冰敷"></div>
+          <div class="sub-group">
+            <span class="glabel">後續處理</span>
+            <div class="chip-row" data-multigroup="dcHealthFollowup">
+              <div class="chip warn" data-val="已通知家長">已通知家長</div>
+              <div class="chip warn" data-val="已送醫">已送醫</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-card" id="dcSpecialIngestionDetail" style="display:none;">
+          <div class="detail-card-title">環境與物品異物吞食</div>
+          <div class="sub-group">
+            <span class="glabel">誤食/破壞事件(可複選)</span>
+            <div class="chip-row" data-multigroup="dcIngestionType">
+              <div class="chip warn" data-val="誤食玩具碎片">誤食玩具碎片</div>
+              <div class="chip warn" data-val="啃咬吞下墊子/布料">啃咬吞下墊子/布料</div>
+              <div class="chip warn" data-val="拆解軟木或塑膠配件">拆解軟木或塑膠配件</div>
+            </div>
+          </div>
+          <div class="field"><label>吞食時間點</label><input type="text" id="dcIngestionTime" placeholder="例如:14:20"></div>
+          <div class="field"><label>物品材質與大約體積</label><input type="text" id="dcIngestionMaterial"></div>
+          <div class="sub-group">
+            <span class="glabel">吞食後精神狀態</span>
+            <div class="chip-row" data-group="dcIngestionSpirit">
+              <div class="chip" data-val="正常">正常</div>
+              <div class="chip warn" data-val="異常">異常</div>
+            </div>
+          </div>
+          <div class="field"><label>後續排泄物觀察</label><input type="text" id="dcIngestionFollowup" placeholder="例如:是否隨便便排出"></div>
+        </div>
+
+        <div class="detail-card" id="dcSpecialStressDetail" style="display:none;">
+          <div class="detail-card-title">極端情緒與壓力反應</div>
+          <div class="sub-group">
+            <span class="glabel">類型(可複選)</span>
+            <div class="chip-row" data-multigroup="dcStressType">
+              <div class="chip warn" data-val="環境恐懼與驚嚇反應">環境恐懼與驚嚇反應(試圖逃跑/撞門/抓破牆面柵欄)</div>
+              <div class="chip warn" data-val="嚴重分離焦慮爆發">嚴重分離焦慮爆發(持續吠叫哀嚎/過度喘氣流口水/踱步/嘗試跳牆破壞門鎖)</div>
+            </div>
+          </div>
+          <div class="field"><label>誘發原因</label><input type="text" id="dcStressCause"></div>
+          <div class="field"><label>持續時間</label><input type="text" id="dcStressDuration" placeholder="例如:約20分鐘"></div>
+          <div class="sub-group">
+            <span class="glabel">安撫手段(可複選)</span>
+            <div class="chip-row" data-multigroup="dcStressSoothe">
+              <div class="chip" data-val="嗅聞">嗅聞</div>
+              <div class="chip" data-val="獨立包廂">獨立包廂</div>
+              <div class="chip" data-val="減壓音樂">減壓音樂</div>
+            </div>
+          </div>
+          <div class="sub-group">
+            <span class="glabel">安撫有效程度</span>
+            <div class="chip-row" data-group="dcStressEffect">
+              <div class="chip" data-val="有效">有效</div>
+              <div class="chip warn" data-val="部分有效">部分有效</div>
+              <div class="chip warn" data-val="無效">無效</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-card" id="dcSpecialEscapeDetail" style="display:none;">
+          <div class="detail-card-title">走失風險與設備異常</div>
+          <div class="sub-group">
+            <span class="glabel">類型(可複選)</span>
+            <div class="chip-row" data-multigroup="dcEscapeType">
+              <div class="chip warn" data-val="趁門縫試圖衝門">趁工作人員進出門縫時試圖衝門</div>
+              <div class="chip warn" data-val="嘗試翻越防護柵欄">嘗試翻越防護柵欄</div>
+              <div class="chip warn" data-val="會開門鎖">會開門鎖</div>
+              <div class="chip warn" data-val="胸背帶脫落">胸背帶脫落</div>
+              <div class="chip warn" data-val="牽繩扣環損壞">牽繩扣環損壞</div>
+            </div>
+          </div>
+          <div class="field"><label>事件經過</label><textarea id="dcEscapeDetail"></textarea></div>
+          <div class="sub-group">
+            <span class="glabel">現場防護機制是否有效攔截</span>
+            <div class="chip-row" data-group="dcEscapeIntercepted">
+              <div class="chip" data-val="有效攔截">有效攔截</div>
+              <div class="chip warn" data-val="未能攔截">未能攔截</div>
+            </div>
+          </div>
+          <div class="field"><label>設備損壞狀況</label><input type="text" id="dcEscapeEquipment"></div>
+          <div class="field"><label>建議家長更換或調整</label><input type="text" id="dcEscapeSuggestion" placeholder="例如:更換牽繩尺寸"></div>
+        </div>
+
+        <div class="detail-card" id="dcSpecialPositiveDetail" style="display:none;">
+          <div class="detail-card-title">行為重大突破與正面轉折</div>
+          <div class="field"><label>突破的情境脈絡</label><textarea id="dcPositiveContext" placeholder="例如:原本極度怕狗,第一次主動嗅聞並與其他狗和平共處"></textarea></div>
+          <div class="field"><label>採用的引導技巧</label><input type="text" id="dcPositiveTechnique"></div>
+          <div class="field"><label>給予的獎勵方式</label><input type="text" id="dcPositiveReward"></div>
+        </div>
+
+        <div class="field"><label>備註說明</label><textarea id="dcSpecialNoteText"></textarea></div>
+        <div class="submit-row"><button class="submit-btn" id="dcSlotSubmitBtn" style="background:var(--danger);">送出特殊事件紀錄</button></div>
+      `;
+      document.querySelectorAll('.chip-row[data-group="dcSpecialCategory"] .chip').forEach(chip => {
+        chip.addEventListener('chipchange', () => {
+          const cat = chipVal('dcSpecialCategory');
+          document.getElementById('dcSpecialConflictDetail').style.display = cat === '衝突與攻擊' ? 'block' : 'none';
+          document.getElementById('dcSpecialHealthDetail').style.display = cat === '健康意外' ? 'block' : 'none';
+          document.getElementById('dcSpecialIngestionDetail').style.display = cat === '異物吞食' ? 'block' : 'none';
+          document.getElementById('dcSpecialStressDetail').style.display = cat === '情緒壓力' ? 'block' : 'none';
+          document.getElementById('dcSpecialEscapeDetail').style.display = cat === '走失設備' ? 'block' : 'none';
+          document.getElementById('dcSpecialPositiveDetail').style.display = cat === '正面突破' ? 'block' : 'none';
+        });
+      });
+      document.querySelectorAll('.chip-row[data-group="dcConflictType"] .chip').forEach(chip => {
+        chip.addEventListener('chipchange', () => {
+          const t = chipVal('dcConflictType');
+          document.getElementById('dcConflictPeerWrap').style.display = t === '毛孩間衝突' ? 'block' : 'none';
+          document.getElementById('dcConflictHumanWrap').style.display = t === '對人攻擊或防禦' ? 'block' : 'none';
+        });
+      });
+      document.querySelectorAll('.chip-row[data-group="dcHealthType"] .chip').forEach(chip => {
+        chip.addEventListener('chipchange', () => {
+          const t = chipVal('dcHealthType');
+          document.getElementById('dcHealthAcuteWrap').style.display = t === '急性身體不適' ? 'block' : 'none';
+          document.getElementById('dcHealthInjuryWrap').style.display = t === '外傷與意外' ? 'block' : 'none';
+        });
+      });
     }
     document.getElementById('dcSlotSubmitBtn').addEventListener('click', () => submitDcSlotEntry(slot, kind));
     wireDynamicChips(area);
+    dcEntryPhotos = [];
+    area.querySelectorAll('.mini-photo-input').forEach(inp => wirePhotoInputDc(inp));
   }
 
   function wireDynamicChips(scope){
@@ -17577,12 +18406,130 @@ var qrcode = function() {
     const btn = document.getElementById('dcSlotSubmitBtn');
     await guardedSubmit(btn, '送出', async () => {
       let content = '', warn = false;
-      if (kind === 'walk'){
-        const state = chipVal('dcWalkState');
-        if (!state) throw new Error('請選擇互動狀況');
-        const note = document.getElementById('dcWalkNote').value.trim();
-        content = slot + '互動狀況' + state + (note ? '，' + note : '');
-        warn = state === '緊繃';
+      let docUpdates = {};
+      if (kind === 'feedtoilet'){
+        const isCat = currentDaycareArea === 'cat';
+        const parts = [];
+        const snap = await getDoc(doc(db, 'daycare', currentDaycareId));
+        const dcData = snap.exists() ? snap.data() : {};
+
+        const vomits = chipVals('dcFtVomit');
+        if (vomits.length){
+          if (vomits.length === 1 && vomits[0] === '無'){
+            parts.push('沒有嘔吐的狀況');
+          } else {
+            parts.push('有' + vomits.filter(v => v !== '無').join('、') + '的狀況' + (txtVal('dcFtVomitNote') ? '，' + txtVal('dcFtVomitNote') : ''));
+            warn = true;
+          }
+        }
+
+        const foods = chipVals('dcFtFood');
+        if (foods.includes('乾糧')){
+          const fed = numVal('dcFtDryFed') || 0;
+          const discard = numVal('dcFtDryDiscard');
+          const keep = numVal('dcFtDryKeep');
+          const prevPending = dcData.pendingDryGrams || 0;
+          let newPending = prevPending + fed;
+          if (keep !== null) newPending = keep + fed;
+          else if (discard !== null) newPending = fed;
+          docUpdates.pendingDryGrams = Math.max(newPending, 0);
+          if (fed) parts.push('乾糧加了' + fed + 'g');
+          if (discard !== null) parts.push('乾糧原本剩餘' + discard + 'g已經倒掉');
+          if (keep !== null) parts.push('乾糧還剩' + keep + 'g，先保留繼續給');
+        }
+        if (foods.includes('濕食')){
+          const served = numVal('dcFtWetGrams') || 0, left = numVal('dcFtWetLeftover') || 0;
+          docUpdates.pendingWetGrams = served;
+          parts.push('濕食餵了' + served + 'g' + (left ? '，剩餘' + left + 'g已倒掉' : ''));
+        }
+        if (foods.includes('鮮食')){
+          const served = numVal('dcFtFreshGrams') || 0, left = numVal('dcFtFreshLeftover') || 0;
+          docUpdates.pendingFreshGrams = served;
+          parts.push('鮮食餵了' + served + 'g' + (left ? '，剩餘' + left + 'g已倒掉' : ''));
+        }
+
+        const snackItem = txtVal('dcFtSnackItem');
+        const snackTiming = txtVal('dcFtSnackTiming');
+        const snackReaction = chipVal('dcFtSnackReaction');
+        if (snackItem || snackTiming || snackReaction){
+          parts.push('獎勵零食' + (snackItem ? '：' + snackItem : '') + (snackTiming ? '，時機：' + snackTiming : '') + (snackReaction ? '，反應' + snackReaction : ''));
+          if (snackReaction === '無反應') warn = true;
+        }
+
+        const waterGive = numVal('dcFtWaterGiveMl');
+        const waterDiscard = numVal('dcFtWaterDiscardMl');
+        if (waterGive !== null || waterDiscard !== null){
+          docUpdates.pendingWaterMl = waterGive || 0;
+          if (waterGive !== null) parts.push('換了新的水，給了' + waterGive + 'ML');
+          if (waterDiscard !== null) parts.push('原本水碗剩' + waterDiscard + 'ML已倒掉');
+        }
+
+        const nowTimeStr = new Date().toTimeString().slice(0,5);
+        if (isCat){
+          if (document.getElementById('dcFtPeeCatNone').checked){ parts.push('目前還沒觀察到尿尿，會再留意追蹤'); warn = true; }
+          const pg = numVal('dcFtPeeCatGrams');
+          const peeColor = chipVal('dcFtPeeCatColor');
+          if (pg !== null){
+            parts.push('尿尿約' + pg + 'g' + (peeColor ? '，顏色' + peeColor : ''));
+            if (peeColor === '異常') warn = true;
+            if (pg > 0) docUpdates.lastPeeCleanTime = nowTimeStr;
+          }
+          if (document.getElementById('dcFtPoopCatNone').checked){ parts.push('目前還沒觀察到便便，會再留意追蹤'); warn = true; }
+          const bg = numVal('dcFtPoopCatGrams');
+          const poopColor = chipVal('dcFtPoopCatColor');
+          const poopTexture = chipVal('dcFtPoopCatTexture');
+          if (bg !== null){
+            const bits = [poopColor ? '顏色' + poopColor : null, poopTexture ? '性質' + poopTexture : null].filter(Boolean);
+            parts.push('便便約' + bg + 'g' + (bits.length ? '，' + bits.join('、') : ''));
+            if (poopColor === '異常' || (poopTexture && poopTexture !== '正常')) warn = true;
+            if (bg > 0) docUpdates.lastPoopCleanTime = nowTimeStr;
+          }
+        } else {
+          if (document.getElementById('dcFtPeeDogNone').checked){ parts.push('目前還沒觀察到尿尿，會再留意追蹤'); warn = true; }
+          const peeType = chipVal('dcFtPeeDogType');
+          const peeColorDog = chipVal('dcFtPeeDogColor');
+          if (peeType === '尿布墊'){ const g = numVal('dcFtPeeDogPadGrams'); if (g !== null){ parts.push('尿布墊尿量約' + g + 'g' + (peeColorDog ? '，顏色' + peeColorDog : '')); docUpdates.lastPeeCleanTime = nowTimeStr; } }
+          if (peeType === '戶外'){ const c = numVal('dcFtPeeDogOutCount'); if (c !== null){ parts.push('戶外尿尿' + c + '次' + (peeColorDog ? '，顏色' + peeColorDog : '')); docUpdates.lastPeeCleanTime = nowTimeStr; } }
+          if (peeColorDog === '異常') warn = true;
+          if (document.getElementById('dcFtPoopDogNone').checked){ parts.push('目前還沒觀察到便便，會再留意追蹤'); warn = true; }
+          const padPoop = numVal('dcFtPoopDogPadGrams') || 0, outPoop = numVal('dcFtPoopDogOutGrams') || 0;
+          const poopColorDog = chipVal('dcFtPoopDogColor');
+          const poopTextureDog = chipVal('dcFtPoopDogTexture');
+          if (padPoop || outPoop){
+            const bits = [poopColorDog ? '顏色' + poopColorDog : null, poopTextureDog ? '性質' + poopTextureDog : null].filter(Boolean);
+            parts.push('便便尿布墊' + padPoop + 'g、戶外' + outPoop + 'g' + (bits.length ? '，' + bits.join('、') : ''));
+            if (poopColorDog === '異常' || (poopTextureDog && poopTextureDog !== '正常')) warn = true;
+            docUpdates.lastPoopCleanTime = nowTimeStr;
+          }
+        }
+
+        const note = txtVal('dcFtNoteText');
+        if (note) parts.push(note);
+        if (!parts.length) throw new Error('請至少填寫一項飲食或排泄紀錄');
+        content = parts.join('，');
+      } else if (kind === 'walk'){
+        const parts = [];
+        const minutes = numVal('dcWalkMinutes');
+        if (minutes !== null) parts.push('共散步' + minutes + '分鐘');
+        const weather = chipVal('dcWalkWeather');
+        if (weather) parts.push('天氣' + weather);
+        const route = chipVal('dcWalkRoute');
+        if (route) parts.push('路線:' + route);
+        const waterCount = numVal('dcWalkWaterCount');
+        const waterMl = numVal('dcWalkWaterMl');
+        if (waterCount !== null || waterMl !== null){
+          parts.push('散步中補水' + (waterCount !== null ? waterCount + '次' : '') + (waterMl !== null ? '，飲水量約' + waterMl + 'ML' : ''));
+        }
+        const leash = chipVal('dcWalkLeash');
+        if (leash){ parts.push('牽繩鬆緊度:' + leash); if (leash === '頻繁暴衝/拉扯牽繩') warn = true; }
+        const sniff = chipVal('dcWalkSniff');
+        if (sniff){ parts.push('嗅聞品質:' + sniff); if (sniff === '無視環境') warn = true; }
+        const motivation = chipVal('dcWalkMotivation');
+        if (motivation){ parts.push('探索動機:' + motivation); if (motivation !== '好奇且放鬆') warn = true; }
+        const note = txtVal('dcWalkNote');
+        if (note) parts.push(note);
+        if (!parts.length) throw new Error('請至少填寫一項散步時段紀錄');
+        content = parts.join('，');
       } else if (kind === 'meal'){
         const amount = document.getElementById('dcMealAmount').value.trim();
         const state = chipVal('dcMealState');
@@ -17590,22 +18537,188 @@ var qrcode = function() {
         const leftover = document.getElementById('dcMealLeftover').value.trim();
         content = '餵食量' + amount + '，' + state + (state === '剩餘' && leftover ? '(剩餘' + leftover + ')' : '');
         warn = state === '剩餘';
+      } else if (kind === 'social'){
+        const parts = [];
+        const willingness = chipVal('dcSocialWillingness');
+        const willingnessOther = txtVal('dcSocialWillingnessOther');
+        if (willingness || willingnessOther){
+          parts.push('社交意願:' + [willingness, willingnessOther].filter(Boolean).join('，'));
+          if (willingness && ['保持距離/獨行','警戒/防禦行為'].includes(willingness)) warn = true;
+        }
+        const interaction = chipVal('dcSocialInteraction');
+        const interactionOther = txtVal('dcSocialInteractionOther');
+        if (interaction || interactionOther){
+          parts.push('互動表現:' + [interaction, interactionOther].filter(Boolean).join('，'));
+          if (interaction && ['避開其他毛孩','需要個別隔離'].includes(interaction)) warn = true;
+        }
+        const playStyle = chipVal('dcPlayStyle');
+        if (playStyle){
+          parts.push('玩耍風格:' + playStyle);
+          if (playStyle === '容易過度興奮') warn = true;
+        }
+        const affinity = chipVal('dcHumanAffinity');
+        const affinityOther = txtVal('dcHumanAffinityOther');
+        if (affinity || affinityOther){
+          parts.push('親人程度:' + [affinity, affinityOther].filter(Boolean).join('，'));
+          if (affinity === '對特定動作敏感') warn = true;
+        }
+        const envAdapt = chipVal('dcSocialEnvAdapt');
+        const envAdaptOther = txtVal('dcSocialEnvAdaptOther');
+        if (envAdapt || envAdaptOther){
+          parts.push('環境適應:' + [envAdapt, envAdaptOther].filter(Boolean).join('，'));
+          if (envAdapt && envAdapt !== '迅速融入環境') warn = true;
+        }
+        const note = txtVal('dcSocialNoteText');
+        if (note) parts.push(note);
+        if (!parts.length) throw new Error('請至少填寫一項社交與行為觀察');
+        content = parts.join('，');
       } else if (kind === 'rest'){
-        const state = chipVal('dcRestState');
-        if (!state) throw new Error('請選擇睡眠與休息狀態');
-        content = '睡眠與休息狀態' + state;
-        warn = state === '躁動';
-      } else {
-        const types = chipVals('dcOtherType');
-        const note = document.getElementById('dcOtherNote').value.trim();
-        if (!types.length) throw new Error('請選擇狀況類型');
-        content = types.join('、') + (note ? '，' + note : '');
+        const parts = [];
+        const restState = chipVal('dcRestState');
+        if (restState){
+          parts.push('午休息狀態:' + restState);
+          if (restState !== '迅速入睡/深層睡眠') warn = true;
+        }
+        const activities = chipVals('dcDecompressActivity');
+        if (activities.length) parts.push('提供減壓活動:' + activities.join('、'));
+        const note = txtVal('dcRestNoteText');
+        if (note) parts.push(note);
+        if (!parts.length) throw new Error('請至少填寫一項休息與情緒調節紀錄');
+        content = parts.join('，');
+      } else if (kind === 'reactivity'){
+        const parts = [];
+        function reactPart(label, encounterGroup, responseGroup, actionGroup, warnResponses){
+          const encounter = chipVals(encounterGroup);
+          const response = chipVals(responseGroup);
+          const action = chipVals(actionGroup);
+          if (!encounter.length && !response.length && !action.length) return;
+          const bits = [];
+          if (encounter.length) bits.push('遇到:' + encounter.join('、'));
+          if (response.length) bits.push('反應:' + response.join('、'));
+          if (action.length) bits.push('處置:' + action.join('、'));
+          parts.push(label + '(' + bits.join('，') + ')');
+          if (response.some(v => warnResponses.includes(v))) warn = true;
+        }
+        reactPart('同類', 'dcReactPeerEncounter', 'dcReactPeerResponse', 'dcReactPeerAction', ['身體僵硬/凝視','低吼/吠叫/暴衝','避開/躲藏']);
+        reactPart('人類', 'dcReactHumanEncounter', 'dcReactHumanResponse', 'dcReactHumanAction', ['警戒避開','吠叫/撲人']);
+        reactPart('交通工具/噪音', 'dcReactNoiseEncounter', 'dcReactNoiseResponse', 'dcReactNoiseAction', ['耳朵向後/貼地','試圖逃跑/爆衝','停在原地發抖']);
+        const note = txtVal('dcReactNoteText');
+        if (note) parts.push(note);
+        if (!parts.length) throw new Error('請至少填寫一項環境刺激與社交反應紀錄');
+        content = parts.join('；');
+      } else if (kind === 'postwalk'){
+        const parts = [];
+        const state = chipVal('dcPostwalkState');
+        if (state){ parts.push('散步結束體能狀態:' + state); if (state !== '恰到好處') warn = true; }
+        const care = chipVals('dcPostwalkCare');
+        if (care.length) parts.push('回家後照護:' + care.join('、'));
+        const note = txtVal('dcPostwalkNoteText');
+        if (note) parts.push(note);
+        if (!parts.length) throw new Error('請至少填寫一項疲勞度與回家狀態評估');
+        content = parts.join('，');
+      } else if (kind === 'training'){
+        const item = txtVal('dcTrainingItem');
+        const attitude = chipVal('dcTrainingAttitude');
+        const note = txtVal('dcTrainingNote');
+        if (!item && !attitude && !note) throw new Error('請至少填寫訓練項目或學習態度');
+        const parts = [];
+        if (item) parts.push('訓練項目:' + item);
+        if (attitude){ parts.push('學習態度:' + attitude); if (attitude !== '專注力佳') warn = true; }
+        if (note) parts.push(note);
+        content = parts.join('，');
+      } else if (kind === 'special'){
         warn = true;
+        const parts = [];
+        const cat = chipVal('dcSpecialCategory');
+        if (!cat) throw new Error('請先選擇事件分類');
+
+        if (cat === '衝突與攻擊'){
+          const type = chipVal('dcConflictType');
+          if (!type) throw new Error('請選擇衝突與攻擊事件的類型');
+          if (type === '毛孩間衝突'){
+            const trigger = chipVals('dcConflictTrigger');
+            const names = txtVal('dcConflictNames');
+            const action = chipVals('dcConflictAction');
+            const injured = chipVal('dcConflictInjured');
+            parts.push('毛孩間衝突' + (trigger.length ? '，導火線:' + trigger.join('、') : '') + (names ? '，雙方:' + names : '') + (action.length ? '，處置:' + action.join('、') : '') + (injured ? '，是否受傷:' + injured : ''));
+          } else {
+            const humanType = chipVals('dcConflictHumanType');
+            const trigger = txtVal('dcConflictHumanTrigger');
+            const sign = txtVal('dcConflictHumanSign');
+            const response = txtVal('dcConflictHumanResponse');
+            parts.push('對人攻擊或防禦行為' + (humanType.length ? '：' + humanType.join('、') : '') + (trigger ? '，觸發動作:' + trigger : '') + (sign ? '，前兆訊號:' + sign : '') + (response ? '，回應方式:' + response : ''));
+          }
+        } else if (cat === '健康意外'){
+          const type = chipVal('dcHealthType');
+          if (!type) throw new Error('請選擇突發健康與意外受傷的類型');
+          if (type === '急性身體不適'){
+            const acute = chipVals('dcHealthAcuteType');
+            const vomitContent = txtVal('dcHealthVomitContent');
+            parts.push('急性身體不適' + (acute.length ? '：' + acute.join('、') : '') + (vomitContent ? '，嘔吐物內容:' + vomitContent : ''));
+          } else {
+            const injury = chipVals('dcHealthInjuryType');
+            parts.push('外傷與意外' + (injury.length ? '：' + injury.join('、') : ''));
+          }
+          const foundTime = txtVal('dcHealthFoundTime');
+          const woundDesc = txtVal('dcHealthWoundDesc');
+          const firstAid = txtVal('dcHealthFirstAid');
+          const followup = chipVals('dcHealthFollowup');
+          if (foundTime) parts.push('發現時間:' + foundTime);
+          if (woundDesc) parts.push('傷口位置與大小:' + woundDesc);
+          if (firstAid) parts.push('第一時間處置:' + firstAid);
+          if (followup.length) parts.push(followup.join('、'));
+        } else if (cat === '異物吞食'){
+          const types = chipVals('dcIngestionType');
+          const time = txtVal('dcIngestionTime');
+          const material = txtVal('dcIngestionMaterial');
+          const spirit = chipVal('dcIngestionSpirit');
+          const followup = txtVal('dcIngestionFollowup');
+          parts.push('異物吞食' + (types.length ? '：' + types.join('、') : '') + (time ? '，時間:' + time : '') + (material ? '，材質體積:' + material : '') + (spirit ? '，精神狀態:' + spirit : '') + (followup ? '，排泄觀察:' + followup : ''));
+          if (spirit === '異常') warn = true;
+        } else if (cat === '情緒壓力'){
+          const types = chipVals('dcStressType');
+          const cause = txtVal('dcStressCause');
+          const duration = txtVal('dcStressDuration');
+          const soothe = chipVals('dcStressSoothe');
+          const effect = chipVal('dcStressEffect');
+          parts.push('極端情緒與壓力反應' + (types.length ? '：' + types.join('、') : '') + (cause ? '，誘發原因:' + cause : '') + (duration ? '，持續時間:' + duration : '') + (soothe.length ? '，安撫手段:' + soothe.join('、') : '') + (effect ? '，效果:' + effect : ''));
+        } else if (cat === '走失設備'){
+          const types = chipVals('dcEscapeType');
+          const detail = txtVal('dcEscapeDetail');
+          const intercepted = chipVal('dcEscapeIntercepted');
+          const equipment = txtVal('dcEscapeEquipment');
+          const suggestion = txtVal('dcEscapeSuggestion');
+          parts.push('走失風險與設備異常' + (types.length ? '：' + types.join('、') : '') + (detail ? '，經過:' + detail : '') + (intercepted ? '，' + intercepted : '') + (equipment ? '，設備損壞:' + equipment : '') + (suggestion ? '，建議:' + suggestion : ''));
+          if (intercepted === '未能攔截') warn = true;
+        } else if (cat === '正面突破'){
+          warn = false;
+          const context = txtVal('dcPositiveContext');
+          const technique = txtVal('dcPositiveTechnique');
+          const reward = txtVal('dcPositiveReward');
+          if (!context) throw new Error('請填寫突破的情境脈絡');
+          parts.push('行為重大突破與正面轉折：' + context + (technique ? '，引導技巧:' + technique : '') + (reward ? '，獎勵方式:' + reward : ''));
+        }
+
+        const note = txtVal('dcSpecialNoteText');
+        if (note) parts.push(note);
+        if (!parts.length) throw new Error('請至少填寫特殊事件的詳細內容');
+        content = parts.join('；');
       }
 
       const now = new Date();
       const entry = { slot, time: now.toTimeString().slice(0,5), content, warn, staff: currentStaffName || '未填寫', createdAtMs: now.getTime() };
-      await updateDoc(doc(db, 'daycare', currentDaycareId), { entries: arrayUnion(entry) });
+      if (dcEntryPhotos.length){
+        const photoUrls = [];
+        for (const file of dcEntryPhotos){
+          const compressed = await compressImage(file, 1000, 0.75);
+          const photoRef = ref(storage, 'daycareEntryPhotos/' + currentDaycareId + '/' + Date.now() + '_' + file.name);
+          await uploadBytes(photoRef, compressed);
+          photoUrls.push(await getDownloadURL(photoRef));
+        }
+        entry.photoUrls = photoUrls;
+        dcEntryPhotos = [];
+      }
+      await updateDoc(doc(db, 'daycare', currentDaycareId), { ...docUpdates, entries: arrayUnion(entry) });
       renderSlotForm(slot);
       await refreshDcLog();
     });
@@ -17621,6 +18734,7 @@ var qrcode = function() {
       <div class="log-entry ${e.warn ? 'warn' : ''}">
         <div class="meta"><span>${e.time} · ${e.slot}${e.staff ? '｜' + e.staff : ''}</span></div>
         <div>${e.content}</div>
+        ${(e.photoUrls && e.photoUrls.length) ? '<div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;">' + e.photoUrls.map(u => '<img src="'+u+'" style="width:52px;height:52px;border-radius:8px;object-fit:cover;">').join('') + '</div>' : ''}
       </div>
     `).join('');
   }
@@ -17630,6 +18744,7 @@ var qrcode = function() {
     const snap = await getDoc(doc(db, 'daycare', id));
     if (!snap.exists()){ alert('找不到這筆安親資料'); return; }
     const data = snap.data();
+    currentDaycareArea = data.area || 'cat';
     document.getElementById('dcRecordName').textContent = data.name;
     document.getElementById('dcRecordMember').textContent = '家長 ' + data.phone + '・報到 ' + (data.checkinTime || '');
     if (data.avatarUrl){ document.getElementById('dcRecordAvatar').src = data.avatarUrl; document.getElementById('dcRecordAvatar').style.display = 'block'; }
@@ -17637,9 +18752,189 @@ var qrcode = function() {
     document.getElementById('dcCheckoutPanel').style.display = 'none';
     document.getElementById('dcCheckoutFood').value = '';
     document.getElementById('dcCheckoutItemsConfirm').checked = false;
-    renderSlotForm('上午放風');
+    document.getElementById('dcStaySummaryPanelWrap').style.display = 'none';
+    document.getElementById('dcPickupCardPanelWrap').style.display = 'none';
+    renderSlotForm('🍱飲食與排泄');
     await refreshDcLog();
     showScreen('screenDaycareRecord');
+  }
+
+  document.getElementById('dcConfirmLineBoundBtn').addEventListener('click', async () => {
+    const snap = await getDoc(doc(db, 'daycare', currentDaycareId));
+    const data = snap.exists() ? snap.data() : {};
+    if (!data.phone){ alert('這筆安親紀錄沒有家長手機號碼。'); return; }
+    const lineIds = await findLineBindingsForPhone(data.phone);
+    if (!lineIds.length){ alert('這位家長目前還沒有綁定 LINE,請先請他用家長端頁面完成綁定,再按這顆按鈕發送確認訊息。'); return; }
+    const greeting = data.name + ' 寶貝已經綁定您的 LINE,之後只有這個 LINE 帳號才能查閱寶貝的照護紀錄,以及接收旅館發送的通知,其他人的 LINE 無法查看,請放心入托!';
+    const result = await sendLineMessagesToPhone(data.phone, [{ type: 'text', text: greeting }]);
+    if (result.sent) alert('已發送綁定確認訊息給家長。');
+    else alert('發送時發生問題,建議稍後再試一次或改用電話告知。');
+  });
+
+  document.getElementById('dcStaySummaryToggleBtn').addEventListener('click', async () => {
+    const wrap = document.getElementById('dcStaySummaryPanelWrap');
+    const willOpen = wrap.style.display === 'none';
+    wrap.style.display = willOpen ? 'block' : 'none';
+    if (willOpen){
+      const snap = await getDoc(doc(db, 'daycare', currentDaycareId));
+      const data = snap.exists() ? snap.data() : {};
+      document.getElementById('dcStaySummaryLastCleanCard').innerHTML = `
+        <div style="display:flex;gap:6px;"><span style="width:118px;flex-shrink:0;">🚽 最後清潔尿尿時間</span><span>:${data.lastPeeCleanTime || '這次入托沒有相關紀錄'}</span></div>
+        <div style="display:flex;gap:6px;"><span style="width:118px;flex-shrink:0;">💩 最後清潔便便時間</span><span>:${data.lastPoopCleanTime || '這次入托沒有相關紀錄'}</span></div>
+      `;
+      document.getElementById('dcStaySummaryAutoText').value = data.dcStaySummary || '';
+      document.getElementById('dcStaySummarySpecialText').value = data.dcStaySummarySpecialNote || '';
+    }
+  });
+
+  document.getElementById('dcStaySummarySaveBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('dcStaySummarySaveBtn');
+    const autoText = document.getElementById('dcStaySummaryAutoText').value.trim();
+    const specialText = document.getElementById('dcStaySummarySpecialText').value.trim();
+    await guardedSubmit(btn, '儲存', async () => {
+      await updateDoc(doc(db, 'daycare', currentDaycareId), {
+        dcStaySummary: autoText || null,
+        dcStaySummarySpecialNote: specialText || null
+      });
+    });
+  });
+
+  document.getElementById('dcPickupCardToggleBtn').addEventListener('click', () => {
+    const wrap = document.getElementById('dcPickupCardPanelWrap');
+    wrap.style.display = wrap.style.display === 'none' ? 'block' : 'none';
+  });
+
+  document.getElementById('dcReprintPickupCardBtn').addEventListener('click', async () => {
+    const snap = await getDoc(doc(db, 'daycare', currentDaycareId));
+    const record = snap.exists() ? snap.data() : {};
+    const { verifyToken, qrImageUrl, stale } = getDaycarePickupQr(record, currentDaycareId);
+    showPickupCard(currentDaycareId, verifyToken);
+    if (stale) persistDaycarePickupQrInBackground(currentDaycareId, verifyToken, qrImageUrl);
+  });
+
+  document.getElementById('dcResendPickupQrBtn').addEventListener('click', async () => {
+    const snap = await getDoc(doc(db, 'daycare', currentDaycareId));
+    const record = snap.exists() ? snap.data() : {};
+    if (!record.phone){ alert('這筆安親紀錄沒有家長手機號碼,無法傳送。'); return; }
+    const { verifyToken, qrImageUrl, stale } = getDaycarePickupQr(record, currentDaycareId);
+    if (stale) persistDaycarePickupQrInBackground(currentDaycareId, verifyToken, qrImageUrl);
+    const result = await sendLineImage(record.phone, qrImageUrl, verifyToken);
+    if (result && result.sent) alert('已傳送接回小卡給家長。');
+    else alert('傳送時發生問題,建議改用列印或稍後再試一次。');
+  });
+
+  function printDaycare(meta, itemsText, notesText, entries, summaryInfo){
+    const sorted = (entries || []).slice().sort((a,b) => (a.createdAtMs || 0) - (b.createdAtMs || 0));
+    let daysHtml = '';
+    sorted.forEach(e => {
+      daysHtml += `<div class="pentry"><span class="ptime">${e.time}</span><span class="pcat">${e.slot}${e.staff ? '・' + e.staff : ''}</span><div class="pcontent">${e.content}</div></div>`;
+    });
+    if (!daysHtml) daysHtml = '<p>目前尚無紀錄</p>';
+
+    let summaryPageHtml = '';
+    if (summaryInfo){
+      summaryPageHtml = `
+        <div class="summary-page">
+          <h1>(inn)heart 日托重點摘要</h1>
+          <div class="meta">${meta}</div>
+          <table class="summary-table">
+            <tr><th>最後清潔尿尿時間</th><td>${summaryInfo.lastPeeCleanTime || '這次入托沒有相關紀錄'}</td></tr>
+            <tr><th>最後清潔便便時間</th><td>${summaryInfo.lastPoopCleanTime || '這次入托沒有相關紀錄'}</td></tr>
+            <tr><th>本次日托重點</th><td>${summaryInfo.dcStaySummary || '尚未填寫日托重點摘要'}</td></tr>
+            <tr><th>特殊交代事項</th><td>${summaryInfo.dcStaySummarySpecialNote || '無'}</td></tr>
+          </table>
+        </div>
+      `;
+    }
+
+    document.getElementById('printArea').innerHTML = `
+      <h1>(inn)heart 寶貝日托紀錄</h1>
+      <div class="meta">${meta}<br>列印時間:${new Date().toLocaleString('zh-TW')}</div>
+      <h2 style="margin-top:8px;">攜帶物品</h2>
+      <p>${itemsText}</p>
+      <h2>特殊注意事項</h2>
+      <p>${notesText}</p>
+      ${daysHtml}
+      ${summaryPageHtml}
+    `;
+    window.print();
+  }
+
+  document.getElementById('dcPrintBtn').addEventListener('click', async () => {
+    const snap = await getDoc(doc(db, 'daycare', currentDaycareId));
+    const data = snap.exists() ? snap.data() : {};
+    const meta = (data.name || '寶貝') + '・' + (currentDaycareArea === 'cat' ? '貓貓' : '狗狗') + '・入托時間 ' + (data.checkinTime || '');
+    const itemsText = data.items ? [...(data.items.list || []), ...(data.items.other ? ['其他:' + data.items.other] : [])].join('、') : '無';
+    const notesText = data.checkinNote || '無';
+    printDaycare(meta, itemsText, notesText, data.entries || [], {
+      lastPeeCleanTime: data.lastPeeCleanTime || null,
+      lastPoopCleanTime: data.lastPoopCleanTime || null,
+      dcStaySummary: data.dcStaySummary || null,
+      dcStaySummarySpecialNote: data.dcStaySummarySpecialNote || null
+    });
+  });
+
+  // The dog/cat watch-item bullets, broken into individually toggleable lines so staff can
+  // pick exactly which ones apply before copying the homecoming message to send manually —
+  // unlike boarding, daycare checkout never auto-sends anything.
+  function dcHomecomingItems(area){
+    if (area === 'dog'){
+      return [
+        { id: 'feed', label: '🍚 吃飯提醒', text: '🍚 吃飯｜回家後是否願意進食,食慾有沒有慢慢回到平常' },
+        { id: 'water', label: '💧 喝水提醒', text: '💧 喝水｜是否有正常攝取水分,是否突然明顯異常' },
+        { id: 'toilet', label: '🚽 大小便觀察提醒', text: '🚽 大小便｜是否有正常尿尿、便便,狀態是否和平常差不多' },
+        { id: 'spirit', label: '💤 精神狀態提醒', text: '💤 精神｜休息後是否能正常活動、互動' },
+        { id: 'behavior', label: '🐕 行為觀察提醒', text: '🐕 行為｜是否逐漸恢復平常的個性與生活節奏' },
+        { id: 'vet', label: '⚠️ 異常就醫提醒', text: '若出現持續不吃不喝、反覆嘔吐／腹瀉、明顯精神不佳、疼痛、呼吸異常或其他明顯異常,建議儘早諮詢獸醫師。' }
+      ];
+    }
+    return [
+      { id: 'feed', label: '🍚 吃飯提醒', text: '🍚 吃飯｜回家後是否願意進食,食慾有沒有慢慢回到平常' },
+      { id: 'water', label: '💧 水分提醒', text: '💧 水分｜是否有正常攝取水分,也可以一起觀察尿尿情況' },
+      { id: 'toilet', label: '🚽 貓砂觀察提醒', text: '🚽 貓砂｜是否有正常尿尿、便便,有沒有頻繁進出貓砂盆' },
+      { id: 'spirit', label: '😺 精神狀態提醒', text: '😺 精神｜休息後是否仍能正常活動、探索' },
+      { id: 'behavior', label: '🤎 行為觀察提醒', text: '🤎 行為｜是否慢慢恢復原本的生活節奏' },
+      { id: 'vet', label: '⚠️ 異常就醫提醒', text: '若出現持續拒食、反覆嘔吐／腹瀉、明顯精神不佳、呼吸異常、疼痛,或一直進出貓砂盆卻無法正常排尿,建議儘早諮詢獸醫師。' }
+    ];
+  }
+
+  function buildDcCheckoutCopyText(data, checkedItems){
+    const lines = [];
+    lines.push((data.area === 'dog' ? '🐶' : '🐱') + ' ' + (data.name || '寶貝') + ' 回家囉｜返家小叮嚀');
+    if (checkedItems.length){
+      lines.push('');
+      checkedItems.forEach(it => lines.push(it.text));
+    }
+    lines.push('');
+    lines.push('📋 日托重點摘要');
+    lines.push('🚽 最後清潔尿尿時間:' + (data.lastPeeCleanTime || '這次入托沒有相關紀錄'));
+    lines.push('💩 最後清潔便便時間:' + (data.lastPoopCleanTime || '這次入托沒有相關紀錄'));
+    lines.push('');
+    lines.push('本次日托重點:');
+    lines.push((data.dcStaySummary && data.dcStaySummary.trim()) || '今天狀況穩定,沒有特別異常紀錄。');
+    if (data.dcStaySummarySpecialNote){
+      lines.push('');
+      lines.push('特殊交代事項:');
+      lines.push(data.dcStaySummarySpecialNote);
+    }
+    return lines.join('\n');
+  }
+
+  function renderDcReminderChecklist(area){
+    const items = dcHomecomingItems(area);
+    const listEl = document.getElementById('dcReminderChecklist');
+    listEl.innerHTML = items.map(it => `
+      <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink);">
+        <input type="checkbox" class="dc-reminder-check" data-id="${it.id}" checked> ${it.label}
+      </label>
+    `).join('');
+  }
+
+  function refreshDcCheckoutModalText(data){
+    const items = dcHomecomingItems(data.area);
+    const checkedIds = Array.from(document.querySelectorAll('.dc-reminder-check:checked')).map(c => c.dataset.id);
+    const checkedItems = items.filter(it => checkedIds.includes(it.id));
+    document.getElementById('dcCheckoutCopyModalText').value = buildDcCheckoutCopyText(data, checkedItems);
   }
 
   document.getElementById('dcCheckoutBtn').addEventListener('click', () => {
@@ -17658,13 +18953,40 @@ var qrcode = function() {
 
   document.getElementById('dcCheckoutConfirmBtn').addEventListener('click', () => guardedSubmit(document.getElementById('dcCheckoutConfirmBtn'), '離店處理', async () => {
     const food = document.getElementById('dcCheckoutFood').value.trim();
+    const snap = await getDoc(doc(db, 'daycare', currentDaycareId));
+    const data = snap.exists() ? snap.data() : {};
+
     await updateDoc(doc(db, 'daycare', currentDaycareId), {
       status: 'done', checkoutFood: food, checkoutAt: new Date().toLocaleString('zh-TW')
     });
     showScreen('screenDaycareList');
     await loadDaycareList();
-    alert('已完成離店。');
+
+    // No auto-send here (unlike boarding) — staff pick which reminder lines to include,
+    // then copy the assembled message and paste it into LINE themselves.
+    renderDcReminderChecklist(data.area);
+    refreshDcCheckoutModalText(data);
+    document.querySelectorAll('.dc-reminder-check').forEach(cb => cb.addEventListener('change', () => refreshDcCheckoutModalText(data)));
+    document.getElementById('dcCheckoutReminderModal').style.display = 'flex';
   }));
+
+  document.getElementById('dcCheckoutCopyModalCopyBtn').addEventListener('click', async () => {
+    const textEl = document.getElementById('dcCheckoutCopyModalText');
+    textEl.select();
+    try {
+      await navigator.clipboard.writeText(textEl.value);
+      const btn = document.getElementById('dcCheckoutCopyModalCopyBtn');
+      const original = btn.textContent;
+      btn.textContent = '已複製!';
+      setTimeout(() => { btn.textContent = original; }, 1500);
+    } catch (err){
+      document.execCommand('copy');
+    }
+  });
+
+  document.getElementById('dcCheckoutCopyModalCloseBtn').addEventListener('click', () => {
+    document.getElementById('dcCheckoutReminderModal').style.display = 'none';
+  });
 </script>
 </body>
 </html>
