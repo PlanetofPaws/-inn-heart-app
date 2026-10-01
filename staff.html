@@ -379,28 +379,6 @@
     </div>
 
     <div class="field">
-      <label>時段紀錄(點選要登打的時段)</label>
-      <div class="chip-row" id="dcSlotTabs" style="flex-wrap:wrap;">
-        <div class="chip active" data-slot="🍱飲食與排泄">🍱飲食與排泄</div>
-        <div class="chip" data-slot="🐕社交與行為觀察">🐕社交與行為觀察</div>
-        <div class="chip" data-slot="🎯散步時段">🎯散步時段</div>
-        <div class="chip" data-slot="午餐時間">午餐時間</div>
-        <div class="chip" data-slot="💤休息與情緒調節">💤休息與情緒調節</div>
-        <div class="chip" data-slot="🐾環境刺激與社交反應">🐾環境刺激與社交反應</div>
-        <div class="chip" data-slot="疲勞度與回家狀態">疲勞度與回家狀態</div>
-        <div class="chip" data-slot="🎯每日訓練">🎯每日訓練</div>
-        <div class="chip warn" data-slot="⚠️特殊事件">⚠️特殊事件</div>
-      </div>
-    </div>
-
-    <div id="dcSlotFormArea"></div>
-
-    <div class="today-section">
-      <h2>今日紀錄</h2>
-      <div id="dcLogList"><div class="empty-note">目前還沒有紀錄</div></div>
-    </div>
-
-    <div class="field">
       <button id="dcConfirmLineBoundBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);width:100%;font-size:11px;">✅ 已確認綁定此家長LINE</button>
     </div>
     <div class="field">
@@ -430,8 +408,7 @@
 
     <div class="field" id="dcCheckoutPanel" style="display:none;">
       <label>離店前確認</label>
-      <input type="text" id="dcCheckoutFood" placeholder="今日餵食量,例如:完食 / 剩餘50g">
-      <label style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:12.5px;color:var(--ink);">
+      <label style="display:flex;align-items:center;gap:8px;margin-top:4px;font-size:12.5px;color:var(--ink);">
         <input type="checkbox" id="dcCheckoutItemsConfirm"> 已確認交還所有物品
       </label>
       <div class="submit-row">
@@ -441,15 +418,35 @@
     <div class="field">
       <button class="small-btn" id="dcCheckoutBtn" style="background:var(--danger);width:100%;">辦理離店</button>
     </div>
+
+    <div class="field">
+      <label>時段紀錄(點選要登打的時段)</label>
+      <div class="chip-row" id="dcSlotTabs" style="flex-wrap:wrap;">
+        <div class="chip active" data-slot="🍱飲食與排泄">🍱飲食與排泄</div>
+        <div class="chip" data-slot="🐕社交與行為觀察">🐕社交與行為觀察</div>
+        <div class="chip" data-slot="🎯散步時段">🎯散步時段</div>
+        <div class="chip" data-slot="💤休息與情緒調節">💤休息與情緒調節</div>
+        <div class="chip" data-slot="🐾環境刺激與社交反應">🐾環境刺激與社交反應</div>
+        <div class="chip" data-slot="疲勞度與回家狀態">疲勞度與回家狀態</div>
+        <div class="chip" data-slot="🎯每日訓練">🎯每日訓練</div>
+        <div class="chip warn" data-slot="⚠️特殊事件">⚠️特殊事件</div>
+      </div>
+    </div>
+
+    <div id="dcSlotFormArea"></div>
+
+    <div class="today-section">
+      <h2>今日紀錄</h2>
+      <div class="summary-strip" id="dcSummaryStrip"></div>
+      <div id="dcLogList"><div class="empty-note">目前還沒有紀錄</div></div>
+    </div>
   </div>
 
   <div id="dcCheckoutReminderModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:999;align-items:center;justify-content:center;padding:20px;">
     <div style="background:#fff;border-radius:18px;padding:20px;max-width:420px;width:100%;max-height:85vh;overflow-y:auto;">
-      <div style="font-size:16px;font-weight:700;margin-bottom:4px;">🏠 返家小叮嚀｜勾選要傳送的項目</div>
-      <div style="font-size:11px;color:var(--ink-soft);margin-bottom:12px;">勾選完畢後按「複製文字」,再手動貼到LINE傳給家長即可,系統不會自動傳送。</div>
-      <div id="dcReminderChecklist" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;"></div>
-      <div class="divider" style="margin:4px 0 10px;">📋 日托重點摘要(一併附上)</div>
-      <textarea id="dcCheckoutCopyModalText" readonly style="width:100%;min-height:160px;font-size:12.5px;line-height:1.6;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);"></textarea>
+      <div style="font-size:16px;font-weight:700;margin-bottom:4px;">🏠 返家小叮嚀</div>
+      <div style="font-size:11px;color:var(--ink-soft);margin-bottom:12px;">已整理成一段文字,按「複製文字」後手動貼到LINE傳給家長即可,系統不會自動傳送。</div>
+      <textarea id="dcCheckoutCopyModalText" readonly style="width:100%;min-height:220px;font-size:12.5px;line-height:1.6;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);"></textarea>
       <div style="display:flex;gap:10px;margin-top:14px;">
         <button id="dcCheckoutCopyModalCopyBtn" style="flex:1;padding:12px;border-radius:12px;border:none;background:var(--pine);color:#fff;font-weight:700;font-size:13.5px;cursor:pointer;">複製文字</button>
         <button id="dcCheckoutCopyModalCloseBtn" style="flex:1;padding:12px;border-radius:12px;border:1px solid var(--line);background:#fff;color:var(--ink);font-weight:700;font-size:13.5px;cursor:pointer;">關閉</button>
@@ -17760,7 +17757,7 @@ var qrcode = function() {
   const dcSlotFieldMap = {
     '🍱飲食與排泄': 'feedtoilet',
     '🐕社交與行為觀察': 'social',
-    '🎯散步時段': 'walk', '午餐時間': 'meal', '💤休息與情緒調節': 'rest',
+    '🎯散步時段': 'walk', '💤休息與情緒調節': 'rest',
     '🐾環境刺激與社交反應': 'reactivity', '疲勞度與回家狀態': 'postwalk',
     '🎯每日訓練': 'training',
     '⚠️特殊事件': 'special'
@@ -17987,24 +17984,6 @@ var qrcode = function() {
         <div class="field"><label>說明(選填)</label><textarea id="dcWalkNote"></textarea></div>
         <div class="submit-row"><button class="submit-btn" id="dcSlotSubmitBtn">送出散步時段紀錄</button></div>
       `;
-    } else if (kind === 'meal'){
-      area.innerHTML = `
-        <div class="field"><label>餵食量</label><input type="text" id="dcMealAmount" placeholder="例如:100g"></div>
-        <div class="sub-group">
-          <span class="glabel">進食狀況</span>
-          <div class="chip-row" data-group="dcMealState">
-            <div class="chip" data-val="完食">完食</div>
-            <div class="chip warn" data-val="剩餘">剩餘</div>
-          </div>
-        </div>
-        <div class="field" id="dcMealLeftoverWrap" style="display:none;"><label>剩餘量</label><input type="text" id="dcMealLeftover"></div>
-        <div class="submit-row"><button class="submit-btn" id="dcSlotSubmitBtn">送出這筆紀錄</button></div>
-      `;
-      document.querySelectorAll('.chip-row[data-group="dcMealState"] .chip').forEach(chip => {
-        chip.addEventListener('chipchange', () => {
-          document.getElementById('dcMealLeftoverWrap').style.display = (chip.classList.contains('active') && chip.dataset.val === '剩餘') ? 'block' : 'none';
-        });
-      });
     } else if (kind === 'social'){
       area.innerHTML = `
         <div class="divider" style="margin:0 0 10px;">同類互動(${isDcCat() ? '貓貓' : '犬隻'}社交能力)</div>
@@ -18407,6 +18386,7 @@ var qrcode = function() {
     await guardedSubmit(btn, '送出', async () => {
       let content = '', warn = false;
       let docUpdates = {};
+      let grams = null, waterMl = null, peeGrams = null, peeCount = null, peeDiaperGrams = null, poopGrams = null;
       if (kind === 'feedtoilet'){
         const isCat = currentDaycareArea === 'cat';
         const parts = [];
@@ -18424,14 +18404,17 @@ var qrcode = function() {
         }
 
         const foods = chipVals('dcFtFood');
+        let foodTotal = 0;
         if (foods.includes('乾糧')){
           const fed = numVal('dcFtDryFed') || 0;
           const discard = numVal('dcFtDryDiscard');
           const keep = numVal('dcFtDryKeep');
           const prevPending = dcData.pendingDryGrams || 0;
+          let consumed = 0;
           let newPending = prevPending + fed;
-          if (keep !== null) newPending = keep + fed;
-          else if (discard !== null) newPending = fed;
+          if (keep !== null){ consumed = Math.max(prevPending - keep, 0); newPending = keep + fed; }
+          else if (discard !== null){ consumed = Math.max(prevPending - discard, 0); newPending = fed; }
+          foodTotal += consumed;
           docUpdates.pendingDryGrams = Math.max(newPending, 0);
           if (fed) parts.push('乾糧加了' + fed + 'g');
           if (discard !== null) parts.push('乾糧原本剩餘' + discard + 'g已經倒掉');
@@ -18439,14 +18422,19 @@ var qrcode = function() {
         }
         if (foods.includes('濕食')){
           const served = numVal('dcFtWetGrams') || 0, left = numVal('dcFtWetLeftover') || 0;
+          const prevPendingWet = dcData.pendingWetGrams || 0;
+          foodTotal += Math.max(prevPendingWet - left, 0);
           docUpdates.pendingWetGrams = served;
           parts.push('濕食餵了' + served + 'g' + (left ? '，剩餘' + left + 'g已倒掉' : ''));
         }
         if (foods.includes('鮮食')){
           const served = numVal('dcFtFreshGrams') || 0, left = numVal('dcFtFreshLeftover') || 0;
+          const prevPendingFresh = dcData.pendingFreshGrams || 0;
+          foodTotal += Math.max(prevPendingFresh - left, 0);
           docUpdates.pendingFreshGrams = served;
           parts.push('鮮食餵了' + served + 'g' + (left ? '，剩餘' + left + 'g已倒掉' : ''));
         }
+        if (foods.length) grams = foodTotal;
 
         const snackItem = txtVal('dcFtSnackItem');
         const snackTiming = txtVal('dcFtSnackTiming');
@@ -18459,6 +18447,8 @@ var qrcode = function() {
         const waterGive = numVal('dcFtWaterGiveMl');
         const waterDiscard = numVal('dcFtWaterDiscardMl');
         if (waterGive !== null || waterDiscard !== null){
+          const prevPendingWater = dcData.pendingWaterMl || 0;
+          waterMl = Math.max(prevPendingWater - (waterDiscard || 0), 0);
           docUpdates.pendingWaterMl = waterGive || 0;
           if (waterGive !== null) parts.push('換了新的水，給了' + waterGive + 'ML');
           if (waterDiscard !== null) parts.push('原本水碗剩' + waterDiscard + 'ML已倒掉');
@@ -18470,6 +18460,7 @@ var qrcode = function() {
           const pg = numVal('dcFtPeeCatGrams');
           const peeColor = chipVal('dcFtPeeCatColor');
           if (pg !== null){
+            peeGrams = pg;
             parts.push('尿尿約' + pg + 'g' + (peeColor ? '，顏色' + peeColor : ''));
             if (peeColor === '異常') warn = true;
             if (pg > 0) docUpdates.lastPeeCleanTime = nowTimeStr;
@@ -18479,6 +18470,7 @@ var qrcode = function() {
           const poopColor = chipVal('dcFtPoopCatColor');
           const poopTexture = chipVal('dcFtPoopCatTexture');
           if (bg !== null){
+            poopGrams = bg;
             const bits = [poopColor ? '顏色' + poopColor : null, poopTexture ? '性質' + poopTexture : null].filter(Boolean);
             parts.push('便便約' + bg + 'g' + (bits.length ? '，' + bits.join('、') : ''));
             if (poopColor === '異常' || (poopTexture && poopTexture !== '正常')) warn = true;
@@ -18488,14 +18480,15 @@ var qrcode = function() {
           if (document.getElementById('dcFtPeeDogNone').checked){ parts.push('目前還沒觀察到尿尿，會再留意追蹤'); warn = true; }
           const peeType = chipVal('dcFtPeeDogType');
           const peeColorDog = chipVal('dcFtPeeDogColor');
-          if (peeType === '尿布墊'){ const g = numVal('dcFtPeeDogPadGrams'); if (g !== null){ parts.push('尿布墊尿量約' + g + 'g' + (peeColorDog ? '，顏色' + peeColorDog : '')); docUpdates.lastPeeCleanTime = nowTimeStr; } }
-          if (peeType === '戶外'){ const c = numVal('dcFtPeeDogOutCount'); if (c !== null){ parts.push('戶外尿尿' + c + '次' + (peeColorDog ? '，顏色' + peeColorDog : '')); docUpdates.lastPeeCleanTime = nowTimeStr; } }
+          if (peeType === '尿布墊'){ const g = numVal('dcFtPeeDogPadGrams'); if (g !== null){ peeDiaperGrams = g; parts.push('尿布墊尿量約' + g + 'g' + (peeColorDog ? '，顏色' + peeColorDog : '')); docUpdates.lastPeeCleanTime = nowTimeStr; } }
+          if (peeType === '戶外'){ const c = numVal('dcFtPeeDogOutCount'); if (c !== null){ peeCount = c; parts.push('戶外尿尿' + c + '次' + (peeColorDog ? '，顏色' + peeColorDog : '')); docUpdates.lastPeeCleanTime = nowTimeStr; } }
           if (peeColorDog === '異常') warn = true;
           if (document.getElementById('dcFtPoopDogNone').checked){ parts.push('目前還沒觀察到便便，會再留意追蹤'); warn = true; }
           const padPoop = numVal('dcFtPoopDogPadGrams') || 0, outPoop = numVal('dcFtPoopDogOutGrams') || 0;
           const poopColorDog = chipVal('dcFtPoopDogColor');
           const poopTextureDog = chipVal('dcFtPoopDogTexture');
           if (padPoop || outPoop){
+            poopGrams = padPoop + outPoop;
             const bits = [poopColorDog ? '顏色' + poopColorDog : null, poopTextureDog ? '性質' + poopTextureDog : null].filter(Boolean);
             parts.push('便便尿布墊' + padPoop + 'g、戶外' + outPoop + 'g' + (bits.length ? '，' + bits.join('、') : ''));
             if (poopColorDog === '異常' || (poopTextureDog && poopTextureDog !== '正常')) warn = true;
@@ -18530,13 +18523,6 @@ var qrcode = function() {
         if (note) parts.push(note);
         if (!parts.length) throw new Error('請至少填寫一項散步時段紀錄');
         content = parts.join('，');
-      } else if (kind === 'meal'){
-        const amount = document.getElementById('dcMealAmount').value.trim();
-        const state = chipVal('dcMealState');
-        if (!amount || !state) throw new Error('請填寫餵食量與進食狀況');
-        const leftover = document.getElementById('dcMealLeftover').value.trim();
-        content = '餵食量' + amount + '，' + state + (state === '剩餘' && leftover ? '(剩餘' + leftover + ')' : '');
-        warn = state === '剩餘';
       } else if (kind === 'social'){
         const parts = [];
         const willingness = chipVal('dcSocialWillingness');
@@ -18707,6 +18693,12 @@ var qrcode = function() {
 
       const now = new Date();
       const entry = { slot, time: now.toTimeString().slice(0,5), content, warn, staff: currentStaffName || '未填寫', createdAtMs: now.getTime() };
+      if (grams !== null) entry.grams = grams;
+      if (waterMl !== null) entry.waterMl = waterMl;
+      if (peeGrams !== null) entry.peeGrams = peeGrams;
+      if (peeCount !== null) entry.peeCount = peeCount;
+      if (peeDiaperGrams !== null) entry.peeDiaperGrams = peeDiaperGrams;
+      if (poopGrams !== null) entry.poopGrams = poopGrams;
       if (dcEntryPhotos.length){
         const photoUrls = [];
         for (const file of dcEntryPhotos){
@@ -18728,6 +18720,26 @@ var qrcode = function() {
     const snap = await getDoc(doc(db, 'daycare', currentDaycareId));
     const data = snap.data();
     const entries = (data.entries || []).slice().sort((a,b) => (b.createdAtMs||0) - (a.createdAtMs||0));
+
+    const totalGrams = entries.reduce((s,e) => s + (e.grams || 0), 0);
+    const totalWater = entries.reduce((s,e) => s + (e.waterMl || 0), 0);
+    const totalPoop = entries.reduce((s,e) => s + (e.poopGrams || 0), 0);
+    let summaryHtml = `
+      <div class="summary-item"><div class="num">${totalGrams}g</div><div class="lbl">今日進食量</div></div>
+      <div class="summary-item"><div class="num">${totalWater}ml</div><div class="lbl">今日飲水量</div></div>
+      <div class="summary-item"><div class="num">${totalPoop}g</div><div class="lbl">今日排便量</div></div>
+    `;
+    if (currentDaycareArea === 'cat'){
+      const totalPeeGrams = entries.reduce((s,e) => s + (e.peeGrams || 0), 0);
+      summaryHtml += `<div class="summary-item"><div class="num">${totalPeeGrams}g</div><div class="lbl">今日排尿量</div></div>`;
+    } else {
+      const totalPeeDiaper = entries.reduce((s,e) => s + (e.peeDiaperGrams || 0), 0);
+      const totalPeeCount = entries.reduce((s,e) => s + (e.peeCount || 0), 0);
+      summaryHtml += `<div class="summary-item"><div class="num">${totalPeeDiaper}g</div><div class="lbl">尿布墊排尿</div></div>`;
+      summaryHtml += `<div class="summary-item"><div class="num">${totalPeeCount}次</div><div class="lbl">戶外排尿</div></div>`;
+    }
+    document.getElementById('dcSummaryStrip').innerHTML = summaryHtml;
+
     const listEl = document.getElementById('dcLogList');
     if (!entries.length){ listEl.innerHTML = '<div class="empty-note">目前還沒有紀錄</div>'; return; }
     listEl.innerHTML = entries.map(e => `
@@ -18750,7 +18762,6 @@ var qrcode = function() {
     if (data.avatarUrl){ document.getElementById('dcRecordAvatar').src = data.avatarUrl; document.getElementById('dcRecordAvatar').style.display = 'block'; }
     else { document.getElementById('dcRecordAvatar').style.display = 'none'; }
     document.getElementById('dcCheckoutPanel').style.display = 'none';
-    document.getElementById('dcCheckoutFood').value = '';
     document.getElementById('dcCheckoutItemsConfirm').checked = false;
     document.getElementById('dcStaySummaryPanelWrap').style.display = 'none';
     document.getElementById('dcPickupCardPanelWrap').style.display = 'none';
@@ -18920,53 +18931,32 @@ var qrcode = function() {
     return lines.join('\n');
   }
 
-  function renderDcReminderChecklist(area){
-    const items = dcHomecomingItems(area);
-    const listEl = document.getElementById('dcReminderChecklist');
-    listEl.innerHTML = items.map(it => `
-      <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink);">
-        <input type="checkbox" class="dc-reminder-check" data-id="${it.id}" checked> ${it.label}
-      </label>
-    `).join('');
-  }
-
-  function refreshDcCheckoutModalText(data){
-    const items = dcHomecomingItems(data.area);
-    const checkedIds = Array.from(document.querySelectorAll('.dc-reminder-check:checked')).map(c => c.dataset.id);
-    const checkedItems = items.filter(it => checkedIds.includes(it.id));
-    document.getElementById('dcCheckoutCopyModalText').value = buildDcCheckoutCopyText(data, checkedItems);
-  }
-
   document.getElementById('dcCheckoutBtn').addEventListener('click', () => {
     const panel = document.getElementById('dcCheckoutPanel');
     panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
     const confirmBtn = document.getElementById('dcCheckoutConfirmBtn');
     function checkReady(){
-      const ready = document.getElementById('dcCheckoutFood').value.trim() && document.getElementById('dcCheckoutItemsConfirm').checked;
+      const ready = document.getElementById('dcCheckoutItemsConfirm').checked;
       confirmBtn.disabled = !ready;
       confirmBtn.style.opacity = ready ? '1' : '0.5';
     }
-    document.getElementById('dcCheckoutFood').oninput = checkReady;
     document.getElementById('dcCheckoutItemsConfirm').onchange = checkReady;
     checkReady();
   });
 
   document.getElementById('dcCheckoutConfirmBtn').addEventListener('click', () => guardedSubmit(document.getElementById('dcCheckoutConfirmBtn'), '離店處理', async () => {
-    const food = document.getElementById('dcCheckoutFood').value.trim();
     const snap = await getDoc(doc(db, 'daycare', currentDaycareId));
     const data = snap.exists() ? snap.data() : {};
 
     await updateDoc(doc(db, 'daycare', currentDaycareId), {
-      status: 'done', checkoutFood: food, checkoutAt: new Date().toLocaleString('zh-TW')
+      status: 'done', checkoutAt: new Date().toLocaleString('zh-TW')
     });
     showScreen('screenDaycareList');
     await loadDaycareList();
 
-    // No auto-send here (unlike boarding) — staff pick which reminder lines to include,
-    // then copy the assembled message and paste it into LINE themselves.
-    renderDcReminderChecklist(data.area);
-    refreshDcCheckoutModalText(data);
-    document.querySelectorAll('.dc-reminder-check').forEach(cb => cb.addEventListener('change', () => refreshDcCheckoutModalText(data)));
+    // No auto-send here (unlike boarding) — staff get one fully assembled block of text,
+    // which they copy and paste into LINE themselves.
+    document.getElementById('dcCheckoutCopyModalText').value = buildDcCheckoutCopyText(data, dcHomecomingItems(data.area));
     document.getElementById('dcCheckoutReminderModal').style.display = 'flex';
   }));
 
