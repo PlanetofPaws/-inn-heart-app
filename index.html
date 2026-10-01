@@ -116,7 +116,24 @@
 
   <div class="screen" id="screenDaycare">
     <div class="topbar"><span id="daycareBackLink" style="text-decoration:underline;cursor:pointer;">← 返回選單</span><span id="phoneEcho4"></span></div>
-    <div id="daycareContent" style="padding:20px 22px;"></div>
+    <div class="pet-tabs" id="daycarePetTabs"></div>
+
+    <div class="hero">
+      <div class="avatar" id="daycareAvatar"></div>
+      <div class="hero-text">
+        <p class="loc" id="daycareLoc"></p>
+        <h1 id="daycareName"></h1>
+      </div>
+    </div>
+
+    <div id="daycareNotesArea"></div>
+    <div id="daycareSnackArea"></div>
+
+    <div class="summary-strip" id="daycareSummaryStrip"></div>
+    <div id="daycareHighlight" style="padding:0 22px 12px;font-size:11.5px;color:var(--ink-soft);"></div>
+
+    <div class="timeline" id="daycareTimeline"></div>
+    <p class="footer-note" style="margin-top:14px;">📷 照片僅在寶貝日托期間保留,離店後會自動清除,文字紀錄則會永久保存。</p>
   </div>
 
   <div class="screen" id="screenHistoryList">
@@ -511,50 +528,128 @@
     document.getElementById('screenMenu').classList.add('active');
   });
 
+  let daycareItems = [];
+  let currentDcIdx = 0;
+
+  function renderDaycarePetTabs(){
+    const wrap = document.getElementById('daycarePetTabs');
+    if (daycareItems.length <= 1){ wrap.innerHTML = ''; return; }
+    wrap.innerHTML = daycareItems.map((it, i) =>
+      `<div class="pet-tab ${i === currentDcIdx ? 'active' : ''}" data-idx="${i}">${it.name}</div>`
+    ).join('');
+    wrap.querySelectorAll('.pet-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        currentDcIdx = parseInt(tab.dataset.idx);
+        renderDaycarePetTabs();
+        renderDaycarePet();
+      });
+    });
+  }
+
+  function formatDcLastCleanLine(it){
+    return `
+      <div style="display:flex;gap:6px;"><span style="width:118px;flex-shrink:0;">🚽 最後清潔尿尿時間</span><span>:${it.lastPeeCleanTime || '這次入托沒有相關紀錄'}</span></div>
+      <div style="display:flex;gap:6px;"><span style="width:118px;flex-shrink:0;">💩 最後清潔便便時間</span><span>:${it.lastPoopCleanTime || '這次入托沒有相關紀錄'}</span></div>
+    `;
+  }
+
+  function renderDaycarePet(){
+    const it = daycareItems[currentDcIdx];
+    const statusText = it.status === 'done' ? '已離店(' + (it.checkoutAt || '') + ')' : '在園中';
+    document.getElementById('daycareName').textContent = it.name;
+    document.getElementById('daycareLoc').textContent = '安親照護・' + statusText;
+
+    const avatarEl = document.getElementById('daycareAvatar');
+    if (it.avatarUrl){
+      avatarEl.style.background = 'none';
+      avatarEl.innerHTML = `<img src="${it.avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:20px;">`;
+    } else {
+      avatarEl.style.background = 'radial-gradient(circle at 30% 30%,#E8DCC8,transparent 60%),linear-gradient(155deg,#D8CBAE,#B9A47D)';
+      avatarEl.innerHTML = '';
+    }
+
+    const notesArea = document.getElementById('daycareNotesArea');
+    notesArea.innerHTML = it.checkinNote ? `<div class="notes-card warn">家長特別交代事項:${it.checkinNote}</div>` : '';
+
+    const snackArea = document.getElementById('daycareSnackArea');
+    snackArea.innerHTML = `
+      <div class="snack-card">
+        <span>想幫牠加點什麼嗎?</span>
+        <a href="https://example.com/hakuke-shop-placeholder" target="_blank" rel="noopener">給寶貝加點小零食</a>
+      </div>`;
+
+    const entries = (it.entries || []).slice().sort((a,b) => (b.createdAtMs||0) - (a.createdAtMs||0));
+
+    document.getElementById('daycareHighlight').innerHTML = formatDcLastCleanLine(it);
+
+    const totalGrams = entries.reduce((s,e) => s + (e.grams || 0), 0);
+    const totalWater = entries.reduce((s,e) => s + (e.waterMl || 0), 0);
+    const totalPoop = entries.reduce((s,e) => s + (e.poopGrams || 0), 0);
+    let summaryHtml = `
+      <div class="summary-item"><div class="num">${totalGrams}g</div><div class="lbl">今日進食量</div></div>
+      <div class="summary-item"><div class="num">${totalWater}ml</div><div class="lbl">今日飲水量</div></div>
+      <div class="summary-item"><div class="num">${totalPoop}g</div><div class="lbl">今日排便量</div></div>
+    `;
+    if ((it.area || 'cat') === 'cat'){
+      const totalPeeGrams = entries.reduce((s,e) => s + (e.peeGrams || 0), 0);
+      summaryHtml += `<div class="summary-item"><div class="num">${totalPeeGrams}g</div><div class="lbl">今日排尿量</div></div>`;
+    } else {
+      const totalPeeDiaper = entries.reduce((s,e) => s + (e.peeDiaperGrams || 0), 0);
+      const totalPeeCount = entries.reduce((s,e) => s + (e.peeCount || 0), 0);
+      summaryHtml += `<div class="summary-item"><div class="num">${totalPeeDiaper}g</div><div class="lbl">尿布墊排尿</div></div>`;
+      summaryHtml += `<div class="summary-item"><div class="num">${totalPeeCount}次</div><div class="lbl">戶外排尿</div></div>`;
+    }
+    document.getElementById('daycareSummaryStrip').innerHTML = summaryHtml;
+
+    const tl = document.getElementById('daycareTimeline');
+    if (!entries.length){
+      tl.innerHTML = '<div class="status-msg">今天還沒有紀錄</div>';
+      return;
+    }
+    tl.innerHTML = entries.map(e => `
+      <div class="entry ${e.warn ? 'warn' : ''}">
+        <div class="time">${e.time}</div>
+        <div class="body">
+          <p class="cat">${e.slot}</p>
+          <p>${e.content}</p>
+          ${(e.photoUrls && e.photoUrls.length) ? e.photoUrls.map(u => '<img src="'+u+'" style="width:100%;max-height:220px;object-fit:cover;border-radius:10px;margin-top:8px;">').join('') : ''}
+        </div>
+      </div>
+    `).join('');
+  }
+
   async function enterDaycareView(){
     document.getElementById('phoneEcho4').textContent = document.getElementById('phoneEcho2').textContent;
     document.getElementById('screenMenu').classList.remove('active');
     document.getElementById('screenDaycare').classList.add('active');
-    const contentEl = document.getElementById('daycareContent');
-    contentEl.innerHTML = '<div class="status-msg">讀取中...</div>';
+    document.getElementById('daycarePetTabs').innerHTML = '';
+    document.getElementById('daycareSummaryStrip').innerHTML = '';
+    document.getElementById('daycareHighlight').innerHTML = '';
+    document.getElementById('daycareNotesArea').innerHTML = '';
+    document.getElementById('daycareSnackArea').innerHTML = '';
+    document.getElementById('daycareTimeline').innerHTML = '<div class="status-msg">讀取中...</div>';
 
     const phone = document.getElementById('phoneEcho2').textContent.replace('家長 ', '');
     try {
       const today = new Date();
       const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
       const snap = await getDocs(query(collection(db, 'daycare'), where('phone', '==', phone), where('checkinDate', '==', todayStr)));
-      const items = [];
-      snap.forEach(d => items.push({ id: d.id, ...d.data() }));
+      daycareItems = [];
+      snap.forEach(d => daycareItems.push({ id: d.id, ...d.data() }));
 
-      if (!items.length){
-        contentEl.innerHTML = '<div class="status-msg">今天還沒有安親紀錄。</div>';
+      if (!daycareItems.length){
+        document.getElementById('daycareName').textContent = '';
+        document.getElementById('daycareLoc').textContent = '';
+        document.getElementById('daycareAvatar').innerHTML = '';
+        document.getElementById('daycareTimeline').innerHTML = '<div class="status-msg">今天還沒有安親紀錄。</div>';
         return;
       }
 
-      contentEl.innerHTML = items.map(it => {
-        const entries = (it.entries || []).slice().sort((a,b) => (b.createdAtMs||0) - (a.createdAtMs||0));
-        const statusText = it.status === 'done' ? '已離店(' + (it.checkoutAt || '') + ')' : '在園中';
-        const entriesHtml = entries.length
-          ? entries.map(e => `
-              <div class="log-entry ${e.warn ? 'warn' : ''}">
-                <div class="meta"><span>${e.time} · ${e.slot}</span></div>
-                <div>${e.content}</div>
-              </div>
-            `).join('')
-          : '<div class="empty-note">目前還沒有紀錄</div>';
-        return `
-          <div class="hero" style="margin-bottom:6px;">
-            ${it.avatarUrl ? '<img src="'+it.avatarUrl+'" class="avatar" style="object-fit:cover;">' : '<div class="avatar"></div>'}
-            <div class="hero-text">
-              <p class="loc">安親照護・${statusText}</p>
-              <h1>${it.name}</h1>
-            </div>
-          </div>
-          <div style="margin:12px 0 24px;">${entriesHtml}</div>
-        `;
-      }).join('<div style="height:1px;background:var(--line);margin:20px 0;"></div>');
+      currentDcIdx = 0;
+      renderDaycarePetTabs();
+      renderDaycarePet();
     } catch (err) {
-      contentEl.innerHTML = '<div class="status-msg" style="color:var(--danger);">讀取失敗:' + err.message + '</div>';
+      document.getElementById('daycareTimeline').innerHTML = '<div class="status-msg" style="color:var(--danger);">讀取失敗:' + err.message + '</div>';
     }
   }
 
