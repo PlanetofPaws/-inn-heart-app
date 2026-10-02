@@ -520,6 +520,14 @@
       </div>
     </div>
 
+    <div id="dupPhoneSection" style="display:none;padding:0 22px 16px;">
+      <div style="background:var(--card);border:1px solid var(--ochre);border-radius:14px;padding:14px;">
+        <div style="font-weight:700;font-size:12.5px;color:var(--ochre);margin-bottom:2px;">🔁 疑似重複的會員資料(手機格式不同)</div>
+        <div style="font-size:10.5px;color:var(--ink-soft);margin-bottom:10px;">以下幾組會員,去掉空格/橫線之後是同一支電話,可能其實是同一位家長。確認是同一人的話,按「合併」會自動把寶貝紀錄、照片、LINE 綁定都搬到同一筆底下。</div>
+        <div id="dupPhoneList"></div>
+      </div>
+    </div>
+
     <div class="member-search">
       <div class="row">
         <input type="text" id="manageSearchInput" placeholder="輸入手機、家長姓名或寶貝名字查詢">
@@ -14067,6 +14075,16 @@ var qrcode = function() {
   const storage = getStorage(app);
   const googleProvider = new GoogleAuthProvider();
 
+  // Strips everything but digits so "0912-345-678", "0912 345 678" and "0912345678" all
+  // resolve to the same key — phone numbers are used as Firestore doc IDs / query filters
+  // throughout this app, and without this, formatting differences silently create duplicate
+  // member records and break LINE-binding lookups.
+  function normalizePhone(raw){
+    let digits = String(raw || '').replace(/\D/g, '');
+    if (digits.startsWith('886') && digits.length === 11) digits = '0' + digits.slice(3);
+    return digits;
+  }
+
   // resize + re-encode an image before upload, to keep Storage usage small
   function compressImage(file, maxDim, quality){
     return new Promise((resolve) => {
@@ -14292,7 +14310,7 @@ var qrcode = function() {
   }
 
   async function tryPrefillCiAvatar(){
-    const phone = document.getElementById('ciMemberNo').value.trim();
+    const phone = normalizePhone(document.getElementById('ciMemberNo').value);
     const petName = document.getElementById('ciPetName').value.trim();
     if (!phone) return;
     const snap = await getDoc(doc(db, 'members', phone));
@@ -14342,8 +14360,8 @@ var qrcode = function() {
 
   document.getElementById('ciSubmitBtn').addEventListener('click', async () => {
     const petName = document.getElementById('ciPetName').value.trim();
-    const phone = document.getElementById('ciMemberNo').value.trim();
-    if (!petName || !phone){ alert('請輸入寶貝名字與家長手機號碼'); return; }
+    const phone = normalizePhone(document.getElementById('ciMemberNo').value);
+    if (!petName || !phone){ alert('請輸入寶貝名字與家長手機號碼(手機請至少輸入數字)'); return; }
 
     const itemsList = Array.from(document.querySelectorAll('.chip-row[data-multigroup="ciItems"] .chip.active')).map(c => c.dataset.val);
     const itemsOther = document.getElementById('ciItemsOther').value.trim();
@@ -16608,6 +16626,11 @@ var qrcode = function() {
     if (!searchTerm) return null;
     const directSnap = await getDoc(doc(db, 'members', searchTerm));
     if (directSnap.exists()) return { phone: searchTerm, member: directSnap.data() };
+    const npSearch = normalizePhone(searchTerm);
+    if (npSearch && npSearch !== searchTerm){
+      const normSnap = await getDoc(doc(db, 'members', npSearch));
+      if (normSnap.exists()) return { phone: npSearch, member: normSnap.data() };
+    }
 
     const allSnap = await getDocs(collection(db, 'members'));
     let found = null;
@@ -16628,9 +16651,10 @@ var qrcode = function() {
       if (r.name && r.name.includes(searchTerm) && r.phone) roomMatchPhone = r.phone;
     });
     if (roomMatchPhone){
-      const snap = await getDoc(doc(db, 'members', roomMatchPhone));
-      if (snap.exists()) return { phone: roomMatchPhone, member: snap.data() };
-      return { phone: roomMatchPhone, member: {} };
+      const np = normalizePhone(roomMatchPhone);
+      const snap = await getDoc(doc(db, 'members', np));
+      if (snap.exists()) return { phone: np, member: snap.data() };
+      return { phone: np, member: {} };
     }
 
     // also check pet names in daycare records (covers customers who only ever did daycare, including older records)
@@ -16642,9 +16666,10 @@ var qrcode = function() {
       if (dc.name && dc.name.includes(searchTerm) && dc.phone) daycareMatchPhone = dc.phone;
     });
     if (daycareMatchPhone){
-      const snap = await getDoc(doc(db, 'members', daycareMatchPhone));
-      if (snap.exists()) return { phone: daycareMatchPhone, member: snap.data() };
-      return { phone: daycareMatchPhone, member: {} };
+      const np = normalizePhone(daycareMatchPhone);
+      const snap = await getDoc(doc(db, 'members', np));
+      if (snap.exists()) return { phone: np, member: snap.data() };
+      return { phone: np, member: {} };
     }
     return null;
   }
@@ -16919,9 +16944,10 @@ var qrcode = function() {
   document.getElementById('mhBackBtn').addEventListener('click', () => showScreen('screenMenu'));
 
   async function findLineBindingsForPhone(phone){
+    const np = normalizePhone(phone);
     const snap = await getDocs(collection(db, 'lineBindings'));
     const ids = [];
-    snap.forEach(d => { if (d.data().phone === phone) ids.push(d.id); });
+    snap.forEach(d => { if (normalizePhone(d.data().phone) === np) ids.push(d.id); });
     return ids;
   }
 
@@ -16951,7 +16977,7 @@ var qrcode = function() {
   document.getElementById('mhReassignBtn').addEventListener('click', async () => {
     if (!currentMemberPhone) return;
     const petName = document.getElementById('mhReassignPetName').value.trim();
-    const newPhone = document.getElementById('mhReassignNewPhone').value.trim();
+    const newPhone = normalizePhone(document.getElementById('mhReassignNewPhone').value);
     if (!petName || !newPhone){ alert('請輸入寶貝名字跟新的手機號碼'); return; }
     if (newPhone === currentMemberPhone){ alert('新舊手機號碼不能一樣'); return; }
     if (!confirm('確定要把「' + petName + '」的入住歷史跟照片,從 ' + currentMemberPhone + ' 轉移到 ' + newPhone + ' 嗎?')) return;
@@ -16964,14 +16990,18 @@ var qrcode = function() {
       const remainingHistory = oldHistory.filter(h => h.petName !== petName);
       const movedAvatar = oldData.petAvatars && oldData.petAvatars[petName];
 
-      // also move any daycare records (active or completed) for this pet under the old phone
-      const daycareSnap = await getDocs(query(collection(db, 'daycare'), where('phone', '==', currentMemberPhone), where('name', '==', petName)));
-      const daycareUpdates = [];
-      daycareSnap.forEach(d => {
-        daycareUpdates.push(updateDoc(doc(db, 'daycare', d.id), { phone: newPhone }));
+      // also move any daycare records (active or completed) for this pet under the old phone —
+      // compare normalized phone so this still finds records saved under a slightly different
+      // format (dashes/spaces) than however currentMemberPhone happens to be written
+      const npOld = normalizePhone(currentMemberPhone);
+      const daycareAllSnap = await getDocs(collection(db, 'daycare'));
+      const daycareMatches = daycareAllSnap.docs.filter(d => {
+        const dc = d.data();
+        return normalizePhone(dc.phone) === npOld && dc.name === petName;
       });
+      const daycareUpdates = daycareMatches.map(d => updateDoc(doc(db, 'daycare', d.id), { phone: newPhone }));
 
-      if (!movedHistory.length && !movedAvatar && daycareSnap.empty){
+      if (!movedHistory.length && !movedAvatar && !daycareMatches.length){
         alert('在這支手機底下找不到叫「' + petName + '」的寶貝紀錄,請確認名字完全一致(含空格、大小寫)。');
         return;
       }
@@ -16981,7 +17011,7 @@ var qrcode = function() {
       const roomUpdates = [];
       roomsSnap.forEach(d => {
         const r = d.data();
-        if (r.phone === currentMemberPhone && r.name === petName){
+        if (normalizePhone(r.phone) === npOld && r.name === petName){
           roomUpdates.push(updateDoc(doc(db, 'rooms', d.id), { phone: newPhone }));
         }
       });
@@ -17028,15 +17058,19 @@ var qrcode = function() {
     await renderMemberManageList();
   });
 
-  document.getElementById('mhPhoneChangeBtn').addEventListener('click', async () => {
-    if (!currentMemberPhone) return;
-    const newPhone = document.getElementById('mhNewPhoneInput').value.trim();
-    if (!newPhone){ alert('請輸入新的手機號碼'); return; }
-    if (newPhone === currentMemberPhone){ alert('新號碼跟原號碼一樣,不需要搬移'); return; }
-    if (!confirm('確定要把「' + currentMemberPhone + '」的資料搬移到「' + newPhone + '」嗎?這個動作無法復原。')) return;
+  // Shared by the manual "變更手機號碼" button and the duplicate-phone scanner's one-click
+  // "合併" button: moves everything under oldPhoneRaw onto newPhoneRaw, merging rather than
+  // overwriting, and migrates rooms/daycare/lineBindings along with it.
+  async function mergeMemberPhones(oldPhoneRaw, newPhoneRaw, opts){
+    opts = opts || {};
+    const oldPhone = oldPhoneRaw;
+    const newPhone = normalizePhone(newPhoneRaw);
+    if (!newPhone){ alert('新的手機號碼無效'); return false; }
+    if (newPhone === normalizePhone(oldPhone)){ alert('新號碼跟原號碼一樣,不需要搬移'); return false; }
+    if (!opts.skipConfirm && !confirm('確定要把「' + oldPhone + '」的資料搬移到「' + newPhone + '」嗎?這個動作無法復原。')) return false;
 
-    const oldSnap = await getDoc(doc(db, 'members', currentMemberPhone));
-    if (!oldSnap.exists()){ alert('找不到原本的資料,請重新查詢一次'); return; }
+    const oldSnap = await getDoc(doc(db, 'members', oldPhone));
+    if (!oldSnap.exists()){ alert('找不到原本的資料,請重新查詢一次'); return false; }
     const oldData = oldSnap.data();
 
     // read the target phone's existing data first (it may already be a real customer with their own pets)
@@ -17052,27 +17086,100 @@ var qrcode = function() {
       history: mergedHistory,
       petAvatars: mergedPetAvatars
     }, { merge: true });
-    await deleteDoc(doc(db, 'members', currentMemberPhone));
+    await deleteDoc(doc(db, 'members', oldPhone));
 
-    // update any currently active room pointing at the old phone
+    // update any currently active room pointing at the old phone (normalized compare, in case
+    // the room's phone field was saved with slightly different formatting)
+    const npOld = normalizePhone(oldPhone);
     const roomsSnap = await getDocs(collection(db, 'rooms'));
     for (const d of roomsSnap.docs){
-      if (d.data().phone === currentMemberPhone){
+      if (normalizePhone(d.data().phone) === npOld){
         await updateDoc(d.ref, { phone: newPhone });
       }
     }
 
+    // migrate every daycare record (active or completed) pointing at the old phone — this was
+    // previously missed entirely, silently orphaning daycare history on every phone merge
+    const daycareSnap = await getDocs(collection(db, 'daycare'));
+    let daycareMovedCount = 0;
+    for (const d of daycareSnap.docs){
+      if (normalizePhone(d.data().phone) === npOld){
+        await updateDoc(d.ref, { phone: newPhone });
+        daycareMovedCount++;
+      }
+    }
+
     // migrate every LINE binding pointing at the old phone (there can be more than one family member)
-    const oldLineIds = await findLineBindingsForPhone(currentMemberPhone);
+    const oldLineIds = await findLineBindingsForPhone(oldPhone);
     for (const id of oldLineIds){
       await setDoc(doc(db, 'lineBindings', id), { phone: newPhone });
     }
 
-    alert('已搬移完成' + (newSnap.exists() ? '(目標號碼原本就有資料,已經合併保留,不會覆蓋掉)' : '') + (oldLineIds.length ? ',並一併更新了 ' + oldLineIds.length + ' 組 LINE 綁定' : '') + '。');
+    alert('已搬移完成' + (newSnap.exists() ? '(目標號碼原本就有資料,已經合併保留,不會覆蓋掉)' : '') + (daycareMovedCount ? ',並搬移了 ' + daycareMovedCount + ' 筆安親紀錄' : '') + (oldLineIds.length ? ',並一併更新了 ' + oldLineIds.length + ' 組 LINE 綁定' : '') + '。');
     openManageEdit(newPhone, { name: newData.name || oldData.name || null, history: mergedHistory, petAvatars: mergedPetAvatars });
     await loadRooms();
     await renderMemberManageList();
+    return true;
+  }
+
+  document.getElementById('mhPhoneChangeBtn').addEventListener('click', async () => {
+    if (!currentMemberPhone) return;
+    await mergeMemberPhones(currentMemberPhone, document.getElementById('mhNewPhoneInput').value);
   });
+
+  async function loadDupPhoneCandidates(){
+    const sectionEl = document.getElementById('dupPhoneSection');
+    const listEl = document.getElementById('dupPhoneList');
+    try {
+      const membersSnap = await getDocs(collection(db, 'members'));
+      const groups = {};
+      membersSnap.forEach(d => {
+        const np = normalizePhone(d.id);
+        if (!np) return;
+        if (!groups[np]) groups[np] = [];
+        groups[np].push({ phone: d.id, data: d.data() });
+      });
+      const dupGroups = Object.values(groups).filter(g => g.length > 1);
+      if (!dupGroups.length){
+        sectionEl.style.display = 'none';
+        return;
+      }
+      sectionEl.style.display = 'block';
+      listEl.innerHTML = dupGroups.map((g, gi) => {
+        const rowsHtml = g.map((entry, i) => {
+          const petNames = Array.from(new Set((entry.data.history || []).map(h => h.petName).filter(Boolean)));
+          return `<div style="font-size:11px;margin-bottom:${i === g.length - 1 ? 0 : 6}px;">・「${entry.phone}」${entry.data.name ? '(' + entry.data.name + ')' : ''}${petNames.length ? '・' + petNames.join('、') : '(尚無住宿紀錄,可能只有安親紀錄)'}</div>`;
+        }).join('');
+        return `
+          <div class="member-row" data-group-idx="${gi}" style="margin-bottom:10px;">
+            ${rowsHtml}
+            <div class="mactions" style="margin-top:8px;">
+              <button class="dup-merge-btn" style="background:var(--pine);color:#fff;">合併這組</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+      listEl.querySelectorAll('.dup-merge-btn').forEach(btn => {
+        btn.addEventListener('click', async (ev) => {
+          const gi = parseInt(ev.target.closest('.member-row').dataset.groupIdx);
+          const g = dupGroups[gi];
+          // merge every entry in the group onto the one with the most history (likely the
+          // long-standing, correctly-used record), normalized to a clean digits-only phone
+          const primary = g.slice().sort((a,b) => (b.data.history||[]).length - (a.data.history||[]).length)[0];
+          const target = normalizePhone(primary.phone);
+          if (!confirm('確定要把這組 ' + g.length + ' 筆資料全部合併到「' + target + '」嗎?這個動作無法復原。')) return;
+          for (const entry of g){
+            if (entry.phone === target) continue;
+            await mergeMemberPhones(entry.phone, target, { skipConfirm: true });
+          }
+          await loadDupPhoneCandidates();
+        });
+      });
+    } catch (err) {
+      sectionEl.style.display = 'block';
+      listEl.innerHTML = '<div class="status-msg" style="color:var(--danger);">讀取失敗:' + err.message + '</div>';
+    }
+  }
 
   // ---------- auth ----------
   document.getElementById('googleLoginBtn').addEventListener('click', async () => {
@@ -17292,6 +17399,7 @@ var qrcode = function() {
     currentMemberPhone = null;
     renderMemberManageList();
     loadPendingBindings();
+    loadDupPhoneCandidates();
   });
 
   async function refreshPendingBindingsBadge(){
@@ -17483,15 +17591,18 @@ var qrcode = function() {
         getDocs(collection(db, 'daycare'))
       ]);
 
+      // Keyed by NORMALIZED phone so a binding or daycare record saved under a slightly
+      // different format ("0912-345-678" vs "0912345678") still matches this member row.
       const lineCountByPhone = {};
-      bindingsSnap.forEach(d => { lineCountByPhone[d.data().phone] = (lineCountByPhone[d.data().phone] || 0) + 1; });
+      bindingsSnap.forEach(d => { const np = normalizePhone(d.data().phone); lineCountByPhone[np] = (lineCountByPhone[np] || 0) + 1; });
 
       const daycarePetsByPhone = {};
       daycareSnap.forEach(d => {
         const dc = d.data();
         if (!dc.phone || !dc.name) return;
-        if (!daycarePetsByPhone[dc.phone]) daycarePetsByPhone[dc.phone] = new Set();
-        daycarePetsByPhone[dc.phone].add(dc.name);
+        const np = normalizePhone(dc.phone);
+        if (!daycarePetsByPhone[np]) daycarePetsByPhone[np] = new Set();
+        daycarePetsByPhone[np].add(dc.name);
       });
 
       if (membersSnap.empty){
@@ -17503,14 +17614,15 @@ var qrcode = function() {
       const membersByPhone = {};
       membersSnap.forEach(d => {
         const phone = d.id;
+        const np = normalizePhone(phone);
         const m = d.data();
         membersByPhone[phone] = m;
         const petNames = new Set();
         (m.history || []).forEach(h => { if (h.petName) petNames.add(h.petName); });
-        Object.values(allRooms).forEach(r => { if (r.phone === phone && r.name) petNames.add(r.name); });
-        (daycarePetsByPhone[phone] || []).forEach(n => petNames.add(n));
+        Object.values(allRooms).forEach(r => { if (normalizePhone(r.phone) === np && r.name) petNames.add(r.name); });
+        (daycarePetsByPhone[np] || []).forEach(n => petNames.add(n));
         const petText = petNames.size ? Array.from(petNames).join('、') : '（尚無寶貝紀錄）';
-        const lineCount = lineCountByPhone[phone] || 0;
+        const lineCount = lineCountByPhone[np] || 0;
 
         html += `
           <div class="member-row" data-phone="${phone}">
@@ -17653,7 +17765,7 @@ var qrcode = function() {
   });
 
   async function tryPrefillDcAvatar(){
-    const phone = document.getElementById('dcMemberNo').value.trim();
+    const phone = normalizePhone(document.getElementById('dcMemberNo').value);
     const petName = document.getElementById('dcPetName').value.trim();
     if (!phone || !petName || dcAvatarFile) return;
     const snap = await getDoc(doc(db, 'members', phone));
@@ -17694,11 +17806,11 @@ var qrcode = function() {
 
   document.getElementById('dcCheckinSubmitBtn').addEventListener('click', () => guardedSubmit(document.getElementById('dcCheckinSubmitBtn'), '送出', async () => {
     const name = document.getElementById('dcPetName').value.trim();
-    const phone = document.getElementById('dcMemberNo').value.trim();
+    const phone = normalizePhone(document.getElementById('dcMemberNo').value);
     const memberName = document.getElementById('dcMemberName').value.trim();
     const area = chipVal('dcArea');
     if (!area){ throw new Error('請選擇寶貝種類(貓貓/狗狗)'); }
-    if (!name || !phone){ throw new Error('請填寫寶貝名字跟家長手機'); }
+    if (!name || !phone){ throw new Error('請填寫寶貝名字跟家長手機(手機請至少輸入數字)'); }
 
     let avatarUrl = dcExistingAvatarUrl;
     if (dcAvatarFile){
