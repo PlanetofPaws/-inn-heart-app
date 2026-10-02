@@ -101,7 +101,7 @@
       <div style="text-align:center;margin-top:40px;">
         <a href="https://planetofpaws.github.io/-inn-heart-app/staff.html" style="font-size:9.5px;color:var(--ink-soft);opacity:0.4;text-decoration:underline;">員工後台</a>
       </div>
-      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:8px;">版本 2026-10-03-1</div>
+      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:8px;">版本 2026-10-03-2</div>
     </div>
   </div>
 
@@ -374,6 +374,16 @@
     return true;
   }
 
+  // Races any promise against a hard timeout, so a step that silently hangs forever (a stalled
+  // Firestore connection, a LIFF SDK call that never settles inside some in-app browsers) still
+  // surfaces as a clear error instead of leaving the UI frozen with no feedback at all.
+  function withTimeout(promise, ms, label){
+    return Promise.race([
+      promise,
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout:' + label)), ms))
+    ]);
+  }
+
   document.getElementById('loginBtn').addEventListener('click', async () => {
     const note = document.getElementById('loginNote');
     const phone = normalizePhone(document.getElementById('phoneInput').value);
@@ -381,10 +391,10 @@
     note.textContent = '查詢中...';
     try {
       // run the LINE identity check and the phone lookup at the same time instead of one after another
-      const [, found] = await Promise.all([liffReadyPromise, fetchStaysForPhone(phone)]);
+      const [, found] = await withTimeout(Promise.all([liffReadyPromise, fetchStaysForPhone(phone)]), 15000, 'lookup');
       if (!found){ note.textContent = '目前查不到這支手機號碼的任何入住紀錄,請確認號碼是否正確,或洽詢櫃檯。'; return; }
       if (pendingLineUserId){
-        const result = await bindOrRequestApproval(pendingLineUserId, phone);
+        const result = await withTimeout(bindOrRequestApproval(pendingLineUserId, phone), 15000, 'bind');
         pendingLineUserId = null;
         if (result.pending){
           note.textContent = '這支電話號碼已經有其他 LINE 帳號綁定過,為了保護寶貝的照護紀錄,已送出申請給店家審核,審核通過後才能查看紀錄。';
@@ -394,10 +404,13 @@
       finalizeEntry(phone);
     } catch (err){
       // Never leave the note stuck on "查詢中...": surface whatever went wrong (most likely a
-      // Firestore permission error on pendingLineBindings/lineBindings) so this is diagnosable
-      // instead of silently hanging forever.
+      // Firestore permission error on pendingLineBindings/lineBindings, or a stalled connection
+      // inside LINE's in-app browser) so this is diagnosable instead of silently hanging forever.
       pendingLineUserId = null;
-      note.textContent = '查詢時發生問題(' + (err && err.code ? err.code : (err && err.message) || err) + '),請稍後再試一次或洽詢櫃檯。';
+      const msg = err && err.message && err.message.startsWith('timeout:')
+        ? '查詢逾時,可能是網路不穩定或目前瀏覽器環境的問題。請點右上角「⋮」選「在瀏覽器中開啟」改用手機原生瀏覽器再試一次,或洽詢櫃檯。'
+        : '查詢時發生問題(' + (err && err.code ? err.code : (err && err.message) || err) + '),請稍後再試一次或洽詢櫃檯。';
+      note.textContent = msg;
     }
   });
 
@@ -405,7 +418,10 @@
   let liffReadyPromise = (async function tryLineAutoLogin(){
     if (typeof liff === 'undefined') return; // not loaded (e.g. offline), fall back to manual login
     try {
-      await liff.init({ liffId: '2011605439-ZiNr1cLk' });
+      // liff.init() has been observed to hang (never resolve or reject) inside some in-app
+      // browser contexts instead of failing cleanly — time it out so a stuck LIFF init can't
+      // block the manual phone-login path (which awaits this same liffReadyPromise) forever.
+      await withTimeout(liff.init({ liffId: '2011605439-ZiNr1cLk' }), 10000, 'liffInit');
       if (!liff.isLoggedIn()){
         liff.login();
         return; // page will redirect through LINE login and reload
