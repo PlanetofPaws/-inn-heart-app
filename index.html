@@ -332,7 +332,10 @@
       await setDoc(doc(db, 'lineBindings', lineUserId), { phone });
       return { pending: false };
     }
-    // someone else already bound this phone: queue for staff approval instead of binding automatically
+    // someone else already bound this phone: queue for staff approval instead of binding automatically.
+    // This write needs Firestore Security Rules to allow create/update on pendingLineBindings for
+    // an unauthenticated LIFF visitor — if the rules don't cover this collection, setDoc below throws
+    // (e.g. "permission-denied") and the caller's catch block will surface that instead of hanging.
     await setDoc(doc(db, 'pendingLineBindings', lineUserId), { phone, requestedAt: serverTimestamp() });
     return { pending: true };
   }
@@ -344,7 +347,14 @@
 
     // first time binding via LINE: remember this LINE account so next visit skips the phone screen
     if (pendingLineUserId){
-      const result = await bindOrRequestApproval(pendingLineUserId, phone);
+      let result;
+      try {
+        result = await bindOrRequestApproval(pendingLineUserId, phone);
+      } catch (err){
+        pendingLineUserId = null;
+        alert('送出審核申請時發生問題(' + (err && err.code ? err.code : err) + '),請稍後再試一次或洽詢櫃檯。');
+        return true; // handled (shown an error), caller should not keep spinning
+      }
       pendingLineUserId = null;
       if (result.pending){
         alert('這支電話號碼已經有其他 LINE 帳號綁定過,為了保護寶貝的照護紀錄,需要店家審核通過後才能查看,已經送出申請,請等候店家聯繫或審核完成後再重新打開。');
@@ -361,18 +371,26 @@
     const phone = normalizePhone(document.getElementById('phoneInput').value);
     if (!phone){ note.textContent = '請輸入手機號碼'; return; }
     note.textContent = '查詢中...';
-    // run the LINE identity check and the phone lookup at the same time instead of one after another
-    const [, found] = await Promise.all([liffReadyPromise, fetchStaysForPhone(phone)]);
-    if (!found){ note.textContent = '目前查不到這支手機號碼的任何入住紀錄,請確認號碼是否正確,或洽詢櫃檯。'; return; }
-    if (pendingLineUserId){
-      const result = await bindOrRequestApproval(pendingLineUserId, phone);
-      pendingLineUserId = null;
-      if (result.pending){
-        note.textContent = '這支電話號碼已經有其他 LINE 帳號綁定過,為了保護寶貝的照護紀錄,已送出申請給店家審核,審核通過後才能查看紀錄。';
-        return;
+    try {
+      // run the LINE identity check and the phone lookup at the same time instead of one after another
+      const [, found] = await Promise.all([liffReadyPromise, fetchStaysForPhone(phone)]);
+      if (!found){ note.textContent = '目前查不到這支手機號碼的任何入住紀錄,請確認號碼是否正確,或洽詢櫃檯。'; return; }
+      if (pendingLineUserId){
+        const result = await bindOrRequestApproval(pendingLineUserId, phone);
+        pendingLineUserId = null;
+        if (result.pending){
+          note.textContent = '這支電話號碼已經有其他 LINE 帳號綁定過,為了保護寶貝的照護紀錄,已送出申請給店家審核,審核通過後才能查看紀錄。';
+          return;
+        }
       }
+      finalizeEntry(phone);
+    } catch (err){
+      // Never leave the note stuck on "查詢中...": surface whatever went wrong (most likely a
+      // Firestore permission error on pendingLineBindings/lineBindings) so this is diagnosable
+      // instead of silently hanging forever.
+      pendingLineUserId = null;
+      note.textContent = '查詢時發生問題(' + (err && err.code ? err.code : (err && err.message) || err) + '),請稍後再試一次或洽詢櫃檯。';
     }
-    finalizeEntry(phone);
   });
 
   // ---------- LINE LIFF auto-login ----------
