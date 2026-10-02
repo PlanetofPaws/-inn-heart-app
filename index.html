@@ -208,6 +208,14 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
+  // Must match the same helper in staff.html — strips everything but digits so
+  // "0912-345-678" / "0912 345 678" / "0912345678" all resolve to the same key.
+  function normalizePhone(raw){
+    let digits = String(raw || '').replace(/\D/g, '');
+    if (digits.startsWith('886') && digits.length === 11) digits = '0' + digits.slice(3);
+    return digits;
+  }
+
   let myStays = [];
   let myDaycareHistory = [];
   let globalMihomeUrl = null;
@@ -239,19 +247,28 @@
   let pendingLineUserId = null;
   let myLineUserId = null;
 
-  async function fetchStaysForPhone(phone){
+  async function fetchStaysForPhone(phoneRaw){
+    const np = normalizePhone(phoneRaw);
+
     const snap = await getDocs(collection(db, 'rooms'));
     myStays = [];
     snap.forEach(d => {
       const data = d.data();
-      if (data.phone === phone) myStays.push({ id: d.id, ...data, isActive: true });
+      if (normalizePhone(data.phone) === np) myStays.push({ id: d.id, ...data, isActive: true });
     });
 
-    const memberSnap = await getDoc(doc(db, 'members', phone));
+    // Look up the member doc by scanning + comparing normalized phone, instead of a direct
+    // getDoc by raw string, so this still finds the record even if it was saved under a
+    // slightly different format (dashes/spaces) than however this phone was just typed.
+    let memberData = null;
+    try {
+      const membersSnap = await getDocs(collection(db, 'members'));
+      membersSnap.forEach(d => { if (!memberData && normalizePhone(d.id) === np) memberData = d.data(); });
+    } catch (err) { /* best-effort */ }
     let memberAvatarUrl = null;
-    if (memberSnap.exists()){
-      memberAvatarUrl = memberSnap.data().avatarUrl || null;
-      const history = memberSnap.data().history || [];
+    if (memberData){
+      memberAvatarUrl = memberData.avatarUrl || null;
+      const history = memberData.history || [];
       history.slice().reverse().forEach(h => {
         myStays.push({
           id: h.roomId, area: h.area, no: h.no, name: h.petName,
@@ -263,12 +280,22 @@
     myStays.forEach(s => { if (s.isActive && !s.avatarUrl) s.avatarUrl = memberAvatarUrl; });
 
     myDaycareHistory = [];
+    let hasAnyDaycare = false;
     try {
-      const dcSnap = await getDocs(query(collection(db, 'daycare'), where('phone', '==', phone), where('status', '==', 'done')));
-      dcSnap.forEach(d => myDaycareHistory.push({ id: d.id, ...d.data() }));
-    } catch (err) { /* daycare history is best-effort; ignore failures here */ }
+      // Fetch the whole daycare collection and compare normalized phone client-side (rather
+      // than a server-side where('phone','==',...) query) so this also matches records saved
+      // under a different phone format, and so an active (not yet checked out) visit still
+      // counts as "found" — only the completed ones go into myDaycareHistory for 歷史查詢.
+      const dcSnap = await getDocs(collection(db, 'daycare'));
+      dcSnap.forEach(d => {
+        const data = d.data();
+        if (normalizePhone(data.phone) !== np) return;
+        hasAnyDaycare = true;
+        if (data.status === 'done') myDaycareHistory.push({ id: d.id, ...data });
+      });
+    } catch (err) { /* daycare lookup is best-effort; ignore failures here */ }
 
-    return myStays.length > 0 || myDaycareHistory.length > 0;
+    return myStays.length > 0 || hasAnyDaycare;
   }
 
   function finalizeEntry(phone){
@@ -288,19 +315,30 @@
     }
   }
 
-  async function bindOrRequestApproval(lineUserId, phone){
-    const existingSnap = await getDocs(query(collection(db, 'lineBindings'), where('phone', '==', phone)));
-    if (existingSnap.empty){
+  async function bindOrRequestApproval(lineUserId, phoneRaw){
+    const phone = normalizePhone(phoneRaw);
+    // scan + compare normalized, rather than a server-side where('phone','==',...) query, so
+    // this still catches an existing binding saved under a slightly different phone format
+    const allBindingsSnap = await getDocs(collection(db, 'lineBindings'));
+    const existing = allBindingsSnap.docs.filter(d => normalizePhone(d.data().phone) === phone);
+    if (!existing.length){
       // no one has bound this phone yet: safe to bind immediately
       await setDoc(doc(db, 'lineBindings', lineUserId), { phone });
       return { pending: false };
     }
-    // someone already bound this phone: queue for staff approval instead of binding automatically
+    if (existing.length === 1 && existing[0].id === lineUserId){
+      // this LINE account already holds the binding (e.g. re-confirming after a phone-format
+      // mismatch) — just make sure it's stored in normalized form, no approval needed
+      await setDoc(doc(db, 'lineBindings', lineUserId), { phone });
+      return { pending: false };
+    }
+    // someone else already bound this phone: queue for staff approval instead of binding automatically
     await setDoc(doc(db, 'pendingLineBindings', lineUserId), { phone, requestedAt: serverTimestamp() });
     return { pending: true };
   }
 
-  async function enterWithPhone(phone){
+  async function enterWithPhone(phoneRaw){
+    const phone = normalizePhone(phoneRaw);
     const found = await fetchStaysForPhone(phone);
     if (!found) return false;
 
@@ -320,7 +358,7 @@
 
   document.getElementById('loginBtn').addEventListener('click', async () => {
     const note = document.getElementById('loginNote');
-    const phone = document.getElementById('phoneInput').value.trim();
+    const phone = normalizePhone(document.getElementById('phoneInput').value);
     if (!phone){ note.textContent = '請輸入手機號碼'; return; }
     note.textContent = '查詢中...';
     // run the LINE identity check and the phone lookup at the same time instead of one after another
@@ -352,7 +390,15 @@
       const bindingSnap = await getDoc(doc(db, 'lineBindings', lineUserId));
       if (bindingSnap.exists()){
         document.getElementById('loginNote').textContent = '';
-        await enterWithPhone(bindingSnap.data().phone);
+        const ok = await enterWithPhone(bindingSnap.data().phone);
+        if (!ok){
+          // Bound phone no longer matches any record (e.g. it was typed with different
+          // formatting somewhere along the way). Fall back to asking for the phone again
+          // so a successful manual login can self-heal the binding, instead of leaving
+          // the customer stuck re-typing their phone every single visit with no explanation.
+          pendingLineUserId = lineUserId;
+          document.getElementById('loginNote').textContent = '您先前綁定的電話目前查不到紀錄,請重新輸入手機號碼,系統會自動更新綁定。';
+        }
       } else {
         pendingLineUserId = lineUserId;
         document.getElementById('loginNote').textContent = '第一次使用,請輸入手機號碼完成綁定,之後就不用再輸入了。';
@@ -629,13 +675,16 @@
     document.getElementById('daycareSnackArea').innerHTML = '';
     document.getElementById('daycareTimeline').innerHTML = '<div class="status-msg">讀取中...</div>';
 
-    const phone = document.getElementById('phoneEcho2').textContent.replace('家長 ', '');
+    const phone = normalizePhone(document.getElementById('phoneEcho2').textContent.replace('家長 ', ''));
     try {
       const today = new Date();
       const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
-      const snap = await getDocs(query(collection(db, 'daycare'), where('phone', '==', phone), where('checkinDate', '==', todayStr)));
+      const snap = await getDocs(collection(db, 'daycare'));
       daycareItems = [];
-      snap.forEach(d => daycareItems.push({ id: d.id, ...d.data() }));
+      snap.forEach(d => {
+        const data = d.data();
+        if (normalizePhone(data.phone) === phone && data.checkinDate === todayStr) daycareItems.push({ id: d.id, ...data });
+      });
 
       if (!daycareItems.length){
         document.getElementById('daycareName').textContent = '';
