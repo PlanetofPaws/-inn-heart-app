@@ -186,7 +186,7 @@
       </button>
       <div id="cameraSettingLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:8px;">設定小米 App 連結</div>
       <div id="staffManageLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:4px;">管理員後台</div>
-      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:20px;">版本 2026-09-21-daycare1</div>
+      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:20px;">版本 2026-10-03-1</div>
     </div>
   </div>
 
@@ -16952,17 +16952,32 @@ var qrcode = function() {
     return ids;
   }
 
+  // Like findLineBindingsForPhone, but returns the full doc data (displayName/pictureUrl included
+  // when the parent side has captured them) so staff can tell WHO each binding belongs to instead
+  // of just a bare LINE user ID string.
+  async function findLineBindingDocsForPhone(phone){
+    const np = normalizePhone(phone);
+    const snap = await getDocs(collection(db, 'lineBindings'));
+    const out = [];
+    snap.forEach(d => { if (normalizePhone(d.data().phone) === np) out.push({ id: d.id, ...d.data() }); });
+    return out;
+  }
+
   async function refreshManageLineIdsList(){
     const statusEl = document.getElementById('manageLineStatus');
     const listEl = document.getElementById('manageLineIdsList');
     statusEl.textContent = '讀取中...';
     listEl.innerHTML = '';
-    const ids = await findLineBindingsForPhone(currentMemberPhone);
-    statusEl.textContent = ids.length ? ('已綁定 ' + ids.length + ' 組 LINE 帳號(審核或刪除請看下方清單)') : '尚未綁定任何 LINE 帳號';
-    listEl.innerHTML = ids.map(id => `
+    const docs = await findLineBindingDocsForPhone(currentMemberPhone);
+    statusEl.textContent = docs.length ? ('已綁定 ' + docs.length + ' 組 LINE 帳號(審核或刪除請看下方清單)') : '尚未綁定任何 LINE 帳號';
+    listEl.innerHTML = docs.map(b => `
       <div style="display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:10px;padding:7px 10px;margin-bottom:6px;">
-        <div style="flex:1;font-size:10.5px;word-break:break-all;color:var(--ink-soft);">${id}</div>
-        <button class="mhLineIdDeleteBtn" data-line-id="${id}" style="background:var(--danger-soft);color:var(--danger);border:none;border-radius:8px;padding:5px 10px;font-size:10.5px;cursor:pointer;white-space:nowrap;">刪除這組</button>
+        ${b.pictureUrl ? `<img src="${b.pictureUrl}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;">` : '<div style="width:28px;height:28px;border-radius:50%;background:var(--card);flex-shrink:0;"></div>'}
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:12px;font-weight:600;">${b.displayName || '(未取得LINE暱稱，可能是較早期綁定的帳號)'}</div>
+          <div style="font-size:9.5px;word-break:break-all;color:var(--ink-soft);">${b.id}</div>
+        </div>
+        <button class="mhLineIdDeleteBtn" data-line-id="${b.id}" style="background:var(--danger-soft);color:var(--danger);border:none;border-radius:8px;padding:5px 10px;font-size:10.5px;cursor:pointer;white-space:nowrap;flex-shrink:0;">刪除這組</button>
       </div>
     `).join('');
   }
@@ -17446,6 +17461,10 @@ var qrcode = function() {
       snap.forEach(d => items.push({ id: d.id, ...d.data() }));
       listEl.innerHTML = items.map(it => `
         <div class="member-row" data-line-id="${it.id}">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+            ${it.pictureUrl ? `<img src="${it.pictureUrl}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;">` : '<div style="width:32px;height:32px;border-radius:50%;background:var(--card);flex-shrink:0;"></div>'}
+            <div style="font-size:13px;font-weight:600;">${it.displayName || '(未取得LINE暱稱)'}</div>
+          </div>
           <div class="mline">申請綁定的手機:<b>${it.phone}</b></div>
           <div class="mline">LINE 帳號 ID:<b style="font-size:10px;word-break:break-all;">${it.id}</b></div>
           <div class="mactions">
@@ -17459,8 +17478,8 @@ var qrcode = function() {
           const row = ev.target.closest('.member-row');
           const lineId = row.dataset.lineId;
           const item = items.find(it => it.id === lineId);
-          if (!confirm('確認核准這組 LINE 帳號綁定「' + item.phone + '」這支電話嗎?核准後,這個 LINE 帳號下次打開就能直接看到這支電話的紀錄,不用再輸入手機號碼。')) return;
-          await setDoc(doc(db, 'lineBindings', lineId), { phone: item.phone });
+          if (!confirm('確認核准這組 LINE 帳號(' + (item.displayName || lineId) + ')綁定「' + item.phone + '」這支電話嗎?核准後,這個 LINE 帳號下次打開就能直接看到這支電話的紀錄,不用再輸入手機號碼。')) return;
+          await setDoc(doc(db, 'lineBindings', lineId), { phone: item.phone, displayName: item.displayName || null, pictureUrl: item.pictureUrl || null });
           await deleteDoc(doc(db, 'pendingLineBindings', lineId));
           await loadPendingBindings();
           await refreshPendingBindingsBadge();
