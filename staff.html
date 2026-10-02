@@ -550,8 +550,9 @@
       <div style="background:var(--card);border-radius:14px;padding:14px;margin-bottom:12px;">
         <div style="font-weight:700;font-size:12.5px;margin-bottom:2px;">💬 LINE 綁定狀態</div>
         <div id="manageLineStatus" style="font-size:11.5px;color:var(--ink-soft);margin-bottom:8px;">讀取中...</div>
-        <button id="mhUnbindLineBtn" style="background:var(--danger-soft);color:var(--danger);border:none;border-radius:12px;padding:9px 16px;font-size:11.5px;cursor:pointer;width:100%;">解除 LINE 綁定</button>
-        <div style="font-size:10px;color:var(--ink-soft);margin-top:6px;">只解除連結,不影響入住紀錄或姓名資料,家長可以重新綁定。</div>
+        <div id="manageLineIdsList" style="margin-bottom:8px;"></div>
+        <button id="mhUnbindLineBtn" style="background:var(--danger-soft);color:var(--danger);border:none;border-radius:12px;padding:9px 16px;font-size:11.5px;cursor:pointer;width:100%;">解除全部 LINE 綁定</button>
+        <div style="font-size:10px;color:var(--ink-soft);margin-top:6px;">只解除連結,不影響入住紀錄或姓名資料,家長可以重新綁定。多組綁定時可以上面單獨刪除某一組,不用整批解除。</div>
       </div>
 
       <div style="background:var(--card);border-radius:14px;padding:14px;margin-bottom:12px;border:1px solid var(--danger-soft);">
@@ -16951,26 +16952,46 @@ var qrcode = function() {
     return ids;
   }
 
+  async function refreshManageLineIdsList(){
+    const statusEl = document.getElementById('manageLineStatus');
+    const listEl = document.getElementById('manageLineIdsList');
+    statusEl.textContent = '讀取中...';
+    listEl.innerHTML = '';
+    const ids = await findLineBindingsForPhone(currentMemberPhone);
+    statusEl.textContent = ids.length ? ('已綁定 ' + ids.length + ' 組 LINE 帳號(審核或刪除請看下方清單)') : '尚未綁定任何 LINE 帳號';
+    listEl.innerHTML = ids.map(id => `
+      <div style="display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:10px;padding:7px 10px;margin-bottom:6px;">
+        <div style="flex:1;font-size:10.5px;word-break:break-all;color:var(--ink-soft);">${id}</div>
+        <button class="mhLineIdDeleteBtn" data-line-id="${id}" style="background:var(--danger-soft);color:var(--danger);border:none;border-radius:8px;padding:5px 10px;font-size:10.5px;cursor:pointer;white-space:nowrap;">刪除這組</button>
+      </div>
+    `).join('');
+  }
+
   function openManageEdit(phone, member){
     currentMemberPhone = phone;
     document.getElementById('manageEditPanel').style.display = 'block';
     document.getElementById('manageEditPhone').textContent = '編輯中:' + phone;
     document.getElementById('mhNameInput').value = (member && member.name) || '';
     document.getElementById('mhNewPhoneInput').value = '';
-    const statusEl = document.getElementById('manageLineStatus');
-    statusEl.textContent = '讀取中...';
-    findLineBindingsForPhone(phone).then(ids => {
-      statusEl.textContent = ids.length ? ('已綁定 ' + ids.length + ' 組 LINE 帳號') : '尚未綁定任何 LINE 帳號';
-    });
+    refreshManageLineIdsList();
   }
+
+  document.getElementById('manageLineIdsList').addEventListener('click', async (e) => {
+    const btn = e.target.closest('.mhLineIdDeleteBtn');
+    if (!btn) return;
+    const lineId = btn.dataset.lineId;
+    if (!confirm('確定要刪除這一組 LINE 帳號(' + lineId + ')的綁定嗎?這個帳號之後要查紀錄需要重新輸入手機號碼綁定。')) return;
+    await deleteDoc(doc(db, 'lineBindings', lineId));
+    await refreshManageLineIdsList();
+  });
 
   document.getElementById('mhUnbindLineBtn').addEventListener('click', async () => {
     if (!currentMemberPhone) return;
     const ids = await findLineBindingsForPhone(currentMemberPhone);
     if (ids.length === 0){ alert('這支手機目前沒有任何 LINE 綁定。'); return; }
-    if (!confirm('確定要解除「' + currentMemberPhone + '」的 LINE 綁定嗎?(共 ' + ids.length + ' 組)入住紀錄跟姓名資料都不會受影響,家長之後可以重新用 LINE 綁定。')) return;
+    if (!confirm('確定要解除「' + currentMemberPhone + '」的全部 LINE 綁定嗎?(共 ' + ids.length + ' 組)入住紀錄跟姓名資料都不會受影響,家長之後可以重新用 LINE 綁定。')) return;
     for (const id of ids){ await deleteDoc(doc(db, 'lineBindings', id)); }
-    document.getElementById('manageLineStatus').textContent = '尚未綁定任何 LINE 帳號';
+    await refreshManageLineIdsList();
     alert('已解除。');
   });
 
@@ -18552,7 +18573,7 @@ var qrcode = function() {
         const snackTiming = txtVal('dcFtSnackTiming');
         const snackReaction = chipVal('dcFtSnackReaction');
         if (snackItem || snackTiming || snackReaction){
-          parts.push('獎勵零食' + (snackItem ? '：' + snackItem : '') + (snackTiming ? '，時機：' + snackTiming : '') + (snackReaction ? '，反應' + snackReaction : ''));
+          parts.push('有給獎勵零食' + (snackItem ? '，是' + snackItem : '') + (snackTiming ? '，時機是' + snackTiming : '') + (snackReaction ? '，反應' + snackReaction : ''));
           if (snackReaction === '無反應') warn = true;
         }
 
@@ -18615,22 +18636,22 @@ var qrcode = function() {
       } else if (kind === 'walk'){
         const parts = [];
         const minutes = numVal('dcWalkMinutes');
-        if (minutes !== null) parts.push('共散步' + minutes + '分鐘');
+        if (minutes !== null) parts.push('這次散步共' + minutes + '分鐘');
         const weather = chipVal('dcWalkWeather');
         if (weather) parts.push('天氣' + weather);
         const route = chipVal('dcWalkRoute');
-        if (route) parts.push('路線:' + route);
+        if (route) parts.push('路線走' + route);
         const waterCount = numVal('dcWalkWaterCount');
         const waterMl = numVal('dcWalkWaterMl');
         if (waterCount !== null || waterMl !== null){
           parts.push('散步中補水' + (waterCount !== null ? waterCount + '次' : '') + (waterMl !== null ? '，飲水量約' + waterMl + 'ML' : ''));
         }
         const leash = chipVal('dcWalkLeash');
-        if (leash){ parts.push('牽繩鬆緊度:' + leash); if (leash === '頻繁暴衝/拉扯牽繩') warn = true; }
+        if (leash){ parts.push('牽繩' + leash); if (leash === '頻繁暴衝/拉扯牽繩') warn = true; }
         const sniff = chipVal('dcWalkSniff');
-        if (sniff){ parts.push('嗅聞品質:' + sniff); if (sniff === '無視環境') warn = true; }
+        if (sniff){ parts.push(sniff); if (sniff === '無視環境') warn = true; }
         const motivation = chipVal('dcWalkMotivation');
-        if (motivation){ parts.push('探索動機:' + motivation); if (motivation !== '好奇且放鬆') warn = true; }
+        if (motivation){ parts.push('探索動機看起來' + motivation); if (motivation !== '好奇且放鬆') warn = true; }
         const note = txtVal('dcWalkNote');
         if (note) parts.push(note);
         if (!parts.length) throw new Error('請至少填寫一項散步時段紀錄');
@@ -18640,30 +18661,30 @@ var qrcode = function() {
         const willingness = chipVal('dcSocialWillingness');
         const willingnessOther = txtVal('dcSocialWillingnessOther');
         if (willingness || willingnessOther){
-          parts.push('社交意願:' + [willingness, willingnessOther].filter(Boolean).join('，'));
+          parts.push('社交上' + [willingness, willingnessOther].filter(Boolean).join('，'));
           if (willingness && ['保持距離/獨行','警戒/防禦行為'].includes(willingness)) warn = true;
         }
         const interaction = chipVal('dcSocialInteraction');
         const interactionOther = txtVal('dcSocialInteractionOther');
         if (interaction || interactionOther){
-          parts.push('互動表現:' + [interaction, interactionOther].filter(Boolean).join('，'));
+          parts.push('跟其他毛孩互動時' + [interaction, interactionOther].filter(Boolean).join('，'));
           if (interaction && ['避開其他毛孩','需要個別隔離'].includes(interaction)) warn = true;
         }
         const playStyle = chipVal('dcPlayStyle');
         if (playStyle){
-          parts.push('玩耍風格:' + playStyle);
+          parts.push('玩耍風格' + playStyle);
           if (playStyle === '容易過度興奮') warn = true;
         }
         const affinity = chipVal('dcHumanAffinity');
         const affinityOther = txtVal('dcHumanAffinityOther');
         if (affinity || affinityOther){
-          parts.push('親人程度:' + [affinity, affinityOther].filter(Boolean).join('，'));
+          parts.push('對人的話' + [affinity, affinityOther].filter(Boolean).join('，'));
           if (affinity === '對特定動作敏感') warn = true;
         }
         const envAdapt = chipVal('dcSocialEnvAdapt');
         const envAdaptOther = txtVal('dcSocialEnvAdaptOther');
         if (envAdapt || envAdaptOther){
-          parts.push('環境適應:' + [envAdapt, envAdaptOther].filter(Boolean).join('，'));
+          parts.push('環境適應上' + [envAdapt, envAdaptOther].filter(Boolean).join('，'));
           if (envAdapt && envAdapt !== '迅速融入環境') warn = true;
         }
         const note = txtVal('dcSocialNoteText');
@@ -18674,11 +18695,11 @@ var qrcode = function() {
         const parts = [];
         const restState = chipVal('dcRestState');
         if (restState){
-          parts.push('午休息狀態:' + restState);
+          parts.push('午休時' + restState);
           if (restState !== '迅速入睡/深層睡眠') warn = true;
         }
         const activities = chipVals('dcDecompressActivity');
-        if (activities.length) parts.push('提供減壓活動:' + activities.join('、'));
+        if (activities.length) parts.push('有提供' + activities.join('、') + '幫助放鬆');
         const note = txtVal('dcRestNoteText');
         if (note) parts.push(note);
         if (!parts.length) throw new Error('請至少填寫一項休息與情緒調節紀錄');
@@ -18690,11 +18711,11 @@ var qrcode = function() {
           const response = chipVals(responseGroup);
           const action = chipVals(actionGroup);
           if (!encounter.length && !response.length && !action.length) return;
-          const bits = [];
-          if (encounter.length) bits.push('遇到:' + encounter.join('、'));
-          if (response.length) bits.push('反應:' + response.join('、'));
-          if (action.length) bits.push('處置:' + action.join('、'));
-          parts.push(label + '(' + bits.join('，') + ')');
+          let sentence = label;
+          if (encounter.length) sentence += '遇到' + encounter.join('、');
+          if (response.length) sentence += (encounter.length ? '，' : '') + '反應是' + response.join('、');
+          if (action.length) sentence += '，當下' + action.join('、');
+          parts.push(sentence);
           if (response.some(v => warnResponses.includes(v))) warn = true;
         }
         reactPart('同類', 'dcReactPeerEncounter', 'dcReactPeerResponse', 'dcReactPeerAction', ['身體僵硬/凝視','低吼/吠叫/暴衝','避開/躲藏']);
@@ -18707,9 +18728,9 @@ var qrcode = function() {
       } else if (kind === 'postwalk'){
         const parts = [];
         const state = chipVal('dcPostwalkState');
-        if (state){ parts.push('散步結束體能狀態:' + state); if (state !== '恰到好處') warn = true; }
+        if (state){ parts.push('散步結束後' + state); if (state !== '恰到好處') warn = true; }
         const care = chipVals('dcPostwalkCare');
-        if (care.length) parts.push('回家後照護:' + care.join('、'));
+        if (care.length) parts.push('回家後已經' + care.join('、'));
         const note = txtVal('dcPostwalkNoteText');
         if (note) parts.push(note);
         if (!parts.length) throw new Error('請至少填寫一項疲勞度與回家狀態評估');
@@ -18720,8 +18741,8 @@ var qrcode = function() {
         const note = txtVal('dcTrainingNote');
         if (!item && !attitude && !note) throw new Error('請至少填寫訓練項目或學習態度');
         const parts = [];
-        if (item) parts.push('訓練項目:' + item);
-        if (attitude){ parts.push('學習態度:' + attitude); if (attitude !== '專注力佳') warn = true; }
+        if (item) parts.push('這次練習了' + item);
+        if (attitude){ parts.push('學習態度' + attitude); if (attitude !== '專注力佳') warn = true; }
         if (note) parts.push(note);
         content = parts.join('，');
       } else if (kind === 'special'){
@@ -18738,13 +18759,13 @@ var qrcode = function() {
             const names = txtVal('dcConflictNames');
             const action = chipVals('dcConflictAction');
             const injured = chipVal('dcConflictInjured');
-            parts.push('毛孩間衝突' + (trigger.length ? '，導火線:' + trigger.join('、') : '') + (names ? '，雙方:' + names : '') + (action.length ? '，處置:' + action.join('、') : '') + (injured ? '，是否受傷:' + injured : ''));
+            parts.push('發生毛孩間衝突' + (names ? '，對象是' + names : '') + (trigger.length ? '，起因是' + trigger.join('、') : '') + (action.length ? '，當下' + action.join('、') : '') + (injured === '有' ? '，有受傷' : injured === '無' ? '，沒有受傷' : ''));
           } else {
             const humanType = chipVals('dcConflictHumanType');
             const trigger = txtVal('dcConflictHumanTrigger');
             const sign = txtVal('dcConflictHumanSign');
             const response = txtVal('dcConflictHumanResponse');
-            parts.push('對人攻擊或防禦行為' + (humanType.length ? '：' + humanType.join('、') : '') + (trigger ? '，觸發動作:' + trigger : '') + (sign ? '，前兆訊號:' + sign : '') + (response ? '，回應方式:' + response : ''));
+            parts.push('出現對人攻擊或防禦行為' + (humanType.length ? '，' + humanType.join('、') : '') + (trigger ? '，觸發動作是' + trigger : '') + (sign ? '，前兆是' + sign : '') + (response ? '，當下處理方式是' + response : ''));
           }
         } else if (cat === '健康意外'){
           const type = chipVal('dcHealthType');
@@ -18752,18 +18773,18 @@ var qrcode = function() {
           if (type === '急性身體不適'){
             const acute = chipVals('dcHealthAcuteType');
             const vomitContent = txtVal('dcHealthVomitContent');
-            parts.push('急性身體不適' + (acute.length ? '：' + acute.join('、') : '') + (vomitContent ? '，嘔吐物內容:' + vomitContent : ''));
+            parts.push('出現急性身體不適' + (acute.length ? '，' + acute.join('、') : '') + (vomitContent ? '，嘔吐物內容是' + vomitContent : ''));
           } else {
             const injury = chipVals('dcHealthInjuryType');
-            parts.push('外傷與意外' + (injury.length ? '：' + injury.join('、') : ''));
+            parts.push('發生外傷或意外' + (injury.length ? '，' + injury.join('、') : ''));
           }
           const foundTime = txtVal('dcHealthFoundTime');
           const woundDesc = txtVal('dcHealthWoundDesc');
           const firstAid = txtVal('dcHealthFirstAid');
           const followup = chipVals('dcHealthFollowup');
-          if (foundTime) parts.push('發現時間:' + foundTime);
-          if (woundDesc) parts.push('傷口位置與大小:' + woundDesc);
-          if (firstAid) parts.push('第一時間處置:' + firstAid);
+          if (foundTime) parts.push('發現時間是' + foundTime);
+          if (woundDesc) parts.push('傷口位置與大小是' + woundDesc);
+          if (firstAid) parts.push('第一時間已經' + firstAid);
           if (followup.length) parts.push(followup.join('、'));
         } else if (cat === '異物吞食'){
           const types = chipVals('dcIngestionType');
@@ -18771,7 +18792,7 @@ var qrcode = function() {
           const material = txtVal('dcIngestionMaterial');
           const spirit = chipVal('dcIngestionSpirit');
           const followup = txtVal('dcIngestionFollowup');
-          parts.push('異物吞食' + (types.length ? '：' + types.join('、') : '') + (time ? '，時間:' + time : '') + (material ? '，材質體積:' + material : '') + (spirit ? '，精神狀態:' + spirit : '') + (followup ? '，排泄觀察:' + followup : ''));
+          parts.push('誤食異物' + (types.length ? '，' + types.join('、') : '') + (time ? '，時間是' + time : '') + (material ? '，材質體積是' + material : '') + (spirit ? '，精神狀態' + spirit : '') + (followup ? '，排泄觀察' + followup : ''));
           if (spirit === '異常') warn = true;
         } else if (cat === '情緒壓力'){
           const types = chipVals('dcStressType');
@@ -18779,14 +18800,14 @@ var qrcode = function() {
           const duration = txtVal('dcStressDuration');
           const soothe = chipVals('dcStressSoothe');
           const effect = chipVal('dcStressEffect');
-          parts.push('極端情緒與壓力反應' + (types.length ? '：' + types.join('、') : '') + (cause ? '，誘發原因:' + cause : '') + (duration ? '，持續時間:' + duration : '') + (soothe.length ? '，安撫手段:' + soothe.join('、') : '') + (effect ? '，效果:' + effect : ''));
+          parts.push('出現極端情緒與壓力反應' + (types.length ? '，' + types.join('、') : '') + (cause ? '，誘發原因是' + cause : '') + (duration ? '，持續了' + duration : '') + (soothe.length ? '，安撫方式用了' + soothe.join('、') : '') + (effect ? '，效果' + effect : ''));
         } else if (cat === '走失設備'){
           const types = chipVals('dcEscapeType');
           const detail = txtVal('dcEscapeDetail');
           const intercepted = chipVal('dcEscapeIntercepted');
           const equipment = txtVal('dcEscapeEquipment');
           const suggestion = txtVal('dcEscapeSuggestion');
-          parts.push('走失風險與設備異常' + (types.length ? '：' + types.join('、') : '') + (detail ? '，經過:' + detail : '') + (intercepted ? '，' + intercepted : '') + (equipment ? '，設備損壞:' + equipment : '') + (suggestion ? '，建議:' + suggestion : ''));
+          parts.push('出現走失風險或設備異常' + (types.length ? '，' + types.join('、') : '') + (detail ? '，經過是' + detail : '') + (intercepted ? '，' + intercepted : '') + (equipment ? '，設備損壞情形是' + equipment : '') + (suggestion ? '，建議' + suggestion : ''));
           if (intercepted === '未能攔截') warn = true;
         } else if (cat === '正面突破'){
           warn = false;
@@ -18794,7 +18815,7 @@ var qrcode = function() {
           const technique = txtVal('dcPositiveTechnique');
           const reward = txtVal('dcPositiveReward');
           if (!context) throw new Error('請填寫突破的情境脈絡');
-          parts.push('行為重大突破與正面轉折：' + context + (technique ? '，引導技巧:' + technique : '') + (reward ? '，獎勵方式:' + reward : ''));
+          parts.push('出現行為重大突破與正面轉折，' + context + (technique ? '，用的引導技巧是' + technique : '') + (reward ? '，獎勵方式是' + reward : ''));
         }
 
         const note = txtVal('dcSpecialNoteText');
@@ -18823,7 +18844,10 @@ var qrcode = function() {
         dcEntryPhotos = [];
       }
       await updateDoc(doc(db, 'daycare', currentDaycareId), { ...docUpdates, entries: arrayUnion(entry) });
-      renderSlotForm(slot);
+      const slotChips = Array.from(document.querySelectorAll('#dcSlotTabs .chip'));
+      const curIdx = slotChips.findIndex(c => c.dataset.slot === slot);
+      const nextChip = (curIdx !== -1 && slotChips.length) ? slotChips[(curIdx + 1) % slotChips.length] : null;
+      renderSlotForm(nextChip ? nextChip.dataset.slot : slot);
       await refreshDcLog();
     });
   }
