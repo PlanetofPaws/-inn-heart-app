@@ -101,6 +101,7 @@
       <div style="text-align:center;margin-top:40px;">
         <a href="https://planetofpaws.github.io/-inn-heart-app/staff.html" style="font-size:9.5px;color:var(--ink-soft);opacity:0.4;text-decoration:underline;">員工後台</a>
       </div>
+      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:8px;">版本 2026-10-03-1</div>
     </div>
   </div>
 
@@ -246,6 +247,8 @@
   let currentIdx = 0;
   let pendingLineUserId = null;
   let myLineUserId = null;
+  let myLineProfile = null; // { displayName, pictureUrl } from liff.getProfile(), used so staff can
+                              // see a real name/photo instead of a bare LINE user ID when reviewing bindings
 
   async function fetchStaysForPhone(phoneRaw){
     const np = normalizePhone(phoneRaw);
@@ -317,26 +320,31 @@
 
   async function bindOrRequestApproval(lineUserId, phoneRaw){
     const phone = normalizePhone(phoneRaw);
+    // Attach the LINE display name/photo when we have it, so staff reviewing bindings see a real
+    // name instead of a bare LINE user ID string they have no way to identify.
+    const profileFields = (lineUserId === myLineUserId && myLineProfile)
+      ? { displayName: myLineProfile.displayName || null, pictureUrl: myLineProfile.pictureUrl || null }
+      : {};
     // scan + compare normalized, rather than a server-side where('phone','==',...) query, so
     // this still catches an existing binding saved under a slightly different phone format
     const allBindingsSnap = await getDocs(collection(db, 'lineBindings'));
     const existing = allBindingsSnap.docs.filter(d => normalizePhone(d.data().phone) === phone);
     if (!existing.length){
       // no one has bound this phone yet: safe to bind immediately
-      await setDoc(doc(db, 'lineBindings', lineUserId), { phone });
+      await setDoc(doc(db, 'lineBindings', lineUserId), { phone, ...profileFields });
       return { pending: false };
     }
     if (existing.length === 1 && existing[0].id === lineUserId){
       // this LINE account already holds the binding (e.g. re-confirming after a phone-format
       // mismatch) — just make sure it's stored in normalized form, no approval needed
-      await setDoc(doc(db, 'lineBindings', lineUserId), { phone });
+      await setDoc(doc(db, 'lineBindings', lineUserId), { phone, ...profileFields });
       return { pending: false };
     }
     // someone else already bound this phone: queue for staff approval instead of binding automatically.
     // This write needs Firestore Security Rules to allow create/update on pendingLineBindings for
     // an unauthenticated LIFF visitor — if the rules don't cover this collection, setDoc below throws
     // (e.g. "permission-denied") and the caller's catch block will surface that instead of hanging.
-    await setDoc(doc(db, 'pendingLineBindings', lineUserId), { phone, requestedAt: serverTimestamp() });
+    await setDoc(doc(db, 'pendingLineBindings', lineUserId), { phone, requestedAt: serverTimestamp(), ...profileFields });
     return { pending: true };
   }
 
@@ -405,9 +413,12 @@
       const profile = await liff.getProfile();
       const lineUserId = profile.userId;
       myLineUserId = lineUserId;
+      myLineProfile = profile;
       const bindingSnap = await getDoc(doc(db, 'lineBindings', lineUserId));
       if (bindingSnap.exists()){
         document.getElementById('loginNote').textContent = '';
+        // keep the stored display name/photo fresh in case it changed since the last visit
+        if (profile.displayName) setDoc(doc(db, 'lineBindings', lineUserId), { displayName: profile.displayName, pictureUrl: profile.pictureUrl || null }, { merge: true }).catch(() => {});
         const ok = await enterWithPhone(bindingSnap.data().phone);
         if (!ok){
           // Bound phone no longer matches any record (e.g. it was typed with different
