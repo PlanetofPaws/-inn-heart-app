@@ -186,7 +186,7 @@
       </button>
       <div id="cameraSettingLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:8px;">設定小米 App 連結</div>
       <div id="staffManageLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:4px;">管理員後台</div>
-      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:20px;">版本 2026-10-03-2</div>
+      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:20px;">版本 2026-10-03-4</div>
     </div>
   </div>
 
@@ -375,6 +375,23 @@
         <div class="loc">安親照護</div>
         <h1 id="dcRecordName" style="margin:0;">-</h1>
         <div class="loc" id="dcRecordMember" style="margin-top:4px;"></div>
+      </div>
+    </div>
+
+    <div class="info-card" id="dcRecordNoteCard" style="display:none;">
+      <div class="info-row alert">
+        <div class="info-text">
+          <div class="info-label">注意事項</div>
+          <div class="info-value" id="dcRecordNoteValue" style="white-space:pre-line;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="info-card" id="dcRecordItemsCard" style="display:none;">
+      <div class="info-row">
+        <div class="info-text">
+          <div class="info-label">攜帶物品</div>
+          <div class="info-value" id="dcRecordItemsValue"></div>
+        </div>
       </div>
     </div>
 
@@ -18549,6 +18566,16 @@ var qrcode = function() {
         });
       });
     }
+    const dcSubmitRow = area.querySelector('.submit-row');
+    if (dcSubmitRow){
+      dcSubmitRow.insertAdjacentHTML('beforebegin', `
+        <div class="field">
+          <label>紀錄時間</label>
+          <input type="datetime-local" id="dcEntryTime">
+        </div>
+      `);
+      document.getElementById('dcEntryTime').value = toDatetimeLocalValue((editEntryData && editEntryData.createdAtMs) ? new Date(editEntryData.createdAtMs) : new Date());
+    }
     document.getElementById('dcSlotSubmitBtn').addEventListener('click', () => submitDcSlotEntry(slot, kind));
     wireDynamicChips(area);
     dcEntryPhotos = [];
@@ -18932,13 +18959,14 @@ var qrcode = function() {
         content = parts.join('；');
       }
 
-      const now = new Date();
+      const dcTimeInput = document.getElementById('dcEntryTime');
+      const chosenTime = (dcTimeInput && dcTimeInput.value) ? new Date(dcTimeInput.value) : new Date();
       const entryId = isEditing ? dcEditingEntryId : ('dce_' + Date.now() + '_' + Math.random().toString(36).slice(2,8));
       const entry = {
         id: entryId, slot, content, warn,
-        time: (isEditing && oldEntry) ? oldEntry.time : now.toTimeString().slice(0,5),
+        time: chosenTime.getHours().toString().padStart(2,'0') + ':' + chosenTime.getMinutes().toString().padStart(2,'0'),
         staff: (isEditing && oldEntry) ? oldEntry.staff : (currentStaffName || '未填寫'),
-        createdAtMs: (isEditing && oldEntry) ? oldEntry.createdAtMs : now.getTime()
+        createdAtMs: chosenTime.getTime()
       };
       if (grams !== null) entry.grams = grams;
       if (waterMl !== null) entry.waterMl = waterMl;
@@ -18963,31 +18991,40 @@ var qrcode = function() {
         entry.photoUrls = existingPhotoUrls;
       }
 
+      let finalEntriesForRefresh = null;
       if (isEditing){
         const snapFinal = await getDoc(doc(db, 'daycare', currentDaycareId));
         const dataFinal = snapFinal.exists() ? snapFinal.data() : {};
         const newEntries = (dataFinal.entries || []).map(e => e.id === dcEditingEntryId ? entry : e);
         await updateDoc(doc(db, 'daycare', currentDaycareId), { ...docUpdates, entries: newEntries });
+        finalEntriesForRefresh = newEntries;
         dcEditingEntryId = null;
         if (pendingWasSkipped){
           alert('已儲存文字與數字內容,但因為後面已經有其他紀錄接續計算,系統沒有自動調整「跨筆記憶」的累計狀態,如果總計數字對不上,建議用補登一筆更正的方式處理。');
         }
         renderSlotForm(slot);
       } else {
+        const snapBefore = await getDoc(doc(db, 'daycare', currentDaycareId));
+        const dataBefore = snapBefore.exists() ? snapBefore.data() : {};
+        finalEntriesForRefresh = [...(dataBefore.entries || []), entry];
         await updateDoc(doc(db, 'daycare', currentDaycareId), { ...docUpdates, entries: arrayUnion(entry) });
         const slotChips = Array.from(document.querySelectorAll('#dcSlotTabs .chip'));
         const curIdx = slotChips.findIndex(c => c.dataset.slot === slot);
         const nextChip = (curIdx !== -1 && slotChips.length) ? slotChips[(curIdx + 1) % slotChips.length] : null;
         renderSlotForm(nextChip ? nextChip.dataset.slot : slot);
       }
-      await refreshDcLog();
+      await refreshDcLog(finalEntriesForRefresh);
     });
   }
 
-  async function refreshDcLog(){
-    const snap = await getDoc(doc(db, 'daycare', currentDaycareId));
-    const data = snap.data();
-    const entries = (data.entries || []).slice().sort((a,b) => (b.createdAtMs||0) - (a.createdAtMs||0));
+  async function refreshDcLog(providedEntries){
+    let rawEntries = providedEntries;
+    if (!rawEntries){
+      const snap = await getDoc(doc(db, 'daycare', currentDaycareId));
+      const data = snap.data();
+      rawEntries = data.entries || [];
+    }
+    const entries = rawEntries.slice().sort((a,b) => (b.createdAtMs||0) - (a.createdAtMs||0));
 
     const totalGrams = entries.reduce((s,e) => s + (e.grams || 0), 0);
     const totalWater = entries.reduce((s,e) => s + (e.waterMl || 0), 0);
@@ -19064,7 +19101,7 @@ var qrcode = function() {
       }
       const newEntries = entries.filter(e => (e.id || ('legacy_' + e.createdAtMs)) !== key);
       await updateDoc(doc(db, 'daycare', currentDaycareId), { entries: newEntries });
-      await refreshDcLog();
+      await refreshDcLog(newEntries);
     }
   });
 
@@ -19078,6 +19115,22 @@ var qrcode = function() {
     document.getElementById('dcRecordMember').textContent = '家長 ' + data.phone + '・報到 ' + (data.checkinTime || '');
     if (data.avatarUrl){ document.getElementById('dcRecordAvatar').src = data.avatarUrl; document.getElementById('dcRecordAvatar').style.display = 'block'; }
     else { document.getElementById('dcRecordAvatar').style.display = 'none'; }
+    if (data.checkinNote){
+      document.getElementById('dcRecordNoteValue').textContent = data.checkinNote;
+      document.getElementById('dcRecordNoteCard').style.display = 'block';
+    } else {
+      document.getElementById('dcRecordNoteCard').style.display = 'none';
+    }
+    const dcItemsList = (data.items && data.items.list) || [];
+    const dcItemsOther = (data.items && data.items.other) || '';
+    if (dcItemsList.length || dcItemsOther){
+      const dcItemsParts = dcItemsList.slice();
+      if (dcItemsOther) dcItemsParts.push('其他:' + dcItemsOther);
+      document.getElementById('dcRecordItemsValue').textContent = dcItemsParts.join('、');
+      document.getElementById('dcRecordItemsCard').style.display = 'block';
+    } else {
+      document.getElementById('dcRecordItemsCard').style.display = 'none';
+    }
     document.getElementById('dcCheckoutPanel').style.display = 'none';
     document.getElementById('dcCheckoutItemsConfirm').checked = false;
     document.getElementById('dcStaySummaryPanelWrap').style.display = 'none';
