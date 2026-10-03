@@ -101,7 +101,8 @@
       <div style="text-align:center;margin-top:40px;">
         <a href="https://planetofpaws.github.io/-inn-heart-app/staff.html" style="font-size:9.5px;color:var(--ink-soft);opacity:0.4;text-decoration:underline;">員工後台</a>
       </div>
-      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:8px;">版本 2026-10-03-2</div>
+      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:8px;">版本 2026-10-03-3</div>
+      <div id="liffDebugLine" style="text-align:center;font-size:9px;color:var(--ink-soft);opacity:0.6;margin-top:4px;"></div>
     </div>
   </div>
 
@@ -415,14 +416,27 @@
   });
 
   // ---------- LINE LIFF auto-login ----------
+  // A small on-screen status line (#liffDebugLine) mirrors every step below. This isn't shown
+  // to look technical — it's the only way to see what LIFF actually did on a real phone inside
+  // LINE's in-app browser, since there is no console to open there. If "approve once, remember
+  // forever" isn't working, compare the LINE ID shown here against the one staff approved in the
+  // backend's pending-bindings list: a mismatch means this LIFF launch isn't getting a stable
+  // LINE identity (a LIFF app / entry-point configuration issue), not a bug in the binding logic.
+  function setLiffDebug(msg){
+    const dbg = document.getElementById('liffDebugLine');
+    if (dbg) dbg.textContent = msg;
+  }
+
   let liffReadyPromise = (async function tryLineAutoLogin(){
-    if (typeof liff === 'undefined') return; // not loaded (e.g. offline), fall back to manual login
+    if (typeof liff === 'undefined'){ setLiffDebug('LIFF SDK 未載入(非LINE瀏覽器或離線)'); return; }
     try {
+      setLiffDebug('LIFF 初始化中...');
       // liff.init() has been observed to hang (never resolve or reject) inside some in-app
       // browser contexts instead of failing cleanly — time it out so a stuck LIFF init can't
       // block the manual phone-login path (which awaits this same liffReadyPromise) forever.
       await withTimeout(liff.init({ liffId: '2011605439-ZiNr1cLk' }), 10000, 'liffInit');
       if (!liff.isLoggedIn()){
+        setLiffDebug('尚未登入LINE,導向LINE登入畫面...');
         liff.login();
         return; // page will redirect through LINE login and reload
       }
@@ -430,8 +444,11 @@
       const lineUserId = profile.userId;
       myLineUserId = lineUserId;
       myLineProfile = profile;
+      const idTag = 'LINE ID:' + lineUserId.slice(0, 8) + '…';
+      setLiffDebug(idTag + '・查詢綁定中...');
       const bindingSnap = await getDoc(doc(db, 'lineBindings', lineUserId));
       if (bindingSnap.exists()){
+        setLiffDebug(idTag + '・已是正式綁定(' + bindingSnap.data().phone + ')');
         document.getElementById('loginNote').textContent = '';
         // keep the stored display name/photo fresh in case it changed since the last visit
         if (profile.displayName) setDoc(doc(db, 'lineBindings', lineUserId), { displayName: profile.displayName, pictureUrl: profile.pictureUrl || null }, { merge: true }).catch(() => {});
@@ -445,11 +462,13 @@
           document.getElementById('loginNote').textContent = '您先前綁定的電話目前查不到紀錄,請重新輸入手機號碼,系統會自動更新綁定。';
         }
       } else {
+        setLiffDebug(idTag + '・目前查無正式綁定紀錄');
         pendingLineUserId = lineUserId;
         document.getElementById('loginNote').textContent = '第一次使用,請輸入手機號碼完成綁定,之後就不用再輸入了。';
       }
     } catch (err) {
       // LIFF unavailable (e.g. testing outside LINE) — manual phone login still works below
+      setLiffDebug('LIFF發生問題:' + (err && err.message ? err.message : err));
     }
   })();
 
