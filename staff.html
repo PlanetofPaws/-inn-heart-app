@@ -186,7 +186,7 @@
       </button>
       <div id="cameraSettingLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:8px;">設定小米 App 連結</div>
       <div id="staffManageLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:4px;">管理員後台</div>
-      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:20px;">版本 2026-10-03-1</div>
+      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:20px;">版本 2026-10-03-2</div>
     </div>
   </div>
 
@@ -17915,7 +17915,50 @@ var qrcode = function() {
     '⚠️特殊事件': 'special'
   };
 
-  function renderSlotForm(slot){
+  // Lets a daycare care-log entry be edited after it's submitted, the same way boarding's
+  // care record entries can: capture every chip/input value in #dcSlotFormArea at submit time,
+  // so editing can jump back to that slot's form and refill it exactly as it was.
+  let dcEditingEntryId = null;
+
+  function dcCaptureFormSnapshot(){
+    const area = document.getElementById('dcSlotFormArea');
+    const snap = { chips: {}, inputs: {}, checkboxes: {} };
+    if (!area) return snap;
+    area.querySelectorAll('.chip-row[data-group], .chip-row[data-multigroup]').forEach(row => {
+      const key = row.dataset.group || row.dataset.multigroup;
+      snap.chips[key] = Array.from(row.querySelectorAll('.chip.active')).map(c => c.dataset.val);
+    });
+    area.querySelectorAll('input[type=text], input[type=number], input[type=time], input[type=datetime-local], textarea').forEach(inp => {
+      if (inp.id) snap.inputs[inp.id] = inp.value;
+    });
+    area.querySelectorAll('input[type=checkbox]').forEach(inp => {
+      if (inp.id) snap.checkboxes[inp.id] = inp.checked;
+    });
+    return snap;
+  }
+
+  function dcRestoreFormSnapshot(snap){
+    if (!snap) return;
+    const area = document.getElementById('dcSlotFormArea');
+    if (!area) return;
+    area.querySelectorAll('.chip-row[data-group], .chip-row[data-multigroup]').forEach(row => {
+      const key = row.dataset.group || row.dataset.multigroup;
+      const vals = (snap.chips && snap.chips[key]) || [];
+      row.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', vals.includes(c.dataset.val)));
+      const anyChip = row.querySelector('.chip');
+      if (anyChip) anyChip.dispatchEvent(new Event('chipchange', { bubbles: true }));
+    });
+    Object.keys(snap.inputs || {}).forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = snap.inputs[id];
+    });
+    Object.keys(snap.checkboxes || {}).forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.checked = snap.checkboxes[id];
+    });
+  }
+
+  function renderSlotForm(slot, editEntryData){
     dcCurrentSlot = slot;
     document.querySelectorAll('#dcSlotTabs .chip').forEach(c => c.classList.toggle('active', c.dataset.slot === slot));
     const area = document.getElementById('dcSlotFormArea');
@@ -18093,7 +18136,7 @@ var qrcode = function() {
           </div>
         </div>
         <div class="sub-group">
-          <span class="glabel">路線類型</span>
+          <div class="glabel-row"><span class="glabel" style="margin:0;">路線類型</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
           <div class="chip-row" data-group="dcWalkRoute">
             <div class="chip" data-val="園區周邊街區">園區周邊街區</div>
             <div class="chip" data-val="公園草地">公園草地</div>
@@ -18150,7 +18193,7 @@ var qrcode = function() {
           <input type="text" id="dcSocialWillingnessOther" placeholder="其他(自行登打)" style="margin-top:8px;">
         </div>
         <div class="sub-group">
-          <span class="glabel">互動表現</span>
+          <div class="glabel-row"><span class="glabel" style="margin:0;">互動表現</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
           <div class="chip-row" data-group="dcSocialInteraction">
             <div class="chip" data-val="玩耍拉扯/追逐">玩耍拉扯/追逐</div>
             <div class="chip" data-val="互相嗅聞後離開">互相嗅聞後離開</div>
@@ -18218,7 +18261,7 @@ var qrcode = function() {
           <div class="divider" style="margin:16px 0 10px;">${title}</div>
           ${hint ? '<div style="font-size:10.5px;color:var(--ink-soft);margin-bottom:8px;">' + hint + '</div>' : ''}
           <div class="sub-group">
-            <span class="glabel">遇到狀況</span>
+            <div class="glabel-row"><span class="glabel" style="margin:0;">遇到狀況</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
             <div class="chip-row" data-multigroup="${encounterGroup}">
               ${encounterOpts.map(v => '<div class="chip" data-val="'+v+'">'+v+'</div>').join('')}
             </div>
@@ -18275,7 +18318,7 @@ var qrcode = function() {
       area.innerHTML = `
         <div class="field"><label>訓練項目</label><input type="text" id="dcTrainingItem" placeholder="例如:坐下、等待、社交減敏"></div>
         <div class="sub-group">
-          <span class="glabel">學習態度</span>
+          <div class="glabel-row"><span class="glabel" style="margin:0;">學習態度</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
           <div class="chip-row" data-group="dcTrainingAttitude">
             <div class="chip" data-val="專注力佳">專注力佳</div>
             <div class="chip warn" data-val="容易受干擾">容易受干擾</div>
@@ -18289,7 +18332,7 @@ var qrcode = function() {
       area.innerHTML = `
         <div style="font-size:10.5px;color:var(--ink-soft);margin-bottom:10px;">先選事件分類,下方會出現對應的登打欄位。「第一次的成功」也值得紀錄,不只有負面突發狀況。</div>
         <div class="sub-group">
-          <span class="glabel">事件分類</span>
+          <div class="glabel-row"><span class="glabel" style="margin:0;">事件分類</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
           <div class="chip-row" data-group="dcSpecialCategory" style="flex-wrap:wrap;">
             <div class="chip warn" data-val="衝突與攻擊">1. 衝突與攻擊事件</div>
             <div class="chip warn" data-val="健康意外">2. 突發健康與意外受傷</div>
@@ -18510,6 +18553,22 @@ var qrcode = function() {
     wireDynamicChips(area);
     dcEntryPhotos = [];
     area.querySelectorAll('.mini-photo-input').forEach(inp => wirePhotoInputDc(inp));
+
+    if (editEntryData){
+      dcEditingEntryId = editEntryData.id;
+      dcRestoreFormSnapshot(editEntryData.formSnapshot);
+      document.getElementById('dcSlotSubmitBtn').textContent = '儲存修改';
+      area.insertAdjacentHTML('afterbegin', `
+        <div id="dcEditBanner" style="background:var(--ochre);color:#2A2A2C;border-radius:10px;padding:8px 12px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;font-size:11.5px;gap:10px;">
+          <span>✏️ 正在編輯這筆紀錄,改好後記得按下方「儲存修改」</span>
+          <span id="dcCancelEditBtn" style="text-decoration:underline;cursor:pointer;white-space:nowrap;">取消編輯</span>
+        </div>
+      `);
+      document.getElementById('dcCancelEditBtn').addEventListener('click', () => { dcEditingEntryId = null; renderSlotForm(slot); });
+      area.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      dcEditingEntryId = null;
+    }
   }
 
   function wireDynamicChips(scope){
@@ -18536,8 +18595,34 @@ var qrcode = function() {
   async function submitDcSlotEntry(slot, kind){
     const btn = document.getElementById('dcSlotSubmitBtn');
     await guardedSubmit(btn, '送出', async () => {
+      const isEditing = !!dcEditingEntryId;
+      let oldEntry = null;
+      let pendingWasSkipped = false;
+      if (isEditing){
+        // Editing a past entry: before recomputing "consumed amount" fields (which read the
+        // CURRENT pendingDryGrams/pendingWetGrams/pendingFreshGrams/pendingWaterMl memory on the
+        // daycare doc), roll that memory back to what it was right before this entry was first
+        // submitted — but only for fields no LATER entry has also touched, same safety rule
+        // boarding's care record uses, so an edit can't silently corrupt a more recent entry's math.
+        const snap0 = await getDoc(doc(db, 'daycare', currentDaycareId));
+        const data0 = snap0.exists() ? snap0.data() : {};
+        const allEntries0 = data0.entries || [];
+        oldEntry = allEntries0.find(e => e.id === dcEditingEntryId) || null;
+        if (oldEntry && oldEntry.pendingSnapshot && Object.keys(oldEntry.pendingSnapshot).length){
+          const revertFields = {};
+          let anySkipped = false;
+          Object.keys(oldEntry.pendingSnapshot).forEach(field => {
+            const later = allEntries0.some(e2 => e2.id !== dcEditingEntryId && e2.pendingSnapshot && (field in e2.pendingSnapshot) && (e2.createdAtMs || 0) > (oldEntry.createdAtMs || 0));
+            if (!later) revertFields[field] = oldEntry.pendingSnapshot[field];
+            else anySkipped = true;
+          });
+          if (Object.keys(revertFields).length) await updateDoc(doc(db, 'daycare', currentDaycareId), revertFields);
+          pendingWasSkipped = anySkipped;
+        }
+      }
       let content = '', warn = false;
       let docUpdates = {};
+      let pendingSnapshot = {};
       let grams = null, waterMl = null, peeGrams = null, peeCount = null, peeDiaperGrams = null, poopGrams = null;
       if (kind === 'feedtoilet'){
         const isCat = currentDaycareArea === 'cat';
@@ -18568,6 +18653,7 @@ var qrcode = function() {
           else if (discard !== null){ consumed = Math.max(prevPending - discard, 0); newPending = fed; }
           foodTotal += consumed;
           docUpdates.pendingDryGrams = Math.max(newPending, 0);
+          pendingSnapshot.pendingDryGrams = prevPending;
           if (fed) parts.push('乾糧加了' + fed + 'g');
           if (discard !== null) parts.push('乾糧原本剩餘' + discard + 'g已經倒掉');
           if (keep !== null) parts.push('乾糧還剩' + keep + 'g，先保留繼續給');
@@ -18577,6 +18663,7 @@ var qrcode = function() {
           const prevPendingWet = dcData.pendingWetGrams || 0;
           foodTotal += Math.max(prevPendingWet - left, 0);
           docUpdates.pendingWetGrams = served;
+          pendingSnapshot.pendingWetGrams = prevPendingWet;
           parts.push('濕食餵了' + served + 'g' + (left ? '，剩餘' + left + 'g已倒掉' : ''));
         }
         if (foods.includes('鮮食')){
@@ -18584,6 +18671,7 @@ var qrcode = function() {
           const prevPendingFresh = dcData.pendingFreshGrams || 0;
           foodTotal += Math.max(prevPendingFresh - left, 0);
           docUpdates.pendingFreshGrams = served;
+          pendingSnapshot.pendingFreshGrams = prevPendingFresh;
           parts.push('鮮食餵了' + served + 'g' + (left ? '，剩餘' + left + 'g已倒掉' : ''));
         }
         if (foods.length) grams = foodTotal;
@@ -18602,6 +18690,7 @@ var qrcode = function() {
           const prevPendingWater = dcData.pendingWaterMl || 0;
           waterMl = Math.max(prevPendingWater - (waterDiscard || 0), 0);
           docUpdates.pendingWaterMl = waterGive || 0;
+          pendingSnapshot.pendingWaterMl = prevPendingWater;
           if (waterGive !== null) parts.push('換了新的水，給了' + waterGive + 'ML');
           if (waterDiscard !== null) parts.push('原本水碗剩' + waterDiscard + 'ML已倒掉');
         }
@@ -18844,29 +18933,53 @@ var qrcode = function() {
       }
 
       const now = new Date();
-      const entry = { slot, time: now.toTimeString().slice(0,5), content, warn, staff: currentStaffName || '未填寫', createdAtMs: now.getTime() };
+      const entryId = isEditing ? dcEditingEntryId : ('dce_' + Date.now() + '_' + Math.random().toString(36).slice(2,8));
+      const entry = {
+        id: entryId, slot, content, warn,
+        time: (isEditing && oldEntry) ? oldEntry.time : now.toTimeString().slice(0,5),
+        staff: (isEditing && oldEntry) ? oldEntry.staff : (currentStaffName || '未填寫'),
+        createdAtMs: (isEditing && oldEntry) ? oldEntry.createdAtMs : now.getTime()
+      };
       if (grams !== null) entry.grams = grams;
       if (waterMl !== null) entry.waterMl = waterMl;
       if (peeGrams !== null) entry.peeGrams = peeGrams;
       if (peeCount !== null) entry.peeCount = peeCount;
       if (peeDiaperGrams !== null) entry.peeDiaperGrams = peeDiaperGrams;
       if (poopGrams !== null) entry.poopGrams = poopGrams;
+      if (Object.keys(pendingSnapshot).length) entry.pendingSnapshot = pendingSnapshot;
+      entry.formSnapshot = dcCaptureFormSnapshot();
+      const existingPhotoUrls = (isEditing && oldEntry && oldEntry.photoUrls) ? oldEntry.photoUrls : [];
       if (dcEntryPhotos.length){
-        const photoUrls = [];
+        const newPhotoUrls = [];
         for (const file of dcEntryPhotos){
           const compressed = await compressImage(file, 1000, 0.75);
           const photoRef = ref(storage, 'daycareEntryPhotos/' + currentDaycareId + '/' + Date.now() + '_' + file.name);
           await uploadBytes(photoRef, compressed);
-          photoUrls.push(await getDownloadURL(photoRef));
+          newPhotoUrls.push(await getDownloadURL(photoRef));
         }
-        entry.photoUrls = photoUrls;
+        entry.photoUrls = [...existingPhotoUrls, ...newPhotoUrls];
         dcEntryPhotos = [];
+      } else if (existingPhotoUrls.length){
+        entry.photoUrls = existingPhotoUrls;
       }
-      await updateDoc(doc(db, 'daycare', currentDaycareId), { ...docUpdates, entries: arrayUnion(entry) });
-      const slotChips = Array.from(document.querySelectorAll('#dcSlotTabs .chip'));
-      const curIdx = slotChips.findIndex(c => c.dataset.slot === slot);
-      const nextChip = (curIdx !== -1 && slotChips.length) ? slotChips[(curIdx + 1) % slotChips.length] : null;
-      renderSlotForm(nextChip ? nextChip.dataset.slot : slot);
+
+      if (isEditing){
+        const snapFinal = await getDoc(doc(db, 'daycare', currentDaycareId));
+        const dataFinal = snapFinal.exists() ? snapFinal.data() : {};
+        const newEntries = (dataFinal.entries || []).map(e => e.id === dcEditingEntryId ? entry : e);
+        await updateDoc(doc(db, 'daycare', currentDaycareId), { ...docUpdates, entries: newEntries });
+        dcEditingEntryId = null;
+        if (pendingWasSkipped){
+          alert('已儲存文字與數字內容,但因為後面已經有其他紀錄接續計算,系統沒有自動調整「跨筆記憶」的累計狀態,如果總計數字對不上,建議用補登一筆更正的方式處理。');
+        }
+        renderSlotForm(slot);
+      } else {
+        await updateDoc(doc(db, 'daycare', currentDaycareId), { ...docUpdates, entries: arrayUnion(entry) });
+        const slotChips = Array.from(document.querySelectorAll('#dcSlotTabs .chip'));
+        const curIdx = slotChips.findIndex(c => c.dataset.slot === slot);
+        const nextChip = (curIdx !== -1 && slotChips.length) ? slotChips[(curIdx + 1) % slotChips.length] : null;
+        renderSlotForm(nextChip ? nextChip.dataset.slot : slot);
+      }
       await refreshDcLog();
     });
   }
@@ -18898,13 +19011,62 @@ var qrcode = function() {
     const listEl = document.getElementById('dcLogList');
     if (!entries.length){ listEl.innerHTML = '<div class="empty-note">目前還沒有紀錄</div>'; return; }
     listEl.innerHTML = entries.map(e => `
-      <div class="log-entry ${e.warn ? 'warn' : ''}">
+      <div class="log-entry ${e.warn ? 'warn' : ''}" data-entry-key="${e.id || ('legacy_' + e.createdAtMs)}">
         <div class="meta"><span>${e.time} · ${e.slot}${e.staff ? '｜' + e.staff : ''}</span></div>
         <div>${e.content}</div>
         ${(e.photoUrls && e.photoUrls.length) ? '<div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;">' + e.photoUrls.map(u => '<img src="'+u+'" style="width:52px;height:52px;border-radius:8px;object-fit:cover;">').join('') + '</div>' : ''}
+        <div class="mactions" style="margin-top:8px;">
+          <button class="dc-entry-edit-btn small-btn" style="background:var(--ochre);color:#2A2A2C;flex:1;">編輯</button>
+          <button class="dc-entry-delete-btn small-btn" style="background:var(--danger-soft);color:var(--danger);flex:1;">刪除</button>
+        </div>
       </div>
     `).join('');
   }
+
+  function jumpToEditDcEntry(entryData){
+    if (!entryData.id || !entryData.formSnapshot){
+      alert('這是舊格式的紀錄,沒有留下可以重新編輯的結構化資料,建議直接用「刪除」處理,並補登一筆新的正確紀錄。');
+      return;
+    }
+    renderSlotForm(entryData.slot, entryData);
+  }
+
+  // one-time event delegation for the daycare log list, mirroring boarding's #logList handling
+  document.getElementById('dcLogList').addEventListener('click', async (event) => {
+    const row = event.target.closest('.log-entry');
+    if (!row) return;
+    const key = row.dataset.entryKey;
+    const snap = await getDoc(doc(db, 'daycare', currentDaycareId));
+    const data = snap.exists() ? snap.data() : {};
+    const entries = data.entries || [];
+    const entryData = entries.find(e => (e.id || ('legacy_' + e.createdAtMs)) === key);
+    if (!entryData) return;
+
+    if (event.target.closest('.dc-entry-edit-btn')){
+      jumpToEditDcEntry(entryData);
+      return;
+    }
+    if (event.target.closest('.dc-entry-delete-btn')){
+      if (!confirm('確定要刪除這筆紀錄嗎?')) return;
+      if (entryData.pendingSnapshot && Object.keys(entryData.pendingSnapshot).length){
+        // same safety rule as editing: only auto-revert a pending field if no later entry also touched it
+        const revertFields = {};
+        const skippedFields = [];
+        Object.keys(entryData.pendingSnapshot).forEach(field => {
+          const later = entries.some(e2 => e2 !== entryData && e2.pendingSnapshot && (field in e2.pendingSnapshot) && (e2.createdAtMs || 0) > (entryData.createdAtMs || 0));
+          if (!later) revertFields[field] = entryData.pendingSnapshot[field];
+          else skippedFields.push(field);
+        });
+        if (Object.keys(revertFields).length) await updateDoc(doc(db, 'daycare', currentDaycareId), revertFields);
+        if (skippedFields.length){
+          alert('提醒:這筆紀錄不是最新一筆影響「' + skippedFields.join('、') + '」的紀錄,系統不會自動回推記憶值,以免影響後面已經登打的紀錄。如果需要,建議直接補登一筆更正的紀錄。');
+        }
+      }
+      const newEntries = entries.filter(e => (e.id || ('legacy_' + e.createdAtMs)) !== key);
+      await updateDoc(doc(db, 'daycare', currentDaycareId), { entries: newEntries });
+      await refreshDcLog();
+    }
+  });
 
   async function openDaycareRecord(id){
     currentDaycareId = id;
