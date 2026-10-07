@@ -188,7 +188,7 @@
       </button>
       <div id="cameraSettingLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:8px;">設定小米 App 連結</div>
       <div id="staffManageLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:4px;">管理員後台</div>
-      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:20px;">版本 2026-10-07-3</div>
+      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:20px;">版本 2026-10-07-6</div>
     </div>
   </div>
 
@@ -14843,7 +14843,7 @@ var qrcode = function() {
         <p style="font-size:11px;color:#E57373;text-align:left;border-top:1px solid #ddd;padding-top:10px;">⚠️ 為了寶貝安全,條碼禁止隨意傳送或交付給非接送者的其他人。若條碼遺失,請務必立即主動告知,以便旅館更加嚴謹審核接送者身份。</p>
       </div>
     `;
-    window.print();
+    printWhenImagesReady();
   }
 
   // photos attached to an entry, as a small thumbnail strip for the printed sheet
@@ -14860,6 +14860,10 @@ var qrcode = function() {
       img.addEventListener('error', res, { once: true });
       setTimeout(res, 8000);
     })));
+    // make sure each picture is fully decoded, then give the browser a beat to paint it,
+    // so the print preview never snapshots an empty box
+    await Promise.all(imgs.map(img => (img.decode ? img.decode().catch(() => {}) : Promise.resolve())));
+    await new Promise(res => setTimeout(res, 150));
     window.print();
   }
 
@@ -18882,10 +18886,12 @@ var qrcode = function() {
         const route = chipVal('dcWalkRoute');
         if (route) parts.push('路線走' + route);
         const waterCount = numVal('dcWalkWaterCount');
-        const waterMl = numVal('dcWalkWaterMl');
-        if (waterCount !== null || waterMl !== null){
-          parts.push('散步中補水' + (waterCount !== null ? waterCount + '次' : '') + (waterMl !== null ? '，飲水量約' + waterMl + 'ML' : ''));
+        const walkWaterMl = numVal('dcWalkWaterMl');
+        if (waterCount !== null || walkWaterMl !== null){
+          parts.push('散步中補水' + (waterCount !== null ? waterCount + '次' : '') + (walkWaterMl !== null ? '，飲水量約' + walkWaterMl + 'ML' : ''));
         }
+        // only a typed ML amount counts toward today's total water; a bare 次數 does not
+        if (walkWaterMl !== null && walkWaterMl > 0) waterMl = walkWaterMl;
         const leash = chipVal('dcWalkLeash');
         if (leash){ parts.push('牽繩' + leash); if (leash === '頻繁暴衝/拉扯牽繩') warn = true; }
         const sniff = chipVal('dcWalkSniff');
@@ -18946,16 +18952,38 @@ var qrcode = function() {
         content = parts.join('，');
       } else if (kind === 'reactivity'){
         const parts = [];
+        // maps each chip to a phrase that reads naturally inside a sentence
+        const REACT_ENC = {
+          '同類': { '無遇到':'沒有遇到其他狗狗', '遠距離看到':'遠遠看到其他狗狗', '近距離交會':'近距離和其他狗狗交會' },
+          '人類': { '無遇到':'沒有遇到路人', '遠距離看到':'遠遠看到路人', '近距離交會':'近距離和路人擦身而過' },
+          '噪音': { '車輛/機車':'經過車輛、機車', '工地施工聲':'聽到工地施工聲', '雷聲/喇叭聲':'聽到雷聲或喇叭聲' }
+        };
+        const REACT_RESP = {
+          '好奇看著/放鬆':'好奇地看著、整個人很放鬆', '身體僵硬/凝視':'身體僵硬、一直盯著對方', '低吼/吠叫/暴衝':'低吼、吠叫甚至往前暴衝', '避開/躲藏':'想閃避或躲起來',
+          '主動討摸/搖尾巴':'主動討摸、搖著尾巴', '無視/冷漠通過':'沒什麼反應地直接走過去', '警戒避開':'顯得警戒、想避開', '吠叫/撲人':'對路人吠叫或撲上去',
+          '毫無影響':'完全沒有受到影響', '耳朵向後/貼地':'耳朵向後、身體壓低貼地', '試圖逃跑/爆衝':'試圖逃跑或爆衝', '停在原地發抖':'停在原地發抖'
+        };
+        const REACT_ACT = {
+          '零食轉移焦點':'用零食轉移牠的注意力', '增加距離繞道':'拉開距離繞道而行', '停下等待對方通過':'停下來等對方先通過', '順利和平交會':'雙方和平順利地交會',
+          '獎勵冷靜行為':'獎勵牠冷靜的表現', '保持安全距離':'保持安全距離', '提示路人勿摸':'提醒路人先不要摸',
+          '快速離開現場':'帶牠快速離開現場', '蹲下安撫/給予獎勵':'蹲下來安撫並給予獎勵', '帶至安靜區域':'帶牠到安靜的地方'
+        };
         function reactPart(label, encounterGroup, responseGroup, actionGroup, warnResponses){
           const encounter = chipVals(encounterGroup);
           const response = chipVals(responseGroup);
           const action = chipVals(actionGroup);
           if (!encounter.length && !response.length && !action.length) return;
-          let sentence = label;
-          if (encounter.length) sentence += '遇到' + encounter.join('、');
-          if (response.length) sentence += (encounter.length ? '，' : '') + '反應是' + response.join('、');
-          if (action.length) sentence += '，當下' + action.join('、');
-          parts.push(sentence);
+          const encMap = REACT_ENC[label === '交通工具/噪音' ? '噪音' : label];
+          const encText = encounter.map(v => encMap[v] || v).join('、');
+          const respText = response.map(v => REACT_RESP[v] || v).join('、');
+          const actText = action.map(v => REACT_ACT[v] || v).join('、');
+          const hasContact = !(encounter.length === 1 && encounter[0] === '無遇到');
+          const pieces = [];
+          if (encText) pieces.push(encText);
+          if (hasContact && respText) pieces.push('牠' + respText);
+          if (hasContact && actText) pieces.push('照護員當下' + actText);
+          if (!pieces.length) return;
+          parts.push(pieces.join('，'));
           if (response.some(v => warnResponses.includes(v))) warn = true;
         }
         reactPart('同類', 'dcReactPeerEncounter', 'dcReactPeerResponse', 'dcReactPeerAction', ['身體僵硬/凝視','低吼/吠叫/暴衝','避開/躲藏']);
