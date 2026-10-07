@@ -143,6 +143,8 @@
     #printArea .pentry .ptime{font-weight:700;margin-right:8px;}
     #printArea .pentry .pcat{color:#666;font-size:10.5px;}
     #printArea .pentry .pcontent{margin-top:2px;}
+    #printArea .pphotos{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
+    #printArea .pphotos img{width:150px;height:150px;object-fit:cover;border-radius:6px;}
     #printArea .summary-page{page-break-before:always;}
     #printArea .summary-table{width:100%;border-collapse:collapse;margin-top:10px;font-size:12px;}
     #printArea .summary-table th, #printArea .summary-table td{border:1px solid #999;padding:8px 10px;text-align:left;vertical-align:top;color:#111;}
@@ -186,7 +188,7 @@
       </button>
       <div id="cameraSettingLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:8px;">設定小米 App 連結</div>
       <div id="staffManageLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:4px;">管理員後台</div>
-      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:20px;">版本 2026-10-07-1</div>
+      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:20px;">版本 2026-10-07-3</div>
     </div>
   </div>
 
@@ -14143,7 +14145,11 @@ var qrcode = function() {
   // the plain "N 號房" numbering when no custom label has been set.
   function roomLabel(room){
     if (!room) return '';
-    return (room.label && room.label.trim()) || (room.no + ' 號房');
+    if (room.label && room.label.trim()) return room.label.trim();
+    // several check-in/check-out writes replace the whole room doc and drop `label`,
+    // so fall back to the official layout code before the plain "N 號房".
+    const dflt = ROOM_LAYOUT[room.area] && ROOM_LAYOUT[room.area][room.no - 1];
+    return dflt || (room.no + ' 號房');
   }
 
   // Official room codes, in grid order (index + 1 = room "no").
@@ -14840,6 +14846,23 @@ var qrcode = function() {
     window.print();
   }
 
+  // photos attached to an entry, as a small thumbnail strip for the printed sheet
+  function printPhotosHtml(e){
+    const photos = (e.photoUrls && e.photoUrls.length) ? e.photoUrls : (e.photoUrl ? [e.photoUrl] : []);
+    return photos.length ? '<div class="pphotos">' + photos.map(u => '<img src="' + u + '">').join('') + '</div>' : '';
+  }
+  // wait (up to 8s) for every photo in the print sheet to finish loading, otherwise the
+  // browser prints blank boxes where the pictures should be
+  async function printWhenImagesReady(){
+    const imgs = Array.from(document.querySelectorAll('#printArea img'));
+    await Promise.all(imgs.map(img => (img.complete && img.naturalWidth) ? Promise.resolve() : new Promise(res => {
+      img.addEventListener('load', res, { once: true });
+      img.addEventListener('error', res, { once: true });
+      setTimeout(res, 8000);
+    })));
+    window.print();
+  }
+
   function printStay(meta, itemsText, notesText, entriesByDateObj, staySummaryInfo){
     const dates = Object.keys(entriesByDateObj).sort();
     let daysHtml = '';
@@ -14848,7 +14871,7 @@ var qrcode = function() {
       if (dayEntries.length === 0) return;
       daysHtml += `<h2>${formatDateHeading(ds)}</h2>`;
       dayEntries.forEach(e => {
-        daysHtml += `<div class="pentry"><span class="ptime">${e.timeStr}</span><span class="pcat">${e.cat}${e.staff ? '・' + e.staff : ''}</span><div class="pcontent">${e.content}</div></div>`;
+        daysHtml += `<div class="pentry"><span class="ptime">${e.timeStr}</span><span class="pcat">${e.cat}${e.staff ? '・' + e.staff : ''}</span><div class="pcontent">${e.content}</div>${printPhotosHtml(e)}</div>`;
       });
     });
     if (!daysHtml) daysHtml = '<p>目前尚無紀錄</p>';
@@ -14880,7 +14903,7 @@ var qrcode = function() {
       ${daysHtml}
       ${summaryPageHtml}
     `;
-    window.print();
+    printWhenImagesReady();
   }
 
   // Synchronous, network-free: figures out the verify token/QR image URL to use right now
@@ -15187,7 +15210,7 @@ var qrcode = function() {
   }
 
   document.getElementById('checkoutConfirmBtn').addEventListener('click', async () => {
-    if (!confirm('確定要辦理退房嗎?退房後這次住宿的照片會自動刪除以節省空間,文字紀錄會保留。')) return;
+    if (!confirm('確定要辦理退房嗎?照片會保留 5 天(期間可在歷史查詢查看、匯出),超過 5 天會自動刪除以節省空間,文字紀錄會永久保留。')) return;
     const confirmBtn = document.getElementById('checkoutConfirmBtn');
     const originalText = confirmBtn.textContent;
     confirmBtn.disabled = true;
@@ -15199,19 +15222,8 @@ var qrcode = function() {
       const summaryAuto = (room.staySummaryAuto && room.staySummaryAuto.trim()) || buildStaySummaryAuto(allEntries);
       const specialNote = (room.staySummarySpecialNote && room.staySummarySpecialNote.trim()) || '';
 
-      // these three are independent of each other, so run them at the same time instead of one after another
-      const photoCleanupPromise = room.stayId
-        ? getDocs(query(collection(db, 'rooms', currentRoomId, 'entries'), where('stayId', '==', room.stayId))).then(entriesSnap =>
-            Promise.all(entriesSnap.docs.map(async (d) => {
-              const data = d.data();
-              const paths = (data.photoPaths && data.photoPaths.length) ? data.photoPaths : (data.photoPath ? [data.photoPath] : []);
-              if (paths.length){
-                await Promise.all(paths.map(p => deleteObject(ref(storage, p)).catch(() => {})));
-                await updateDoc(d.ref, { photoUrl: null, photoPath: null, photoUrls: [], photoPaths: [] });
-              }
-            }))
-          )
-        : Promise.resolve();
+      // photos are kept for 5 days (see cleanupExpiredPhotos), so checkout no longer deletes them
+      const photoCleanupPromise = Promise.resolve();
 
       const historyWritePromise = room.phone
         ? setDoc(doc(db, 'members', room.phone), {
@@ -16756,7 +16768,7 @@ var qrcode = function() {
       const dcSnap = await getDocs(query(collection(db, 'daycare'), where('phone', '==', phone), where('status', '==', 'done')));
       dcSnap.forEach(d => {
         const data = d.data();
-        pastDaycare.push({ historyType: 'daycare', petName: data.name, avatarUrl: data.avatarUrl, checkinDate: data.checkinDate, checkedOutAt: data.checkoutAt, id: d.id, entries: data.entries || [] });
+        pastDaycare.push({ historyType: 'daycare', petName: data.name, avatarUrl: data.avatarUrl, checkinDate: data.checkinDate, checkedOutAt: data.checkoutAt, id: d.id, entries: data.entries || [], area: data.area, checkinTime: data.checkinTime, items: data.items || null, checkinNote: data.checkinNote || '', lastPeeCleanTime: data.lastPeeCleanTime || null, lastPoopCleanTime: data.lastPoopCleanTime || null, dcStaySummary: data.dcStaySummary || null, dcStaySummarySpecialNote: data.dcStaySummarySpecialNote || null });
       });
     } catch (err) { /* daycare history is best-effort; ignore failures here */ }
     const allHistory = [...pastStays, ...pastDaycare];
@@ -16861,14 +16873,24 @@ var qrcode = function() {
           <div class="log-entry ${e.warn ? 'warn' : ''}">
             <div class="meta"><span>${e.time} · ${e.slot}${e.staff ? '｜' + e.staff : ''}</span></div>
             <div>${e.content}</div>
+            ${(e.photoUrls || []).map(u => '<img src="'+u+'" style="width:100%;max-height:220px;object-fit:cover;border-radius:10px;margin-top:8px;">').join('')}
           </div>
         `).join('')
       : '<div class="empty-note">這天沒有留下紀錄</div>';
     document.getElementById('mhDaycareTimeline').innerHTML = `
       <div class="loc">安親照護・${record.checkinDate || ''}</div>
       <h2 style="margin:4px 0 16px;">${record.petName}</h2>
+      <button class="small-btn" id="mhDcPrintBtn" style="background:var(--ochre);width:100%;margin-bottom:14px;">匯出並列印這次紀錄</button>
       ${entriesHtml}
     `;
+    document.getElementById('mhDcPrintBtn').onclick = () => {
+      const meta = record.petName + '・' + (record.area === 'cat' ? '貓貓' : '狗狗') + '・入托時間 ' + (record.checkinDate || '') + ' ' + (record.checkinTime || '');
+      const itemsText = record.items ? [...(record.items.list || []), ...(record.items.other ? ['其他:' + record.items.other] : [])].join('、') || '無' : '無';
+      printDaycare(meta, itemsText, record.checkinNote || '無', record.entries || [], {
+        lastPeeCleanTime: record.lastPeeCleanTime, lastPoopCleanTime: record.lastPoopCleanTime,
+        dcStaySummary: record.dcStaySummary, dcStaySummarySpecialNote: record.dcStaySummarySpecialNote
+      });
+    };
   }
 
   document.getElementById('mhDetailBackBtn').addEventListener('click', () => {
@@ -17279,12 +17301,52 @@ var qrcode = function() {
     await signOut(auth);
   });
 
+  // ---------- photo retention: keep care-record photos for 5 days, then delete them ----------
+  const PHOTO_KEEP_DAYS = 5;
+  async function cleanupExpiredPhotos(){
+    try {
+      const last = Number(localStorage.getItem('photoCleanupAt') || 0);
+      if (Date.now() - last < 6 * 3600 * 1000) return;
+      const cutoffMs = Date.now() - PHOTO_KEEP_DAYS * 24 * 3600 * 1000;
+
+      // boarding: entries are a subcollection per room
+      for (const rid of Object.keys(allRooms)){
+        const snap = await getDocs(query(collection(db, 'rooms', rid, 'entries'), where('createdAtMs', '<', cutoffMs)));
+        for (const d of snap.docs){
+          const data = d.data();
+          const paths = (data.photoPaths && data.photoPaths.length) ? data.photoPaths : (data.photoPath ? [data.photoPath] : []);
+          if (!paths.length && !(data.photoUrls && data.photoUrls.length)) continue;
+          await Promise.all(paths.map(p => deleteObject(ref(storage, p)).catch(() => {})));
+          await updateDoc(d.ref, { photoUrl: null, photoPath: null, photoUrls: [], photoPaths: [] });
+        }
+      }
+
+      // daycare: entries are an array field on the visit doc, photos stored as URLs only
+      const dcSnap = await getDocs(query(collection(db, 'daycare'), where('createdAtMs', '<', cutoffMs)));
+      for (const d of dcSnap.docs){
+        const entries = d.data().entries || [];
+        if (!entries.some(e => e.photoUrls && e.photoUrls.length && (e.createdAtMs || 0) < cutoffMs)) continue;
+        const newEntries = [];
+        for (const e of entries){
+          if (e.photoUrls && e.photoUrls.length && (e.createdAtMs || 0) < cutoffMs){
+            await Promise.all(e.photoUrls.map(u => deleteObject(ref(storage, u)).catch(() => {})));
+            const { photoUrls, ...rest } = e;
+            newEntries.push(rest);
+          } else newEntries.push(e);
+        }
+        await updateDoc(d.ref, { entries: newEntries });
+      }
+      localStorage.setItem('photoCleanupAt', String(Date.now()));
+    } catch (err) { console.warn('photo cleanup skipped:', err); }
+  }
+
   async function startApp(){
     document.getElementById('loadingMsg').style.display = 'block';
     document.getElementById('loadingMsg').textContent = '連線資料庫中...';
     try {
       await ensureRoomsSeeded();
       await loadRooms();
+      cleanupExpiredPhotos(); // background, not awaited
       document.getElementById('loadingMsg').style.display = 'none';
       const verifyToken = new URLSearchParams(window.location.search).get('pickupVerify');
       if (verifyToken){
@@ -19252,7 +19314,7 @@ var qrcode = function() {
     const sorted = (entries || []).slice().sort((a,b) => (a.createdAtMs || 0) - (b.createdAtMs || 0));
     let daysHtml = '';
     sorted.forEach(e => {
-      daysHtml += `<div class="pentry"><span class="ptime">${e.time}</span><span class="pcat">${e.slot}${e.staff ? '・' + e.staff : ''}</span><div class="pcontent">${e.content}</div></div>`;
+      daysHtml += `<div class="pentry"><span class="ptime">${e.time}</span><span class="pcat">${e.slot}${e.staff ? '・' + e.staff : ''}</span><div class="pcontent">${e.content}</div>${printPhotosHtml(e)}</div>`;
     });
     if (!daysHtml) daysHtml = '<p>目前尚無紀錄</p>';
 
@@ -19282,7 +19344,7 @@ var qrcode = function() {
       ${daysHtml}
       ${summaryPageHtml}
     `;
-    window.print();
+    printWhenImagesReady();
   }
 
   document.getElementById('dcPrintBtn').addEventListener('click', async () => {
