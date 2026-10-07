@@ -815,7 +815,7 @@
   async function renderPet(){
     const room = visibleStays[currentIdx];
     document.getElementById('mainName').textContent = room.name;
-    document.getElementById('mainLoc').textContent = (room.area === 'cat' ? '貓貓區' : '狗狗區') + ' · ' + ((room.label && room.label.trim()) || (room.no + ' 號房')) +
+    document.getElementById('mainLoc').textContent = (room.area === 'cat' ? '貓貓區' : '狗狗區') + ' · ' + ((room.label && room.label.trim()) || (({dog:['D-SU01','D-SU02','D-SU03H','D-SU04','D-SD05','D-SD06','D-LD01','D-LD02','D-LD03H','D-LD04','D-LD05','D-LD06','D-HH01','D-HH02'],cat:['C-SD01','C-SD02','C-SD03','C-SD04','C-SU01','C-SU02','C-SU03','C-SU04','C-LD01','C-LD02','C-LU01','C-LU02']}[room.area] || [])[room.no - 1]) || (room.no + ' 號房')) +
       (room.isActive ? '' : '(已退房・' + room.checkedOutAt + ')');
     const avatarEl = document.getElementById('mainAvatar');
     if (room.avatarUrl){
