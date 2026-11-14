@@ -101,7 +101,7 @@
       <div style="text-align:center;margin-top:40px;">
         <a href="https://planetofpaws.github.io/-inn-heart-app/staff.html" style="font-size:9.5px;color:var(--ink-soft);opacity:0.4;text-decoration:underline;">員工後台</a>
       </div>
-      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:8px;">版本 2026-10-03-3</div>
+      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:8px;">版本 2026-11-15-1</div>
       <div id="liffDebugLine" style="text-align:center;font-size:9px;color:var(--ink-soft);opacity:0.6;margin-top:4px;"></div>
     </div>
   </div>
@@ -109,9 +109,9 @@
   <div class="screen" id="screenMenu">
     <div class="topbar"><span>(inn)heart</span><span id="phoneEcho2"></span></div>
     <div style="padding:20px 22px 0;display:flex;flex-direction:column;gap:12px;">
-      <button class="login-btn" id="menuCurrentBtn" style="margin-top:0;">照護紀錄(現在住房中)</button>
+      <button class="login-btn" id="menuCurrentBtn" style="margin-top:0;">照護紀錄</button>
       <button class="login-btn" id="menuDaycareBtn" style="margin-top:0;background:var(--pine);">安親照護紀錄</button>
-      <button class="login-btn" id="menuHistoryBtn" style="margin-top:0;background:var(--ochre);">歷史查詢</button>
+      <button class="login-btn" id="menuHistoryBtn" style="margin-top:0;background:var(--ochre);">過往住宿與安親紀錄</button>
       <div id="menuLogoutLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:6px;">綁定的電話錯了?請聯繫店家協助更改</div>
     </div>
   </div>
@@ -145,7 +145,7 @@
     <div class="hero">
       <div class="avatar" id="historyAvatar"></div>
       <div class="hero-text">
-        <p class="loc">歷史紀錄查詢</p>
+        <p class="loc">過往住宿與安親紀錄</p>
         <h1 id="historyPetName"></h1>
       </div>
     </div>
@@ -482,7 +482,7 @@
     if (mode === 'current'){
       visibleStays = myStays.filter(s => s.isActive);
       if (visibleStays.length === 0){
-        alert('目前沒有寶貝入住中');
+        alert('寶貝目前未在館內');
         return;
       }
       document.getElementById('screenMenu').classList.remove('active');
@@ -501,7 +501,7 @@
     }));
     const allPast = [...pastStays, ...pastDaycare];
     if (allPast.length === 0){
-      alert('目前沒有已完成的歷史紀錄');
+      alert('目前還沒有過往的住宿或安親紀錄');
       return;
     }
     const byName = {};
@@ -751,10 +751,10 @@
       });
 
       if (!daycareItems.length){
-        document.getElementById('daycareName').textContent = '';
-        document.getElementById('daycareLoc').textContent = '';
-        document.getElementById('daycareAvatar').innerHTML = '';
-        document.getElementById('daycareTimeline').innerHTML = '<div class="status-msg">今天還沒有安親紀錄。</div>';
+        document.getElementById('daycareTimeline').innerHTML = '';
+        document.getElementById('screenDaycare').classList.remove('active');
+        document.getElementById('screenMenu').classList.add('active');
+        alert('寶貝目前未在館內');
         return;
       }
 
