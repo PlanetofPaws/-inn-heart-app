@@ -188,7 +188,7 @@
       </button>
       <div id="cameraSettingLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:8px;">設定小米 App 連結</div>
       <div id="staffManageLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:4px;">管理員後台</div>
-      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:20px;">版本 2026-11-15-1</div>
+      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:20px;">版本 2026-11-15-2</div>
     </div>
   </div>
 
@@ -1199,6 +1199,7 @@
         <div class="glabel-row"><span class="glabel" style="margin:0;">排尿紀錄(貓貓區)</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
         <label style="display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:11.5px;color:var(--ink-soft);"><input type="checkbox" id="ftPeeCatNone"> 目前無尿尿,待追蹤</label>
         <input type="number" min="0" id="ftPeeCatGrams" placeholder="重量(含貓砂,g)">
+        <input type="number" min="0" id="ftPeeCatCount" placeholder="或只登記次數(次)" style="margin-top:8px;">
         <label style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:11.5px;color:var(--ink-soft);"><input type="checkbox" id="ftPeeCatMulti"> 多貓同住,無法精準判斷</label>
         <div class="glabel" style="margin-top:10px;">顏色</div>
         <div class="chip-row" data-group="ftPeeCatColor">
@@ -1213,7 +1214,7 @@
           <div class="chip" data-val="尿布墊">尿布墊</div>
           <div class="chip" data-val="戶外">戶外</div>
         </div>
-        <div id="ftPeeDogPadWrap" style="display:none;margin-top:8px;"><input type="number" min="0" id="ftPeeDogPadGrams" placeholder="重量(已扣除尿布墊,g)"></div>
+        <div id="ftPeeDogPadWrap" style="display:none;margin-top:8px;"><input type="number" min="0" id="ftPeeDogPadGrams" placeholder="重量(已扣除尿布墊,g)"><input type="number" min="0" id="ftPeeDogPadCount" placeholder="或只登記次數(次)" style="margin-top:8px;"></div>
         <div id="ftPeeDogOutWrap" style="display:none;margin-top:8px;">
           <input type="number" min="0" id="ftPeeDogOutCount" placeholder="次數">
         </div>
@@ -1228,6 +1229,7 @@
         <div class="glabel-row"><span class="glabel" style="margin:0;">排便紀錄(貓貓區)</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
         <label style="display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:11.5px;color:var(--ink-soft);"><input type="checkbox" id="ftPoopCatNone"> 目前無便便,待追蹤</label>
         <input type="number" min="0" id="ftPoopCatGrams" placeholder="重量(含貓砂,g)">
+        <input type="number" min="0" id="ftPoopCatCount" placeholder="或只登記次數(次)" style="margin-top:8px;">
         <label style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:11.5px;color:var(--ink-soft);"><input type="checkbox" id="ftPoopCatMulti"> 多貓同住,無法精準判斷</label>
         <div class="glabel" style="margin-top:10px;">顏色</div>
         <div class="chip-row" data-group="ftPoopCatColor">
@@ -1249,6 +1251,7 @@
           <div><label class="glabel">尿布墊(已扣除,g)</label><input type="number" min="0" id="ftPoopDogPadGrams"></div>
           <div><label class="glabel">戶外(g)</label><input type="number" min="0" id="ftPoopDogOutGrams"></div>
         </div>
+        <input type="number" min="0" id="ftPoopDogCount" placeholder="或只登記排便次數(次)" style="margin-top:8px;">
         <div class="glabel" style="margin-top:10px;">顏色</div>
         <div class="chip-row" data-group="ftPoopDogColor">
           <div class="chip" data-val="正常">正常</div>
@@ -14425,6 +14428,20 @@ var qrcode = function() {
     openLineCopyModal({ title: '📋 複製通知給家長', text: message });
   }
 
+  // text for "how much" of a pee/poop: grams, a count, or both
+  function amountPhrase(g, c){
+    const gt = g !== null && g !== undefined ? '約' + g + 'g' : '';
+    const ct = c !== null && c !== undefined ? c + '次' : '';
+    return gt && ct ? ct + '，' + gt : (ct || gt);
+  }
+  // summary-strip value: counts show as 次, grams as g (both shown if both were recorded)
+  function fmtAmount(grams, count){
+    grams = grams || 0; count = count || 0;
+    if (grams > 0 && count > 0) return grams + 'g・' + count + '次';
+    if (count > 0) return count + '次';
+    return grams + 'g';
+  }
+
   function toDatetimeLocalValue(d){
     const pad = n => String(n).padStart(2,'0');
     return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
@@ -16040,7 +16057,7 @@ var qrcode = function() {
       const waterSum24h = recent.reduce((s,e) => s + (e.waterMl||0), 0);
       if (waterSum24h < 20) flags.push('24小時內總飲水量少於20ml(目前約' + waterSum24h + 'ml)');
 
-      const latestPee = sorted.find(e => (e.peeGrams||0) > 0 || (e.peeDiaperGrams||0) > 0 || (e.peeCount||0) > 0);
+      const latestPee = sorted.find(e => (e.peeGrams||0) > 0 || (e.peeDiaperGrams||0) > 0 || (e.peeCount||0) > 0 || (e.peeTimes||0) > 0);
       if (!latestPee || (now - latestPee.createdAtMs) >= 24*3600*1000) flags.push('24小時未有排尿紀錄');
     }
 
@@ -16137,8 +16154,8 @@ var qrcode = function() {
   // read it as a precise biological-event timestamp.
   function computeLastCleanTimes(allEntries){
     const sorted = allEntries.slice().sort((a,b) => (b.createdAtMs||0) - (a.createdAtMs||0));
-    const lastPee = sorted.find(e => (e.peeGrams||0) > 0 || (e.peeDiaperGrams||0) > 0 || (e.peeCount||0) > 0);
-    const lastPoop = sorted.find(e => (e.poopGrams||0) > 0);
+    const lastPee = sorted.find(e => (e.peeGrams||0) > 0 || (e.peeDiaperGrams||0) > 0 || (e.peeCount||0) > 0 || (e.peeTimes||0) > 0);
+    const lastPoop = sorted.find(e => (e.poopGrams||0) > 0 || (e.poopCount||0) > 0);
     return {
       peeText: lastPee ? (lastPee.dateStr + ' ' + lastPee.timeStr) : null,
       poopText: lastPoop ? (lastPoop.dateStr + ' ' + lastPoop.timeStr) : null
@@ -16175,19 +16192,22 @@ var qrcode = function() {
     const totalGrams = dayEntries.reduce((s,e) => s + (e.grams || 0), 0);
     const totalWater = dayEntries.reduce((s,e) => s + (e.waterMl || 0), 0);
     const totalPoop = dayEntries.reduce((s,e) => s + (e.poopGrams || 0), 0);
+    const totalPoopCount = dayEntries.reduce((s,e) => s + (e.poopCount || 0), 0);
 
     let summaryHtml = `
       <div class="summary-item"><div class="num">${totalGrams}g</div><div class="lbl">今日進食量</div></div>
       <div class="summary-item"><div class="num">${totalWater}ml</div><div class="lbl">今日飲水量</div></div>
-      <div class="summary-item"><div class="num">${totalPoop}g</div><div class="lbl">今日排便量</div></div>
+      <div class="summary-item"><div class="num">${fmtAmount(totalPoop, totalPoopCount)}</div><div class="lbl">今日排便量</div></div>
     `;
     if (area === 'cat'){
       const totalPeeGrams = dayEntries.reduce((s,e) => s + (e.peeGrams || 0), 0);
-      summaryHtml += `<div class="summary-item"><div class="num">${totalPeeGrams}g</div><div class="lbl">今日排尿量</div></div>`;
+      const totalPeeTimes = dayEntries.reduce((s,e) => s + (e.peeTimes || 0), 0);
+      summaryHtml += `<div class="summary-item"><div class="num">${fmtAmount(totalPeeGrams, totalPeeTimes)}</div><div class="lbl">今日排尿量</div></div>`;
     } else {
       const totalPeeDiaper = dayEntries.reduce((s,e) => s + (e.peeDiaperGrams || 0), 0);
       const totalPeeCount = dayEntries.reduce((s,e) => s + (e.peeCount || 0), 0);
-      summaryHtml += `<div class="summary-item"><div class="num">${totalPeeDiaper}g</div><div class="lbl">尿布墊排尿</div></div>`;
+      const totalPadTimes = dayEntries.reduce((s,e) => s + (e.peeTimes || 0), 0);
+      summaryHtml += `<div class="summary-item"><div class="num">${fmtAmount(totalPeeDiaper, totalPadTimes)}</div><div class="lbl">尿布墊排尿</div></div>`;
       summaryHtml += `<div class="summary-item"><div class="num">${totalPeeCount}次</div><div class="lbl">戶外排尿</div></div>`;
     }
     document.getElementById('summaryStrip').innerHTML = summaryHtml;
@@ -16288,7 +16308,7 @@ var qrcode = function() {
     const area = allRooms[currentRoomId] ? allRooms[currentRoomId].area : 'cat';
     let content = '';
     let warn = false;
-    let grams = null, waterMl = null, peeGrams = null, peeCount = null, peeDiaperGrams = null, poopGrams = null;
+    let grams = null, waterMl = null, peeGrams = null, peeCount = null, peeDiaperGrams = null, poopGrams = null, peeTimes = null, poopCount = null;
     let pendingSnapshot = {};
     let roomUpdates = {};
     const parts = [];
@@ -16441,37 +16461,42 @@ var qrcode = function() {
       if (area === 'cat'){
         if (document.getElementById('ftPeeCatNone').checked){ parts.push('目前還沒觀察到尿尿，會再留意追蹤'); warn = true; }
         const pg = numVal('ftPeeCatGrams');
+        const pc = numVal('ftPeeCatCount');
         const peeColor = chipVal('ftPeeCatColor');
-        if (pg !== null){
-          peeGrams = pg;
-          parts.push('尿尿約' + pg + 'g' + (peeColor ? '，顏色' + peeColor : '') + (document.getElementById('ftPeeCatMulti').checked ? '(多貓同住，無法精準判斷)' : ''));
+        if (pg !== null || pc !== null){
+          peeGrams = pg; peeTimes = pc;
+          parts.push('尿尿' + amountPhrase(pg, pc) + (peeColor ? '，顏色' + peeColor : '') + (document.getElementById('ftPeeCatMulti').checked ? '(多貓同住，無法精準判斷)' : ''));
           if (peeColor === '異常') warn = true;
         }
         if (document.getElementById('ftPoopCatNone').checked){ parts.push('目前還沒觀察到便便，會再留意追蹤'); warn = true; }
         const bg = numVal('ftPoopCatGrams');
+        const bc = numVal('ftPoopCatCount');
         const poopColor = chipVal('ftPoopCatColor');
         const poopTexture = chipVal('ftPoopCatTexture');
-        if (bg !== null){
-          poopGrams = bg;
+        if (bg !== null || bc !== null){
+          poopGrams = bg; poopCount = bc;
           const bits = [poopColor ? '顏色' + poopColor : null, poopTexture ? '性質' + poopTexture : null].filter(Boolean);
-          parts.push('便便約' + bg + 'g' + (bits.length ? '，' + bits.join('、') : '') + (document.getElementById('ftPoopCatMulti').checked ? '(多貓同住，無法精準判斷)' : ''));
+          parts.push('便便' + amountPhrase(bg, bc) + (bits.length ? '，' + bits.join('、') : '') + (document.getElementById('ftPoopCatMulti').checked ? '(多貓同住，無法精準判斷)' : ''));
           if (poopColor === '異常' || (poopTexture && poopTexture !== '正常')) warn = true;
         }
       } else {
         if (document.getElementById('ftPeeDogNone').checked){ parts.push('目前還沒觀察到尿尿，會再留意追蹤'); warn = true; }
         const peeType = chipVal('ftPeeDogType');
         const peeColorDog = chipVal('ftPeeDogColor');
-        if (peeType === '尿布墊'){ peeDiaperGrams = numVal('ftPeeDogPadGrams'); if (peeDiaperGrams !== null) parts.push('尿布墊尿量約' + peeDiaperGrams + 'g' + (peeColorDog ? '，顏色' + peeColorDog : '')); }
+        if (peeType === '尿布墊'){ peeDiaperGrams = numVal('ftPeeDogPadGrams'); peeTimes = numVal('ftPeeDogPadCount'); if (peeDiaperGrams !== null || peeTimes !== null) parts.push('尿布墊尿尿' + amountPhrase(peeDiaperGrams, peeTimes) + (peeColorDog ? '，顏色' + peeColorDog : '')); }
         if (peeType === '戶外'){ peeCount = numVal('ftPeeDogOutCount'); if (peeCount !== null) parts.push('戶外尿尿' + peeCount + '次' + (peeColorDog ? '，顏色' + peeColorDog : '')); }
         if (peeColorDog === '異常') warn = true;
         if (document.getElementById('ftPoopDogNone').checked){ parts.push('目前還沒觀察到便便，會再留意追蹤'); warn = true; }
         const padPoop = numVal('ftPoopDogPadGrams') || 0, outPoop = numVal('ftPoopDogOutGrams') || 0;
+        const poopCntDog = numVal('ftPoopDogCount');
         const poopColorDog = chipVal('ftPoopDogColor');
         const poopTextureDog = chipVal('ftPoopDogTexture');
-        if (padPoop || outPoop){
-          poopGrams = padPoop + outPoop;
+        if (padPoop || outPoop || poopCntDog !== null){
+          if (padPoop || outPoop) poopGrams = padPoop + outPoop;
+          if (poopCntDog !== null) poopCount = poopCntDog;
           const bits = [poopColorDog ? '顏色' + poopColorDog : null, poopTextureDog ? '性質' + poopTextureDog : null].filter(Boolean);
-          parts.push('便便尿布墊' + padPoop + 'g、戶外' + outPoop + 'g' + (bits.length ? '，' + bits.join('、') : ''));
+          const gramText = (padPoop || outPoop) ? '尿布墊' + padPoop + 'g、戶外' + outPoop + 'g' : '';
+          parts.push('便便' + (poopCntDog !== null ? poopCntDog + '次' : '') + ((poopCntDog !== null && gramText) ? '，' : '') + gramText + (bits.length ? '，' + bits.join('、') : ''));
           if (poopColorDog === '異常' || (poopTextureDog && poopTextureDog !== '正常')) warn = true;
         }
       }
@@ -16607,7 +16632,7 @@ var qrcode = function() {
 
     return {
       content, contentParts, warn,
-      grams, waterMl, peeGrams, peeCount, peeDiaperGrams, poopGrams,
+      grams, waterMl, peeGrams, peeCount, peeDiaperGrams, poopGrams, peeTimes, poopCount,
       roomUpdates, pendingSnapshot, noteFieldId, timeFieldId
     };
   }
@@ -16654,7 +16679,7 @@ var qrcode = function() {
       panelId,
       content: fields.content, contentParts: fields.contentParts, warn: fields.warn,
       grams: fields.grams, waterMl: fields.waterMl, peeGrams: fields.peeGrams, peeCount: fields.peeCount,
-      peeDiaperGrams: fields.peeDiaperGrams, poopGrams: fields.poopGrams,
+      peeDiaperGrams: fields.peeDiaperGrams, poopGrams: fields.poopGrams, peeTimes: fields.peeTimes, poopCount: fields.poopCount,
       pendingSnapshot: fields.pendingSnapshot,
       formSnapshot: captureFormSnapshot(panelId),
       photoUrl: photoUrls[0] ? photoUrls[0].url : null,
@@ -16728,7 +16753,7 @@ var qrcode = function() {
       panelId,
       content: fields.content, contentParts: fields.contentParts, warn: fields.warn,
       grams: fields.grams, waterMl: fields.waterMl, peeGrams: fields.peeGrams, peeCount: fields.peeCount,
-      peeDiaperGrams: fields.peeDiaperGrams, poopGrams: fields.poopGrams,
+      peeDiaperGrams: fields.peeDiaperGrams, poopGrams: fields.poopGrams, peeTimes: fields.peeTimes, poopCount: fields.poopCount,
       pendingSnapshot: fields.pendingSnapshot,
       formSnapshot: captureFormSnapshot(panelId),
       photoUrl: mergedPhotoUrls[0] || null,
@@ -17052,18 +17077,21 @@ var qrcode = function() {
     const totalGrams = entries.reduce((s,e) => s + (e.grams || 0), 0);
     const totalWater = entries.reduce((s,e) => s + (e.waterMl || 0), 0);
     const totalPoop = entries.reduce((s,e) => s + (e.poopGrams || 0), 0);
+    const totalPoopCount = entries.reduce((s,e) => s + (e.poopCount || 0), 0);
     let summaryHtml = `
       <div class="summary-item"><div class="num">${totalGrams}g</div><div class="lbl">進食量</div></div>
       <div class="summary-item"><div class="num">${totalWater}ml</div><div class="lbl">飲水量</div></div>
-      <div class="summary-item"><div class="num">${totalPoop}g</div><div class="lbl">排便量</div></div>
+      <div class="summary-item"><div class="num">${fmtAmount(totalPoop, totalPoopCount)}</div><div class="lbl">排便量</div></div>
     `;
     if (h.area === 'cat'){
       const totalPeeGrams = entries.reduce((s,e) => s + (e.peeGrams || 0), 0);
-      summaryHtml += `<div class="summary-item"><div class="num">${totalPeeGrams}g</div><div class="lbl">排尿量</div></div>`;
+      const totalPeeTimes = entries.reduce((s,e) => s + (e.peeTimes || 0), 0);
+      summaryHtml += `<div class="summary-item"><div class="num">${fmtAmount(totalPeeGrams, totalPeeTimes)}</div><div class="lbl">排尿量</div></div>`;
     } else {
       const totalPeeDiaper = entries.reduce((s,e) => s + (e.peeDiaperGrams || 0), 0);
       const totalPeeCount = entries.reduce((s,e) => s + (e.peeCount || 0), 0);
-      summaryHtml += `<div class="summary-item"><div class="num">${totalPeeDiaper}g</div><div class="lbl">尿布墊排尿</div></div>`;
+      const totalPadTimes = entries.reduce((s,e) => s + (e.peeTimes || 0), 0);
+      summaryHtml += `<div class="summary-item"><div class="num">${fmtAmount(totalPeeDiaper, totalPadTimes)}</div><div class="lbl">尿布墊排尿</div></div>`;
       summaryHtml += `<div class="summary-item"><div class="num">${totalPeeCount}次</div><div class="lbl">戶外排尿</div></div>`;
     }
     document.getElementById('mhSummaryStrip').innerHTML = summaryHtml;
@@ -18244,6 +18272,7 @@ var qrcode = function() {
           <div class="glabel-row"><span class="glabel" style="margin:0;">排尿紀錄</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
           <label style="display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:11.5px;color:var(--ink-soft);"><input type="checkbox" id="dcFtPeeCatNone"> 目前無尿尿,待追蹤</label>
           <input type="number" min="0" id="dcFtPeeCatGrams" placeholder="重量(含貓砂,g)">
+          <input type="number" min="0" id="dcFtPeeCatCount" placeholder="或只登記次數(次)" style="margin-top:8px;">
           <div class="glabel" style="margin-top:10px;">顏色</div>
           <div class="chip-row" data-group="dcFtPeeCatColor">
             <div class="chip" data-val="正常">正常</div>
@@ -18254,6 +18283,7 @@ var qrcode = function() {
           <div class="glabel-row"><span class="glabel" style="margin:0;">排便紀錄</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
           <label style="display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:11.5px;color:var(--ink-soft);"><input type="checkbox" id="dcFtPoopCatNone"> 目前無便便,待追蹤</label>
           <input type="number" min="0" id="dcFtPoopCatGrams" placeholder="重量(含貓砂,g)">
+          <input type="number" min="0" id="dcFtPoopCatCount" placeholder="或只登記次數(次)" style="margin-top:8px;">
           <div class="glabel" style="margin-top:10px;">顏色</div>
           <div class="chip-row" data-group="dcFtPoopCatColor">
             <div class="chip" data-val="正常">正常</div>
@@ -18275,7 +18305,7 @@ var qrcode = function() {
             <div class="chip" data-val="尿布墊">尿布墊</div>
             <div class="chip" data-val="戶外">戶外</div>
           </div>
-          <div id="dcFtPeeDogPadWrap" style="display:none;margin-top:8px;"><input type="number" min="0" id="dcFtPeeDogPadGrams" placeholder="重量(已扣除尿布墊,g)"></div>
+          <div id="dcFtPeeDogPadWrap" style="display:none;margin-top:8px;"><input type="number" min="0" id="dcFtPeeDogPadGrams" placeholder="重量(已扣除尿布墊,g)"><input type="number" min="0" id="dcFtPeeDogPadCount" placeholder="或只登記次數(次)" style="margin-top:8px;"></div>
           <div id="dcFtPeeDogOutWrap" style="display:none;margin-top:8px;"><input type="number" min="0" id="dcFtPeeDogOutCount" placeholder="次數"></div>
           <div class="glabel" style="margin-top:10px;">顏色</div>
           <div class="chip-row" data-group="dcFtPeeDogColor">
@@ -18290,6 +18320,7 @@ var qrcode = function() {
             <div><label class="glabel">尿布墊(已扣除,g)</label><input type="number" min="0" id="dcFtPoopDogPadGrams"></div>
             <div><label class="glabel">戶外(g)</label><input type="number" min="0" id="dcFtPoopDogOutGrams"></div>
           </div>
+          <input type="number" min="0" id="dcFtPoopDogCount" placeholder="或只登記排便次數(次)" style="margin-top:8px;">
           <div class="glabel" style="margin-top:10px;">顏色</div>
           <div class="chip-row" data-group="dcFtPoopDogColor">
             <div class="chip" data-val="正常">正常</div>
@@ -18842,7 +18873,7 @@ var qrcode = function() {
       let content = '', warn = false;
       let docUpdates = {};
       let pendingSnapshot = {};
-      let grams = null, waterMl = null, peeGrams = null, peeCount = null, peeDiaperGrams = null, poopGrams = null;
+      let grams = null, waterMl = null, peeGrams = null, peeCount = null, peeDiaperGrams = null, poopGrams = null, peeTimes = null, poopCount = null;
       if (kind === 'feedtoilet'){
         const isCat = currentDaycareArea === 'cat';
         const parts = [];
@@ -18918,39 +18949,44 @@ var qrcode = function() {
         if (isCat){
           if (document.getElementById('dcFtPeeCatNone').checked){ parts.push('目前還沒觀察到尿尿，會再留意追蹤'); warn = true; }
           const pg = numVal('dcFtPeeCatGrams');
+          const pc = numVal('dcFtPeeCatCount');
           const peeColor = chipVal('dcFtPeeCatColor');
-          if (pg !== null){
-            peeGrams = pg;
-            parts.push('尿尿約' + pg + 'g' + (peeColor ? '，顏色' + peeColor : ''));
+          if (pg !== null || pc !== null){
+            peeGrams = pg; peeTimes = pc;
+            parts.push('尿尿' + amountPhrase(pg, pc) + (peeColor ? '，顏色' + peeColor : ''));
             if (peeColor === '異常') warn = true;
-            if (pg > 0) docUpdates.lastPeeCleanTime = nowTimeStr;
+            if (pg > 0 || pc > 0) docUpdates.lastPeeCleanTime = nowTimeStr;
           }
           if (document.getElementById('dcFtPoopCatNone').checked){ parts.push('目前還沒觀察到便便，會再留意追蹤'); warn = true; }
           const bg = numVal('dcFtPoopCatGrams');
+          const bc = numVal('dcFtPoopCatCount');
           const poopColor = chipVal('dcFtPoopCatColor');
           const poopTexture = chipVal('dcFtPoopCatTexture');
-          if (bg !== null){
-            poopGrams = bg;
+          if (bg !== null || bc !== null){
+            poopGrams = bg; poopCount = bc;
             const bits = [poopColor ? '顏色' + poopColor : null, poopTexture ? '性質' + poopTexture : null].filter(Boolean);
-            parts.push('便便約' + bg + 'g' + (bits.length ? '，' + bits.join('、') : ''));
+            parts.push('便便' + amountPhrase(bg, bc) + (bits.length ? '，' + bits.join('、') : ''));
             if (poopColor === '異常' || (poopTexture && poopTexture !== '正常')) warn = true;
-            if (bg > 0) docUpdates.lastPoopCleanTime = nowTimeStr;
+            if (bg > 0 || bc > 0) docUpdates.lastPoopCleanTime = nowTimeStr;
           }
         } else {
           if (document.getElementById('dcFtPeeDogNone').checked){ parts.push('目前還沒觀察到尿尿，會再留意追蹤'); warn = true; }
           const peeType = chipVal('dcFtPeeDogType');
           const peeColorDog = chipVal('dcFtPeeDogColor');
-          if (peeType === '尿布墊'){ const g = numVal('dcFtPeeDogPadGrams'); if (g !== null){ peeDiaperGrams = g; parts.push('尿布墊尿量約' + g + 'g' + (peeColorDog ? '，顏色' + peeColorDog : '')); docUpdates.lastPeeCleanTime = nowTimeStr; } }
+          if (peeType === '尿布墊'){ const g = numVal('dcFtPeeDogPadGrams'); const c = numVal('dcFtPeeDogPadCount'); if (g !== null || c !== null){ peeDiaperGrams = g; peeTimes = c; parts.push('尿布墊尿尿' + amountPhrase(g, c) + (peeColorDog ? '，顏色' + peeColorDog : '')); docUpdates.lastPeeCleanTime = nowTimeStr; } }
           if (peeType === '戶外'){ const c = numVal('dcFtPeeDogOutCount'); if (c !== null){ peeCount = c; parts.push('戶外尿尿' + c + '次' + (peeColorDog ? '，顏色' + peeColorDog : '')); docUpdates.lastPeeCleanTime = nowTimeStr; } }
           if (peeColorDog === '異常') warn = true;
           if (document.getElementById('dcFtPoopDogNone').checked){ parts.push('目前還沒觀察到便便，會再留意追蹤'); warn = true; }
           const padPoop = numVal('dcFtPoopDogPadGrams') || 0, outPoop = numVal('dcFtPoopDogOutGrams') || 0;
+          const poopCntDog = numVal('dcFtPoopDogCount');
           const poopColorDog = chipVal('dcFtPoopDogColor');
           const poopTextureDog = chipVal('dcFtPoopDogTexture');
-          if (padPoop || outPoop){
-            poopGrams = padPoop + outPoop;
+          if (padPoop || outPoop || poopCntDog !== null){
+            if (padPoop || outPoop) poopGrams = padPoop + outPoop;
+            if (poopCntDog !== null) poopCount = poopCntDog;
             const bits = [poopColorDog ? '顏色' + poopColorDog : null, poopTextureDog ? '性質' + poopTextureDog : null].filter(Boolean);
-            parts.push('便便尿布墊' + padPoop + 'g、戶外' + outPoop + 'g' + (bits.length ? '，' + bits.join('、') : ''));
+            const gramText = (padPoop || outPoop) ? '尿布墊' + padPoop + 'g、戶外' + outPoop + 'g' : '';
+            parts.push('便便' + (poopCntDog !== null ? poopCntDog + '次' : '') + ((poopCntDog !== null && gramText) ? '，' : '') + gramText + (bits.length ? '，' + bits.join('、') : ''));
             if (poopColorDog === '異常' || (poopTextureDog && poopTextureDog !== '正常')) warn = true;
             docUpdates.lastPoopCleanTime = nowTimeStr;
           }
@@ -19190,6 +19226,8 @@ var qrcode = function() {
       if (peeCount !== null) entry.peeCount = peeCount;
       if (peeDiaperGrams !== null) entry.peeDiaperGrams = peeDiaperGrams;
       if (poopGrams !== null) entry.poopGrams = poopGrams;
+      if (peeTimes !== null) entry.peeTimes = peeTimes;
+      if (poopCount !== null) entry.poopCount = poopCount;
       if (Object.keys(pendingSnapshot).length) entry.pendingSnapshot = pendingSnapshot;
       entry.formSnapshot = dcCaptureFormSnapshot();
       const existingPhotoUrls = (isEditing && oldEntry && oldEntry.photoUrls) ? oldEntry.photoUrls : [];
@@ -19245,18 +19283,21 @@ var qrcode = function() {
     const totalGrams = entries.reduce((s,e) => s + (e.grams || 0), 0);
     const totalWater = entries.reduce((s,e) => s + (e.waterMl || 0), 0);
     const totalPoop = entries.reduce((s,e) => s + (e.poopGrams || 0), 0);
+    const totalPoopCount = entries.reduce((s,e) => s + (e.poopCount || 0), 0);
     let summaryHtml = `
       <div class="summary-item"><div class="num">${totalGrams}g</div><div class="lbl">今日進食量</div></div>
       <div class="summary-item"><div class="num">${totalWater}ml</div><div class="lbl">今日飲水量</div></div>
-      <div class="summary-item"><div class="num">${totalPoop}g</div><div class="lbl">今日排便量</div></div>
+      <div class="summary-item"><div class="num">${fmtAmount(totalPoop, totalPoopCount)}</div><div class="lbl">今日排便量</div></div>
     `;
     if (currentDaycareArea === 'cat'){
       const totalPeeGrams = entries.reduce((s,e) => s + (e.peeGrams || 0), 0);
-      summaryHtml += `<div class="summary-item"><div class="num">${totalPeeGrams}g</div><div class="lbl">今日排尿量</div></div>`;
+      const totalPeeTimes = entries.reduce((s,e) => s + (e.peeTimes || 0), 0);
+      summaryHtml += `<div class="summary-item"><div class="num">${fmtAmount(totalPeeGrams, totalPeeTimes)}</div><div class="lbl">今日排尿量</div></div>`;
     } else {
       const totalPeeDiaper = entries.reduce((s,e) => s + (e.peeDiaperGrams || 0), 0);
       const totalPeeCount = entries.reduce((s,e) => s + (e.peeCount || 0), 0);
-      summaryHtml += `<div class="summary-item"><div class="num">${totalPeeDiaper}g</div><div class="lbl">尿布墊排尿</div></div>`;
+      const totalPadTimes = entries.reduce((s,e) => s + (e.peeTimes || 0), 0);
+      summaryHtml += `<div class="summary-item"><div class="num">${fmtAmount(totalPeeDiaper, totalPadTimes)}</div><div class="lbl">尿布墊排尿</div></div>`;
       summaryHtml += `<div class="summary-item"><div class="num">${totalPeeCount}次</div><div class="lbl">戶外排尿</div></div>`;
     }
     document.getElementById('dcSummaryStrip').innerHTML = summaryHtml;
