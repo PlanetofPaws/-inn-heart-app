@@ -188,7 +188,7 @@
       </button>
       <div id="cameraSettingLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:8px;">設定小米 App 連結</div>
       <div id="staffManageLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:4px;">管理員後台</div>
-      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:20px;">版本 2026-10-07-6</div>
+      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:20px;">版本 2026-11-15-1</div>
     </div>
   </div>
 
@@ -406,7 +406,7 @@
     </div>
 
     <div class="field">
-      <button id="dcConfirmLineBoundBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);width:100%;font-size:11px;">✅ 已確認綁定此家長LINE</button>
+      <button id="dcConfirmLineBoundBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);width:100%;font-size:11px;">📋 複製綁定確認訊息(貼給家長 LINE)</button>
     </div>
     <div class="field">
       <button id="dcStaySummaryToggleBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);width:100%;font-size:11px;padding:9px 6px;">📋 日托重點摘要</button>
@@ -429,7 +429,7 @@
     <div class="field" id="dcPickupCardPanelWrap" style="display:none;">
       <div style="display:flex;gap:8px;">
         <button id="dcReprintPickupCardBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);flex:1;font-size:11px;padding:9px 6px;">🖨️ 重新列印小卡</button>
-        <button id="dcResendPickupQrBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);flex:1;font-size:11px;padding:9px 6px;">📱 傳送小卡給家長</button>
+        <button id="dcResendPickupQrBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);flex:1;font-size:11px;padding:9px 6px;">📋 複製小卡給家長 LINE</button>
       </div>
     </div>
 
@@ -902,7 +902,7 @@
     </div>
 
     <div class="field">
-      <button id="confirmLineBoundBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);width:100%;font-size:11px;">✅ 已確認綁定此家長LINE</button>
+      <button id="confirmLineBoundBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);width:100%;font-size:11px;">📋 複製綁定確認訊息(貼給家長 LINE)</button>
     </div>
     <div class="field">
       <button id="staySummaryToggleBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);width:100%;font-size:11px;padding:9px 6px;">📋 住宿重點摘要</button>
@@ -932,7 +932,7 @@
     <div class="field" id="pickupCardPanelWrap" style="display:none;">
       <div style="display:flex;gap:8px;">
         <button id="reprintPickupCardBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);flex:1;font-size:11px;padding:9px 6px;">🖨️ 重新列印小卡</button>
-        <button id="resendPickupQrBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);flex:1;font-size:11px;padding:9px 6px;">📱 傳送小卡給家長</button>
+        <button id="resendPickupQrBtn" class="small-btn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);flex:1;font-size:11px;padding:9px 6px;">📋 複製小卡給家長 LINE</button>
       </div>
     </div>
     <div class="field" id="changeRoomPanel" style="display:none;">
@@ -1628,10 +1628,30 @@
   </div>
 </div>
 
+<div id="lineCopyModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:var(--card);color:var(--ink);border-radius:20px;padding:22px 20px;max-width:380px;width:100%;max-height:88vh;overflow-y:auto;">
+    <div id="lineCopyModalTitle" style="font-size:16px;font-weight:700;margin-bottom:6px;">📋 複製後貼到家長 LINE</div>
+    <div id="lineCopyModalHint" style="font-size:11.5px;color:var(--ink-soft);margin-bottom:10px;">系統不會自動傳送,請複製後自己貼到家長的 LINE。</div>
+    <div id="lineCopyModalImgWrap" style="display:none;text-align:center;margin-bottom:10px;">
+      <img id="lineCopyModalImg" style="width:220px;height:220px;background:#fff;border-radius:10px;padding:6px;">
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <button id="lineCopyModalCopyImgBtn" style="flex:1;padding:10px;border-radius:12px;border:1px solid var(--line);background:#fff;color:#2A2A2C;font-weight:700;font-size:12.5px;cursor:pointer;">複製 QR 圖片</button>
+        <a id="lineCopyModalDownloadLink" download="pickup-card.png" style="flex:1;padding:10px;border-radius:12px;border:1px solid var(--line);background:#fff;color:#2A2A2C;font-weight:700;font-size:12.5px;text-decoration:none;display:block;">下載 QR 圖片</a>
+      </div>
+      <div style="font-size:10.5px;color:var(--ink-soft);margin-top:6px;">先貼文字,再貼圖片(或長按圖片儲存後從相簿傳送)</div>
+    </div>
+    <textarea id="lineCopyModalText" readonly style="width:100%;min-height:200px;font-size:12.5px;line-height:1.6;padding:10px;border-radius:12px;border:1px solid var(--line);background:#fff;color:#2A2A2C;"></textarea>
+    <div style="display:flex;gap:8px;margin-top:14px;">
+      <button id="lineCopyModalCopyBtn" style="flex:1;padding:12px;border-radius:12px;border:none;background:var(--pine);color:#fff;font-weight:700;font-size:13.5px;cursor:pointer;">複製文字</button>
+      <button id="lineCopyModalCloseBtn" style="flex:1;padding:12px;border-radius:12px;border:1px solid var(--line);background:#fff;color:#2A2A2C;font-weight:700;font-size:13.5px;cursor:pointer;">關閉</button>
+    </div>
+  </div>
+</div>
+
 <div id="checkoutCopyModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:999;align-items:center;justify-content:center;padding:20px;">
   <div style="background:var(--card);color:var(--ink);border-radius:20px;padding:24px 22px;max-width:380px;width:100%;max-height:85vh;overflow-y:auto;">
-    <div style="font-size:16px;font-weight:700;margin-bottom:10px;">📋 住宿重點摘要(可複製手動傳送)</div>
-    <div style="font-size:11.5px;color:var(--ink-soft);margin-bottom:10px;">這段文字不會自動發送,退房溫馨提醒已經另外自動推播給家長了。這段是額外資訊,複製後可自行貼到 LINE 或其他管道傳給家長。</div>
+    <div style="font-size:16px;font-weight:700;margin-bottom:10px;">📋 退房訊息(複製後貼給家長 LINE)</div>
+    <div style="font-size:11.5px;color:var(--ink-soft);margin-bottom:10px;">系統不會自動發送。上面是退房返家小提醒,下面是這次住宿的重點摘要,整段複製後貼到家長 LINE 即可。</div>
     <textarea id="checkoutCopyModalText" readonly style="width:100%;min-height:220px;font-size:12.5px;line-height:1.6;padding:10px;border-radius:12px;border:1px solid var(--line);background:#fff;color:#2A2A2C;"></textarea>
     <div style="display:flex;gap:8px;margin-top:14px;">
       <button id="checkoutCopyModalCopyBtn" style="flex:1;padding:12px;border-radius:12px;border:none;background:var(--pine);color:#fff;font-weight:700;font-size:13.5px;cursor:pointer;">複製文字</button>
@@ -14317,16 +14337,92 @@ var qrcode = function() {
     return sendLineMessagesToPhone(phone, [buildPickupCardFlexMessage(qrImageUrl, verifyToken)]);
   }
 
-  async function sendLineNotification(phone, message){
-    if (!phone) { alert('這筆資料沒有手機號碼,無法發送。'); return; }
-    const result = await sendLineMessagesToPhone(phone, [{ type: 'text', text: message }]);
-    if (result.reason === 'not-bound'){
-      alert('這位家長目前還沒有綁定 LINE,沒辦法直接發送。可以請他先用家長端的頁面綁定 LINE,或是自己手動聯絡。');
-    } else if (result.sent){
-      alert('已發送到家長的 LINE。');
-    } else {
-      alert('部分發送失敗,建議改用複製訊息手動傳送確認。');
+  // LINE messages are no longer pushed automatically: every "send to parent" action opens this
+  // window instead, with the message already written so staff can copy it and paste into the parent's LINE.
+  async function copyTextWithFeedback(text, textEl, btn){
+    try {
+      await navigator.clipboard.writeText(text);
+      const original = btn.textContent;
+      btn.textContent = '已複製 ✓';
+      setTimeout(() => { btn.textContent = original; }, 1500);
+    } catch (err) {
+      textEl.select();
+      alert('自動複製失敗,已幫你反白文字,請手動複製(Ctrl/Cmd+C)。');
     }
+  }
+
+  function qrGifToPngBlob(dataUrl){
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const c = document.createElement('canvas');
+        c.width = 600; c.height = 600;
+        const ctx = c.getContext('2d');
+        ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, 600, 600);
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(img, 20, 20, 560, 560);
+        c.toBlob(b => b ? resolve(b) : reject(new Error('toBlob failed')), 'image/png');
+      };
+      img.onerror = reject;
+      img.src = dataUrl;
+    });
+  }
+
+  function openLineCopyModal(opts){
+    document.getElementById('lineCopyModalTitle').textContent = opts.title || '📋 複製後貼到家長 LINE';
+    document.getElementById('lineCopyModalHint').textContent = opts.hint || '系統不會自動傳送,請複製後自己貼到家長的 LINE。';
+    document.getElementById('lineCopyModalText').value = opts.text || '';
+    const wrap = document.getElementById('lineCopyModalImgWrap');
+    if (opts.qrDataUrl){
+      document.getElementById('lineCopyModalImg').src = opts.qrDataUrl;
+      qrGifToPngBlob(opts.qrDataUrl).then(blob => {
+        document.getElementById('lineCopyModalDownloadLink').href = URL.createObjectURL(blob);
+        wrap._pngBlob = blob;
+      }).catch(() => {});
+      wrap.style.display = 'block';
+    } else {
+      wrap.style.display = 'none';
+    }
+    document.getElementById('lineCopyModal').style.display = 'flex';
+  }
+
+  document.getElementById('lineCopyModalCopyBtn').addEventListener('click', () => {
+    copyTextWithFeedback(document.getElementById('lineCopyModalText').value, document.getElementById('lineCopyModalText'), document.getElementById('lineCopyModalCopyBtn'));
+  });
+  document.getElementById('lineCopyModalCopyImgBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('lineCopyModalCopyImgBtn');
+    const blob = document.getElementById('lineCopyModalImgWrap')._pngBlob;
+    try {
+      if (!blob || !window.ClipboardItem) throw new Error('unsupported');
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+      const original = btn.textContent;
+      btn.textContent = '已複製 ✓';
+      setTimeout(() => { btn.textContent = original; }, 1500);
+    } catch (err) {
+      alert('這個瀏覽器不能直接複製圖片,請按「下載 QR 圖片」,或在圖片上按右鍵/長按儲存後再傳給家長。');
+    }
+  });
+  document.getElementById('lineCopyModalCloseBtn').addEventListener('click', () => {
+    document.getElementById('lineCopyModal').style.display = 'none';
+  });
+
+  function buildPickupCardCopyText(verifyToken){
+    return '(inn)heart 接回小卡\n接回寶貝時,請出示此 QR Code 給工作人員掃描核對。\n' +
+      (verifyToken ? '掃描不到時,可直接告知工作人員核對代碼:' + verifyToken + '\n' : '') +
+      '⚠️ 為了寶貝安全,條碼禁止隨意傳送或交付給非接送者的其他人。若條碼遺失,請務必立即主動告知,以便旅館更加嚴謹審核接送者身份。';
+  }
+
+  function openPickupCardCopyModal(verifyToken){
+    openLineCopyModal({
+      title: '📋 複製接回小卡給家長',
+      hint: '系統不會自動傳送。請先複製文字貼到家長 LINE,再把下面的 QR 圖片也傳給他。',
+      text: buildPickupCardCopyText(verifyToken),
+      qrDataUrl: generateQrDataUrl(buildVerifyUrl(verifyToken))
+    });
+  }
+
+  async function sendLineNotification(phone, message){
+    openLineCopyModal({ title: '📋 複製通知給家長', text: message });
   }
 
   function toDatetimeLocalValue(d){
@@ -14953,26 +15049,17 @@ var qrcode = function() {
     if (stale) persistPickupQrInBackground(room, verifyToken, qrImageUrl);
   });
 
-  document.getElementById('resendPickupQrBtn').addEventListener('click', async () => {
+  document.getElementById('resendPickupQrBtn').addEventListener('click', () => {
     const room = allRooms[currentRoomId];
-    if (!room.phone){ alert('這個房間沒有家長手機號碼,無法傳送。'); return; }
     const { verifyToken, qrImageUrl, stale } = getPickupQr(room);
     if (stale) persistPickupQrInBackground(room, verifyToken, qrImageUrl);
-    const lineIds = await findLineBindingsForPhone(room.phone);
-    if (!lineIds.length){ alert('這位家長目前還沒有綁定 LINE,沒辦法直接傳送,請改用列印小卡。'); return; }
-    await sendLineImage(room.phone, qrImageUrl, verifyToken);
-    alert('已傳送 QR Code 到家長的 LINE。');
+    openPickupCardCopyModal(verifyToken);
   });
 
-  document.getElementById('confirmLineBoundBtn').addEventListener('click', async () => {
+  document.getElementById('confirmLineBoundBtn').addEventListener('click', () => {
     const room = allRooms[currentRoomId];
-    if (!room.phone){ alert('這個房間沒有家長手機號碼。'); return; }
-    const lineIds = await findLineBindingsForPhone(room.phone);
-    if (!lineIds.length){ alert('這位家長目前還沒有綁定 LINE,請先請他用家長端頁面完成綁定,再按這顆按鈕發送確認訊息。'); return; }
-    const greeting = room.name + ' 寶貝已經綁定您的 LINE,之後只有這個 LINE 帳號才能查閱寶貝的照護紀錄,以及接收旅館發送的通知,其他人的 LINE 無法查看,請放心入住!';
-    const result = await sendLineMessagesToPhone(room.phone, [{ type: 'text', text: greeting }]);
-    if (result.sent) alert('已發送綁定確認訊息給家長。');
-    else alert('發送時發生問題,建議稍後再試一次或改用電話告知。');
+    const greeting = room.name + ' 寶貝已經綁定您的 LINE,之後只有這個 LINE 帳號才能查閱寶貝的照護紀錄,其他人的 LINE 無法查看,請放心入住!';
+    openLineCopyModal({ title: '📋 複製綁定確認訊息', text: greeting });
   });
 
   document.getElementById('printBtn').addEventListener('click', () => {
@@ -15256,11 +15343,7 @@ var qrcode = function() {
       const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('退房逾時,請檢查網路連線後再試一次(如果房間已經清空一半,可以用房間卡片上的「重置」按鈕清乾淨)')), 20000));
       await Promise.race([Promise.all([photoCleanupPromise, historyWritePromise, mergeReleasePromise]), timeoutPromise]);
 
-      // best-effort: send the standard warm homecoming reminder to the parent's LINE; never blocks checkout if it fails.
-      // (this is the ONLY thing sent automatically — the fuller 住宿重點摘要 below is shown for staff to copy manually)
-      if (room.phone){
-        sendLineMessagesToPhone(room.phone, [{ type: 'text', text: buildHomecomingReminder(room.area) }]).catch(() => {});
-      }
+      // nothing is sent to LINE automatically; the reminder is included in the copy window shown after checkout
 
       await setDoc(doc(db, 'rooms', currentRoomId), {
         area: room.area, no: room.no, name: null, phone: null, stayId: null, items: null, notes: null,
@@ -15273,7 +15356,7 @@ var qrcode = function() {
       showScreen('screenRooms');
       renderRooms();
 
-      document.getElementById('checkoutCopyModalText').value = buildCheckoutCopyText(room, lastCleanTimes, summaryAuto, specialNote);
+      document.getElementById('checkoutCopyModalText').value = buildHomecomingReminder(room.area) + '\n\n' + buildCheckoutCopyText(room, lastCleanTimes, summaryAuto, specialNote);
       document.getElementById('checkoutCopyModal').style.display = 'flex';
     } catch (err) {
       alert('退房時發生錯誤:' + err.message + '\n請把這則訊息截圖回報。');
@@ -19277,13 +19360,8 @@ var qrcode = function() {
   document.getElementById('dcConfirmLineBoundBtn').addEventListener('click', async () => {
     const snap = await getDoc(doc(db, 'daycare', currentDaycareId));
     const data = snap.exists() ? snap.data() : {};
-    if (!data.phone){ alert('這筆安親紀錄沒有家長手機號碼。'); return; }
-    const lineIds = await findLineBindingsForPhone(data.phone);
-    if (!lineIds.length){ alert('這位家長目前還沒有綁定 LINE,請先請他用家長端頁面完成綁定,再按這顆按鈕發送確認訊息。'); return; }
-    const greeting = data.name + ' 寶貝已經綁定您的 LINE,之後只有這個 LINE 帳號才能查閱寶貝的照護紀錄,以及接收旅館發送的通知,其他人的 LINE 無法查看,請放心入托!';
-    const result = await sendLineMessagesToPhone(data.phone, [{ type: 'text', text: greeting }]);
-    if (result.sent) alert('已發送綁定確認訊息給家長。');
-    else alert('發送時發生問題,建議稍後再試一次或改用電話告知。');
+    const greeting = (data.name || '寶貝') + ' 寶貝已經綁定您的 LINE,之後只有這個 LINE 帳號才能查閱寶貝的照護紀錄,其他人的 LINE 無法查看,請放心入托!';
+    openLineCopyModal({ title: '📋 複製綁定確認訊息', text: greeting });
   });
 
   document.getElementById('dcStaySummaryToggleBtn').addEventListener('click', async () => {
@@ -19330,12 +19408,9 @@ var qrcode = function() {
   document.getElementById('dcResendPickupQrBtn').addEventListener('click', async () => {
     const snap = await getDoc(doc(db, 'daycare', currentDaycareId));
     const record = snap.exists() ? snap.data() : {};
-    if (!record.phone){ alert('這筆安親紀錄沒有家長手機號碼,無法傳送。'); return; }
     const { verifyToken, qrImageUrl, stale } = getDaycarePickupQr(record, currentDaycareId);
     if (stale) persistDaycarePickupQrInBackground(currentDaycareId, verifyToken, qrImageUrl);
-    const result = await sendLineImage(record.phone, qrImageUrl, verifyToken);
-    if (result && result.sent) alert('已傳送接回小卡給家長。');
-    else alert('傳送時發生問題,建議改用列印或稍後再試一次。');
+    openPickupCardCopyModal(verifyToken);
   });
 
   function printDaycare(meta, itemsText, notesText, entries, summaryInfo){
