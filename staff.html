@@ -188,7 +188,7 @@
       </button>
       <div id="cameraSettingLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:8px;">設定小米 App 連結</div>
       <div id="staffManageLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:4px;">管理員後台</div>
-      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:20px;">版本 2026-11-15-2</div>
+      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:20px;">版本 2026-11-15-3</div>
     </div>
   </div>
 
@@ -1418,7 +1418,7 @@
     <!-- 觸發情境紀錄(狗狗限定) -->
     <div class="cat-panel" data-panel="incident">
       <div class="field">
-        <label>情境</label>
+        <div class="glabel-row"><label style="margin:0;">情境</label><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
         <textarea id="incidentSituationText" placeholder="發生了什麼情境..."></textarea>
       </div>
       <div class="field">
@@ -1492,7 +1492,7 @@
     <!-- 其他(自行登打) -->
     <div class="cat-panel" data-panel="otherNote">
       <div class="field">
-        <label>其他(自行登打)</label>
+        <div class="glabel-row"><label style="margin:0;">其他(自行登打)</label><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
         <textarea id="otherNoteText" style="min-height:160px;"></textarea>
       </div>
       <div class="field">
