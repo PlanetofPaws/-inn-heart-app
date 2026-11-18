@@ -188,7 +188,7 @@
       </button>
       <div id="cameraSettingLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:8px;">設定小米 App 連結</div>
       <div id="staffManageLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:4px;">管理員後台</div>
-      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:20px;">版本 2026-11-15-3</div>
+      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:20px;">版本 2026-11-18-2</div>
     </div>
   </div>
 
@@ -15318,7 +15318,7 @@ var qrcode = function() {
   }
 
   document.getElementById('checkoutConfirmBtn').addEventListener('click', async () => {
-    if (!confirm('確定要辦理退房嗎?照片會保留 5 天(期間可在歷史查詢查看、匯出),超過 5 天會自動刪除以節省空間,文字紀錄會永久保留。')) return;
+    if (!confirm('確定要辦理退房嗎?住宿期間的照片都會保留,退房後再保留 5 天(期間可在歷史查詢查看、匯出),之後會自動刪除以節省空間,文字紀錄會永久保留。')) return;
     const confirmBtn = document.getElementById('checkoutConfirmBtn');
     const originalText = confirmBtn.textContent;
     confirmBtn.disabled = true;
@@ -15340,6 +15340,7 @@ var qrcode = function() {
               roomId: currentRoomId, stayId: room.stayId || null,
               checkinDate: room.checkinDate || '',
               checkedOutAt: new Date().toLocaleString('zh-TW'),
+              checkedOutAtMs: Date.now(),
               avatarUrl: room.avatarUrl || null,
               items: room.items || null, notes: room.notes || null,
               lastPeeCleanTime: lastCleanTimes.peeText || null,
@@ -16623,17 +16624,21 @@ var qrcode = function() {
       content = parts.join('，');
     }
 
+    // 備註 is kept on the entry (and comes back when editing) but is NOT shown in the timeline.
+    // The 「其他(自行登打)」 panel is the exception: there the text box is the entry itself.
     const note = txtVal(noteFieldId);
-    if (note) parts.push('備註:' + note);
+    const noteIsContent = (panelId === 'otherNote');
+    if (note && noteIsContent) parts.push(note);
+    const hiddenNote = (note && !noteIsContent) ? note : '';
     content = parts.join('。');
     const contentParts = parts.slice();
-    if (!content && entryPhotos.length === 0) return { error: '請至少填寫一項狀況、備註或新增照片' };
-    if (!content){ content = '（僅上傳照片）'; contentParts.push(content); }
+    if (!content && entryPhotos.length === 0 && !hiddenNote) return { error: '請至少填寫一項狀況、備註或新增照片' };
+    if (!content){ content = entryPhotos.length ? '（僅上傳照片）' : '（已登打備註）'; contentParts.push(content); }
 
     return {
       content, contentParts, warn,
       grams, waterMl, peeGrams, peeCount, peeDiaperGrams, poopGrams, peeTimes, poopCount,
-      roomUpdates, pendingSnapshot, noteFieldId, timeFieldId
+      roomUpdates, pendingSnapshot, noteFieldId, timeFieldId, hiddenNote
     };
   }
 
@@ -16679,7 +16684,7 @@ var qrcode = function() {
       panelId,
       content: fields.content, contentParts: fields.contentParts, warn: fields.warn,
       grams: fields.grams, waterMl: fields.waterMl, peeGrams: fields.peeGrams, peeCount: fields.peeCount,
-      peeDiaperGrams: fields.peeDiaperGrams, poopGrams: fields.poopGrams, peeTimes: fields.peeTimes, poopCount: fields.poopCount,
+      peeDiaperGrams: fields.peeDiaperGrams, poopGrams: fields.poopGrams, peeTimes: fields.peeTimes, poopCount: fields.poopCount, staffNote: fields.hiddenNote || null,
       pendingSnapshot: fields.pendingSnapshot,
       formSnapshot: captureFormSnapshot(panelId),
       photoUrl: photoUrls[0] ? photoUrls[0].url : null,
@@ -16753,7 +16758,7 @@ var qrcode = function() {
       panelId,
       content: fields.content, contentParts: fields.contentParts, warn: fields.warn,
       grams: fields.grams, waterMl: fields.waterMl, peeGrams: fields.peeGrams, peeCount: fields.peeCount,
-      peeDiaperGrams: fields.peeDiaperGrams, poopGrams: fields.poopGrams, peeTimes: fields.peeTimes, poopCount: fields.poopCount,
+      peeDiaperGrams: fields.peeDiaperGrams, poopGrams: fields.poopGrams, peeTimes: fields.peeTimes, poopCount: fields.poopCount, staffNote: fields.hiddenNote || null,
       pendingSnapshot: fields.pendingSnapshot,
       formSnapshot: captureFormSnapshot(panelId),
       photoUrl: mergedPhotoUrls[0] || null,
@@ -17424,11 +17429,21 @@ var qrcode = function() {
       if (Date.now() - last < 6 * 3600 * 1000) return;
       const cutoffMs = Date.now() - PHOTO_KEEP_DAYS * 24 * 3600 * 1000;
 
-      // boarding: entries are a subcollection per room
+      // boarding: a photo is kept while the dog is still staying, and for 5 days after checkout
+      // (so a 7-day stay never loses its day-1 photos before checkout / the printed sheet).
+      const activeStayIds = new Set(Object.values(allRooms).map(r => r.stayId).filter(Boolean));
+      const checkoutMsByStay = {};
+      const memberSnap = await getDocs(collection(db, 'members'));
+      memberSnap.forEach(m => (m.data().history || []).forEach(h => {
+        if (h.stayId) checkoutMsByStay[h.stayId] = h.checkedOutAtMs || 0;
+      }));
       for (const rid of Object.keys(allRooms)){
         const snap = await getDocs(query(collection(db, 'rooms', rid, 'entries'), where('createdAtMs', '<', cutoffMs)));
         for (const d of snap.docs){
           const data = d.data();
+          if (data.stayId && activeStayIds.has(data.stayId)) continue;           // still staying: keep
+          const outMs = data.stayId ? checkoutMsByStay[data.stayId] : 0;
+          if (outMs && outMs >= cutoffMs) continue;                               // checked out < 5 days ago: keep
           const paths = (data.photoPaths && data.photoPaths.length) ? data.photoPaths : (data.photoPath ? [data.photoPath] : []);
           if (!paths.length && !(data.photoUrls && data.photoUrls.length)) continue;
           await Promise.all(paths.map(p => deleteObject(ref(storage, p)).catch(() => {})));
@@ -18874,6 +18889,7 @@ var qrcode = function() {
       let docUpdates = {};
       let pendingSnapshot = {};
       let grams = null, waterMl = null, peeGrams = null, peeCount = null, peeDiaperGrams = null, poopGrams = null, peeTimes = null, poopCount = null;
+      let staffNote = ''; // 備註: stored on the entry, not shown in the timeline
       if (kind === 'feedtoilet'){
         const isCat = currentDaycareArea === 'cat';
         const parts = [];
@@ -18993,7 +19009,7 @@ var qrcode = function() {
         }
 
         const note = txtVal('dcFtNoteText');
-        if (note) parts.push(note);
+        if (note) staffNote = note;
         if (!parts.length) throw new Error('請至少填寫一項飲食或排泄紀錄');
         content = parts.join('，');
       } else if (kind === 'walk'){
@@ -19018,7 +19034,7 @@ var qrcode = function() {
         const motivation = chipVal('dcWalkMotivation');
         if (motivation){ parts.push('探索動機看起來' + motivation); if (motivation !== '好奇且放鬆') warn = true; }
         const note = txtVal('dcWalkNote');
-        if (note) parts.push(note);
+        if (note) staffNote = note;
         if (!parts.length) throw new Error('請至少填寫一項散步時段紀錄');
         content = parts.join('，');
       } else if (kind === 'social'){
@@ -19053,7 +19069,7 @@ var qrcode = function() {
           if (envAdapt && envAdapt !== '迅速融入環境') warn = true;
         }
         const note = txtVal('dcSocialNoteText');
-        if (note) parts.push(note);
+        if (note) staffNote = note;
         if (!parts.length) throw new Error('請至少填寫一項社交與行為觀察');
         content = parts.join('，');
       } else if (kind === 'rest'){
@@ -19066,7 +19082,7 @@ var qrcode = function() {
         const activities = chipVals('dcDecompressActivity');
         if (activities.length) parts.push('有提供' + activities.join('、') + '幫助放鬆');
         const note = txtVal('dcRestNoteText');
-        if (note) parts.push(note);
+        if (note) staffNote = note;
         if (!parts.length) throw new Error('請至少填寫一項休息與情緒調節紀錄');
         content = parts.join('，');
       } else if (kind === 'reactivity'){
@@ -19109,7 +19125,7 @@ var qrcode = function() {
         reactPart('人類', 'dcReactHumanEncounter', 'dcReactHumanResponse', 'dcReactHumanAction', ['警戒避開','吠叫/撲人']);
         reactPart('交通工具/噪音', 'dcReactNoiseEncounter', 'dcReactNoiseResponse', 'dcReactNoiseAction', ['耳朵向後/貼地','試圖逃跑/爆衝','停在原地發抖']);
         const note = txtVal('dcReactNoteText');
-        if (note) parts.push(note);
+        if (note) staffNote = note;
         if (!parts.length) throw new Error('請至少填寫一項環境刺激與社交反應紀錄');
         content = parts.join('；');
       } else if (kind === 'postwalk'){
@@ -19119,7 +19135,7 @@ var qrcode = function() {
         const care = chipVals('dcPostwalkCare');
         if (care.length) parts.push('回家後已經' + care.join('、'));
         const note = txtVal('dcPostwalkNoteText');
-        if (note) parts.push(note);
+        if (note) staffNote = note;
         if (!parts.length) throw new Error('請至少填寫一項疲勞度與回家狀態評估');
         content = parts.join('，');
       } else if (kind === 'training'){
@@ -19130,7 +19146,7 @@ var qrcode = function() {
         const parts = [];
         if (item) parts.push('這次練習了' + item);
         if (attitude){ parts.push('學習態度' + attitude); if (attitude !== '專注力佳') warn = true; }
-        if (note) parts.push(note);
+        if (note) staffNote = note;
         content = parts.join('，');
       } else if (kind === 'special'){
         warn = true;
@@ -19206,11 +19222,12 @@ var qrcode = function() {
         }
 
         const note = txtVal('dcSpecialNoteText');
-        if (note) parts.push(note);
+        if (note) staffNote = note;
         if (!parts.length) throw new Error('請至少填寫特殊事件的詳細內容');
         content = parts.join('；');
       }
 
+      if (!content && staffNote) content = '（已登打備註）';
       const dcTimeInput = document.getElementById('dcEntryTime');
       const chosenTime = (dcTimeInput && dcTimeInput.value) ? new Date(dcTimeInput.value) : new Date();
       const entryId = isEditing ? dcEditingEntryId : ('dce_' + Date.now() + '_' + Math.random().toString(36).slice(2,8));
@@ -19228,6 +19245,7 @@ var qrcode = function() {
       if (poopGrams !== null) entry.poopGrams = poopGrams;
       if (peeTimes !== null) entry.peeTimes = peeTimes;
       if (poopCount !== null) entry.poopCount = poopCount;
+      if (staffNote) entry.staffNote = staffNote;
       if (Object.keys(pendingSnapshot).length) entry.pendingSnapshot = pendingSnapshot;
       entry.formSnapshot = dcCaptureFormSnapshot();
       const existingPhotoUrls = (isEditing && oldEntry && oldEntry.photoUrls) ? oldEntry.photoUrls : [];
