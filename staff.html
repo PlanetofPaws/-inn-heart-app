@@ -151,6 +151,7 @@
     #printArea .summary-table th{width:32%;background:#f2f2f2;font-weight:700;}
     #printArea .summary-table td{white-space:pre-line;}
   }
+  .ft-hide{display:none !important;}
 </style>
 </head>
 <body>
@@ -188,7 +189,7 @@
       </button>
       <div id="cameraSettingLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:8px;">設定小米 App 連結</div>
       <div id="staffManageLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:4px;">管理員後台</div>
-      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:20px;">版本 2026-11-18-2</div>
+      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:20px;">版本 2026-11-19-1</div>
     </div>
   </div>
 
@@ -978,7 +979,8 @@
     <div class="field" id="sessionSubTabsWrap">
       <div class="cat-tabs" id="sessionSubTabs">
         <div class="cat-tab active" data-sub="bodycheck">身心評估</div>
-        <div class="cat-tab" data-sub="feedtoilet">進食與排泄評估</div>
+        <div class="cat-tab" data-sub="feedtoilet" data-ftpart="eat">進食評估</div>
+        <div class="cat-tab" data-sub="feedtoilet" data-ftpart="toilet">排泄評估</div>
         <div class="cat-tab" data-sub="sleep">睡眠評估</div>
         <div class="cat-tab" data-sub="activity">活動評估</div>
         <div class="cat-tab" data-sub="incident" id="incidentSubTab">觸發情境紀錄</div>
@@ -1119,13 +1121,13 @@
         <input type="datetime-local" id="bcEntryTime">
       </div>
       <div class="submit-row">
-        <button class="small-btn" id="continueToFeedtoiletBtn" style="background:var(--pine);color:#F4F1E9;width:100%;">送出身心評估,並繼續填寫進食與排泄評估</button>
+        <button class="small-btn" id="continueToFeedtoiletBtn" style="background:var(--pine);color:#F4F1E9;width:100%;">送出身心評估,並繼續填寫進食評估</button>
       </div>
     </div>
 
     <!-- 進食與排泄評估 -->
     <div class="cat-panel" data-panel="feedtoilet">
-      <div class="sub-group" id="ftFeedingBehaviorCat">
+      <div class="sub-group" id="ftFeedingBehaviorCat" data-ftpart="eat">
         <div class="glabel-row"><span class="glabel" style="margin:0;">行為觀察(餵飯時)</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
         <div class="glabel" style="margin-bottom:6px;">行為反應</div>
         <div class="chip-row" data-group="ftFeedingBehavior">
@@ -1137,7 +1139,7 @@
         </div>
         <input type="text" id="ftFeedingBehaviorOther" placeholder="其他(自行登打)" style="margin-top:8px;">
       </div>
-      <div class="sub-group">
+      <div class="sub-group" data-ftpart="eat">
         <div class="glabel-row"><span class="glabel" style="margin:0;">嘔吐(異常可複選)</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
         <div class="chip-row" data-multigroup="ftVomit">
           <div class="chip" data-val="無">無</div>
@@ -1149,7 +1151,7 @@
         <input type="text" id="ftVomitNote" placeholder="說明" style="margin-top:8px;display:none;">
       </div>
 
-      <div class="sub-group">
+      <div class="sub-group" data-ftpart="eat">
         <div class="glabel-row"><span class="glabel" style="margin:0;">進食紀錄(可複選)</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
         <div id="ftSupplementHint"></div>
         <input type="text" id="ftSupplementAmount" placeholder="加保健食品,量" style="margin-bottom:8px;">
@@ -1159,7 +1161,7 @@
           <div class="chip" data-val="鮮食">鮮食</div>
         </div>
       </div>
-      <div class="detail-card" id="ftDryDetail" style="display:none;">
+      <div class="detail-card" id="ftDryDetail" data-ftpart="eat" style="display:none;">
         <div class="detail-card-title">乾糧</div>
         <div id="ftDryHint"></div>
         <div class="three-col">
@@ -1169,7 +1171,7 @@
         </div>
         <div style="font-size:10.5px;color:var(--ink-soft);margin-top:6px;">剩餘棄置 = 這次把之前留下的量倒掉不要了;剩餘保留 = 留著繼續給,會自動跟這次的餵食量加在一起。兩者擇一填寫即可,系統會自動算出這段時間吃了多少。</div>
       </div>
-      <div class="detail-card" id="ftWetDetail" style="display:none;">
+      <div class="detail-card" id="ftWetDetail" data-ftpart="eat" style="display:none;">
         <div class="detail-card-title">濕食</div>
         <div id="ftWetHint"></div>
         <div class="two-col">
@@ -1177,7 +1179,7 @@
           <div><label class="glabel">剩餘棄置(g)</label><input type="number" min="0" id="ftWetLeftover"></div>
         </div>
       </div>
-      <div class="detail-card" id="ftFreshDetail" style="display:none;">
+      <div class="detail-card" id="ftFreshDetail" data-ftpart="eat" style="display:none;">
         <div class="detail-card-title">鮮食</div>
         <div id="ftFreshHint"></div>
         <div class="two-col">
@@ -1186,7 +1188,7 @@
         </div>
       </div>
 
-      <div class="sub-group">
+      <div class="sub-group" data-ftpart="eat">
         <div class="glabel-row"><span class="glabel" style="margin:0;">飲水紀錄</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
         <div class="two-col">
           <div><label class="glabel">給水量(ML)</label><input type="number" min="0" id="ftWaterGiveMl"></div>
@@ -1195,7 +1197,7 @@
         <div style="font-size:10.5px;color:var(--ink-soft);margin-top:6px;">今日飲水量 = 上次給水量 − 這次棄置剩餘量,自動累計</div>
       </div>
 
-      <div class="sub-group" id="ftPeeCat" style="display:none;">
+      <div class="sub-group" id="ftPeeCat" data-ftpart="toilet" style="display:none;">
         <div class="glabel-row"><span class="glabel" style="margin:0;">排尿紀錄(貓貓區)</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
         <label style="display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:11.5px;color:var(--ink-soft);"><input type="checkbox" id="ftPeeCatNone"> 目前無尿尿,待追蹤</label>
         <input type="number" min="0" id="ftPeeCatGrams" placeholder="重量(含貓砂,g)">
@@ -1207,7 +1209,7 @@
           <div class="chip warn" data-val="異常">異常</div>
         </div>
       </div>
-      <div class="sub-group" id="ftPeeDog" style="display:none;">
+      <div class="sub-group" id="ftPeeDog" data-ftpart="toilet" style="display:none;">
         <div class="glabel-row"><span class="glabel" style="margin:0;">排尿紀錄(狗狗區)</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
         <label style="display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:11.5px;color:var(--ink-soft);"><input type="checkbox" id="ftPeeDogNone"> 目前無尿尿,待追蹤</label>
         <div class="chip-row" data-group="ftPeeDogType">
@@ -1225,7 +1227,7 @@
         </div>
       </div>
 
-      <div class="sub-group" id="ftPoopCat" style="display:none;">
+      <div class="sub-group" id="ftPoopCat" data-ftpart="toilet" style="display:none;">
         <div class="glabel-row"><span class="glabel" style="margin:0;">排便紀錄(貓貓區)</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
         <label style="display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:11.5px;color:var(--ink-soft);"><input type="checkbox" id="ftPoopCatNone"> 目前無便便,待追蹤</label>
         <input type="number" min="0" id="ftPoopCatGrams" placeholder="重量(含貓砂,g)">
@@ -1244,7 +1246,7 @@
           <div class="chip warn" data-val="腹瀉">腹瀉</div>
         </div>
       </div>
-      <div class="sub-group" id="ftPoopDog" style="display:none;">
+      <div class="sub-group" id="ftPoopDog" data-ftpart="toilet" style="display:none;">
         <div class="glabel-row"><span class="glabel" style="margin:0;">排便紀錄(狗狗區)</span><label class="photo-mini">📷<input type="file" accept="image/*" class="mini-photo-input"></label></div>
         <label style="display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:11.5px;color:var(--ink-soft);"><input type="checkbox" id="ftPoopDogNone"> 目前無便便,待追蹤</label>
         <div class="two-col">
@@ -1275,7 +1277,7 @@
         <input type="datetime-local" id="ftEntryTime">
       </div>
       <div class="submit-row">
-        <button class="submit-btn" id="ftSubmitBtn">送出進食與排泄評估,並繼續填寫睡眠評估</button>
+        <button class="submit-btn" id="ftSubmitBtn">送出進食評估,並繼續填寫排泄評估</button>
       </div>
     </div>
 
@@ -15406,11 +15408,28 @@ var qrcode = function() {
   let currentPanel = 'bodycheck';
   let entryPhotos = [];
 
+  let currentFtPart = 'eat';
+  function setFtPart(part){
+    currentFtPart = part;
+    document.querySelectorAll('.cat-panel[data-panel="feedtoilet"] [data-ftpart]').forEach(el => {
+      el.classList.toggle('ft-hide', part !== 'all' && el.dataset.ftpart !== part);
+    });
+    if (currentPanel === 'feedtoilet'){
+      document.querySelectorAll('#sessionSubTabs .cat-tab[data-sub="feedtoilet"]').forEach(t => {
+        t.classList.toggle('active', t.dataset.ftpart === (part === 'all' ? 'eat' : part));
+      });
+    }
+    const btn = document.getElementById('ftSubmitBtn');
+    if (btn && !editingEntryId) btn.textContent = part === 'toilet' ? '送出排泄評估,並繼續填寫睡眠評估' : (part === 'eat' ? '送出進食評估,並繼續填寫排泄評估' : '送出進食與排泄評估');
+  }
+  function ftCatLabel(){ return currentFtPart === 'toilet' ? '排泄評估' : (currentFtPart === 'eat' ? '進食評估' : '進食與排泄評估'); }
+
   function showPanel(panelId){
     currentPanel = panelId;
     document.querySelectorAll('.cat-panel').forEach(p => p.classList.remove('show'));
     const p = document.querySelector('.cat-panel[data-panel="' + panelId + '"]');
     if (p) p.classList.add('show');
+    if (panelId === 'feedtoilet') setFtPart(currentFtPart);
     const isSpecial = ['spOther'].includes(panelId);
     document.getElementById('specialNoteWrap').style.display = isSpecial ? 'block' : 'none';
     document.getElementById('specialTimeWrap').style.display = isSpecial ? 'block' : 'none';
@@ -15443,6 +15462,7 @@ var qrcode = function() {
     tab.addEventListener('click', () => {
       tab.parentElement.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
+      if (tab.dataset.sub === 'feedtoilet') currentFtPart = tab.dataset.ftpart || 'eat';
       showPanel(tab.dataset.sub);
     });
   });
@@ -15473,21 +15493,29 @@ var qrcode = function() {
     }
   }
 
-  async function submitAndChain(btn, fromPanelId, toPanelId){
+  async function ftSubmitChain(){
+    const btn = document.getElementById('ftSubmitBtn');
+    if (currentFtPart === 'eat') return submitAndChain(btn, 'feedtoilet', 'feedtoilet', 'toilet');
+    return submitAndChain(btn, 'feedtoilet', 'sleep');
+  }
+
+  async function submitAndChain(btn, fromPanelId, toPanelId, toFtPart){
     await guardedSubmit(btn, '送出', async () => {
       if (editingEntryId){ await saveEditedEntry(fromPanelId); return; }
       const ok = await createEntry(fromPanelId);
       if (!ok) return;
       document.querySelectorAll('#sessionSubTabs .cat-tab').forEach(t => t.classList.remove('active'));
-      document.querySelector('#sessionSubTabs .cat-tab[data-sub="'+toPanelId+'"]').classList.add('active');
+      if (toFtPart) currentFtPart = toFtPart;
+      const sel = '#sessionSubTabs .cat-tab[data-sub="'+toPanelId+'"]' + (toFtPart ? '[data-ftpart="'+toFtPart+'"]' : '');
+      document.querySelector(sel).classList.add('active');
       showPanel(toPanelId);
     });
   }
 
   document.getElementById('continueToFeedtoiletBtn').addEventListener('click', () =>
-    submitAndChain(document.getElementById('continueToFeedtoiletBtn'), 'bodycheck', 'feedtoilet'));
+    submitAndChain(document.getElementById('continueToFeedtoiletBtn'), 'bodycheck', 'feedtoilet', 'eat'));
   document.getElementById('ftSubmitBtn').addEventListener('click', () =>
-    submitAndChain(document.getElementById('ftSubmitBtn'), 'feedtoilet', 'sleep'));
+    ftSubmitChain());
   document.getElementById('sleepSubmitBtn').addEventListener('click', () =>
     submitAndChain(document.getElementById('sleepSubmitBtn'), 'sleep', 'activity'));
   document.getElementById('activitySubmitBtn').addEventListener('click', () => {
@@ -15786,6 +15814,9 @@ var qrcode = function() {
       document.getElementById('specialSubTabsWrap').style.display = 'none';
       document.querySelectorAll('#sessionSubTabs .cat-tab').forEach(t => t.classList.toggle('active', t.dataset.sub === panelId));
     }
+    if (panelId === 'feedtoilet'){
+      currentFtPart = entryData.cat === '進食評估' ? 'eat' : (entryData.cat === '排泄評估' ? 'toilet' : 'all');
+    }
     showPanel(panelId);
     restoreFormSnapshot(panelId, entryData.formSnapshot);
 
@@ -15820,6 +15851,7 @@ var qrcode = function() {
     document.querySelectorAll('#sessionSubTabs .cat-tab').forEach(t => t.classList.remove('active'));
     document.querySelector('#sessionSubTabs .cat-tab[data-sub="bodycheck"]').classList.add('active');
     currentSession = 'regular';
+    currentFtPart = 'eat';
     showPanel('bodycheck');
     resetPanelFields('bodycheck');
     resetPanelFields('feedtoilet');
@@ -16624,11 +16656,11 @@ var qrcode = function() {
       content = parts.join('，');
     }
 
-    // 備註 is kept on the entry (and comes back when editing) but is NOT shown in the timeline.
+    // 備註 text is appended to the record content without the label; also kept as staffNote for editing.
     // The 「其他(自行登打)」 panel is the exception: there the text box is the entry itself.
     const note = txtVal(noteFieldId);
     const noteIsContent = (panelId === 'otherNote');
-    if (note && noteIsContent) parts.push(note);
+    if (note) parts.push(note); // 備註 text goes into the record as plain text (no 「備註」 label)
     const hiddenNote = (note && !noteIsContent) ? note : '';
     content = parts.join('。');
     const contentParts = parts.slice();
@@ -16680,7 +16712,7 @@ var qrcode = function() {
     const chosenTime = timeVal ? new Date(timeVal) : new Date();
     await addDoc(collection(db, 'rooms', currentRoomId, 'entries'), {
       stayId: allRooms[currentRoomId].stayId,
-      cat: panelLabels[panelId],
+      cat: panelId === 'feedtoilet' ? ftCatLabel() : panelLabels[panelId],
       panelId,
       content: fields.content, contentParts: fields.contentParts, warn: fields.warn,
       grams: fields.grams, waterMl: fields.waterMl, peeGrams: fields.peeGrams, peeCount: fields.peeCount,
@@ -16754,7 +16786,7 @@ var qrcode = function() {
     const mergedPhotoUrls = [...(oldData.photoUrls || []), ...newPhotoUrls.map(p => p.url)];
     const mergedPhotoPaths = [...(oldData.photoPaths || []), ...newPhotoUrls.map(p => p.path)];
     await updateDoc(doc(db, 'rooms', currentRoomId, 'entries', entryId), {
-      cat: panelLabels[panelId],
+      cat: panelId === 'feedtoilet' ? ftCatLabel() : panelLabels[panelId],
       panelId,
       content: fields.content, contentParts: fields.contentParts, warn: fields.warn,
       grams: fields.grams, waterMl: fields.waterMl, peeGrams: fields.peeGrams, peeCount: fields.peeCount,
@@ -16785,8 +16817,8 @@ var qrcode = function() {
 
   function exitEditMode(){
     editingEntryId = null;
-    document.getElementById('continueToFeedtoiletBtn').textContent = '送出身心評估,並繼續填寫進食與排泄評估';
-    document.getElementById('ftSubmitBtn').textContent = '送出進食與排泄評估,並繼續填寫睡眠評估';
+    document.getElementById('continueToFeedtoiletBtn').textContent = '送出身心評估,並繼續填寫進食評估';
+    setFtPart(currentFtPart === 'all' ? 'eat' : currentFtPart);
     document.getElementById('sleepSubmitBtn').textContent = '送出睡眠評估,並繼續填寫活動評估';
     document.getElementById('activitySubmitBtn').textContent = '送出活動評估,並繼續填寫保健與用藥紀錄';
     document.getElementById('medicationSubmitBtn').textContent = '送出保健與用藥紀錄,並繼續填寫其他';
@@ -19227,7 +19259,7 @@ var qrcode = function() {
         content = parts.join('；');
       }
 
-      if (!content && staffNote) content = '（已登打備註）';
+      if (staffNote) content = content ? (content + '。' + staffNote) : staffNote;
       const dcTimeInput = document.getElementById('dcEntryTime');
       const chosenTime = (dcTimeInput && dcTimeInput.value) ? new Date(dcTimeInput.value) : new Date();
       const entryId = isEditing ? dcEditingEntryId : ('dce_' + Date.now() + '_' + Math.random().toString(36).slice(2,8));
