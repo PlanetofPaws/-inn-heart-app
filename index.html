@@ -101,7 +101,7 @@
       <div style="text-align:center;margin-top:40px;">
         <a href="https://planetofpaws.github.io/-inn-heart-app/staff.html" style="font-size:9.5px;color:var(--ink-soft);opacity:0.4;text-decoration:underline;">員工後台</a>
       </div>
-      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:8px;">版本 2026-11-18-2</div>
+      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:8px;">版本 2026-11-20-1</div>
       <div id="liffDebugLine" style="text-align:center;font-size:9px;color:var(--ink-soft);opacity:0.6;margin-top:4px;"></div>
     </div>
   </div>
@@ -111,6 +111,7 @@
     <div style="padding:20px 22px 0;display:flex;flex-direction:column;gap:12px;">
       <button class="login-btn" id="menuCurrentBtn" style="margin-top:0;">照護紀錄</button>
       <button class="login-btn" id="menuDaycareBtn" style="margin-top:0;background:var(--pine);">安親照護紀錄</button>
+      <button class="login-btn" id="menuTrialEvalBtn" style="margin-top:0;background:#6C8EBF;display:none;">寶貝安親評估表</button>
       <button class="login-btn" id="menuHistoryBtn" style="margin-top:0;background:var(--ochre);">過往住宿與安親紀錄</button>
       <div id="menuLogoutLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:6px;">綁定的電話錯了?請聯繫店家協助更改</div>
     </div>
@@ -136,6 +137,19 @@
 
     <div class="timeline" id="daycareTimeline"></div>
     <p class="footer-note" style="margin-top:14px;">📷 照片會保留 5 天,之後自動清除,文字紀錄則會永久保存。</p>
+  </div>
+
+  <div class="screen" id="screenTrialEval">
+    <div class="topbar"><span id="teBackLink" style="text-decoration:underline;cursor:pointer;">← 返回選單</span><span id="phoneEcho5"></span></div>
+    <div class="pet-tabs" id="tePetTabs"></div>
+    <div class="hero">
+      <div class="avatar" id="teAvatar"></div>
+      <div class="hero-text">
+        <p class="loc">住宿試安親評估表</p>
+        <h1 id="tePetName"></h1>
+      </div>
+    </div>
+    <div id="teList" style="padding:8px 22px 20px;"></div>
   </div>
 
   <div class="screen" id="screenHistoryList">
@@ -220,6 +234,7 @@
 
   let myStays = [];
   let myDaycareHistory = [];
+  let myTrialEvals = {}; // petName -> [evaluation, newest first]
   let globalMihomeUrl = null;
 
   (async function loadGlobalSettings(){
@@ -269,6 +284,13 @@
       const membersSnap = await getDocs(collection(db, 'members'));
       membersSnap.forEach(d => { if (!memberData && normalizePhone(d.id) === np) memberData = d.data(); });
     } catch (err) { /* best-effort */ }
+    myTrialEvals = {};
+    if (memberData){
+      const tl = memberData.trialEvalList || {}, tl0 = memberData.trialEvals || {};
+      Object.keys(tl).forEach(p => { if (Array.isArray(tl[p]) && tl[p].length) myTrialEvals[p] = tl[p].slice(); });
+      Object.keys(tl0).forEach(p => { if (!myTrialEvals[p] && tl0[p]) myTrialEvals[p] = [tl0[p]]; });
+      Object.keys(myTrialEvals).forEach(p => myTrialEvals[p].sort((a, b) => (b.evaluatedAtMs || 0) - (a.evaluatedAtMs || 0)));
+    }
     let memberAvatarUrl = null;
     if (memberData){
       memberAvatarUrl = memberData.avatarUrl || null;
@@ -306,6 +328,8 @@
     document.getElementById('phoneEcho').textContent = '家長 ' + phone;
     document.getElementById('phoneEcho2').textContent = '家長 ' + phone;
     document.getElementById('phoneEcho3').textContent = '家長 ' + phone;
+    document.getElementById('phoneEcho5').textContent = '家長 ' + phone;
+    document.getElementById('menuTrialEvalBtn').style.display = Object.keys(myTrialEvals).length ? 'block' : 'none';
     document.getElementById('screenLogin').classList.remove('active');
     document.getElementById('screenMenu').classList.add('active');
 
@@ -638,6 +662,73 @@
   }
 
   document.getElementById('menuCurrentBtn').addEventListener('click', () => enterMenuView('current'));
+  // ---------- 住宿試安親評估表(唯讀) ----------
+  const TE_VIEW = [
+    { title:'一、個性與習慣', rows:[
+      ['arrive','到館後的反應','到館後不安反應持續多久'],['leave','家長離館後的反應','不安反應持續多久'],
+      ['stairsUp','館內上樓梯狀況'],['stairsDown','館內下樓梯狀況'],['stranger','對陌生人態度'],['solo','是否習慣獨立活動'],
+      ['restAlone','是否習慣獨立隔間休息'],['sepAnx','是否對人會有分離焦慮'],['interact','喜歡的互動方式','說明'],
+      ['barkFreq','吠叫頻率'],['barkWhen','吠叫情境','說明'],['destroy','是否有破壞行為(啃咬物品等)','描述'],
+      ['pica','是否有異食傾向','描述'],['stroller','是否習慣乘坐推車']
+    ]},
+    { title:'二、營養狀況', rows:[['eating','進食狀況'],['drinking','喝水狀況'],['treat','對零食的反應']] },
+    { title:'三、如廁與清潔習慣', rows:[['toiletWay','如廁方式'],['afterToilet','如廁後的反應'],['marking','是否有記號行為']] },
+    { title:'四、試安親評估結果', rows:[['overall','總體適應能力'],['rooms','建議入住房間'],['suggest','住宿建議說明','說明'],['validity','此安親評估可用效期']] }
+  ];
+  function teFmtD(d){ return d.getFullYear() + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + String(d.getDate()).padStart(2,'0'); }
+  function teX(x){ return String(x == null ? '' : x).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+  function teExpiry(ev){
+    const v = (ev.answers && ev.answers.validity && ev.answers.validity[0]) || '';
+    if (!v || !ev.evaluatedAtMs) return '';
+    const d = new Date(ev.evaluatedAtMs); d.setMonth(d.getMonth() + (v === '1年' ? 12 : 6));
+    return '效期' + v + ',到期日 ' + teFmtD(d) + (Date.now() > d.getTime() ? '(已逾期)' : '');
+  }
+  let teViewPets = [], teViewIdx = 0;
+  function openTrialEvalView(){
+    teViewPets = Object.keys(myTrialEvals);
+    if (!teViewPets.length){ alert('目前還沒有安親評估表'); return; }
+    teViewIdx = 0;
+    document.getElementById('screenMenu').classList.remove('active');
+    document.getElementById('screenTrialEval').classList.add('active');
+    renderTrialEvalView();
+  }
+  function renderTrialEvalView(){
+    const tabs = document.getElementById('tePetTabs');
+    tabs.innerHTML = teViewPets.length <= 1 ? '' : teViewPets.map((p, i) => '<div class="pet-tab ' + (i === teViewIdx ? 'active' : '') + '" data-i="' + i + '">' + teX(p) + '</div>').join('');
+    tabs.querySelectorAll('.pet-tab').forEach(t => t.addEventListener('click', () => { teViewIdx = parseInt(t.dataset.i); renderTrialEvalView(); }));
+    const pet = teViewPets[teViewIdx];
+    document.getElementById('tePetName').textContent = pet;
+    const av = document.getElementById('teAvatar');
+    const hp = (typeof historyPets !== 'undefined' ? historyPets : []).find(h => h.name === pet);
+    const st = myStays.find(s => s.name === pet && s.avatarUrl);
+    const url = (st && st.avatarUrl) || (hp && hp.avatarUrl) || null;
+    if (url){ av.style.background = 'none'; av.innerHTML = '<img src="' + url + '" style="width:100%;height:100%;object-fit:cover;border-radius:20px;">'; }
+    else { av.style.background = 'radial-gradient(circle at 30% 30%,#E8DCC8,transparent 60%),linear-gradient(155deg,#D8CBAE,#B9A47D)'; av.innerHTML = ''; }
+    document.getElementById('teList').innerHTML = myTrialEvals[pet].map((ev, i) => {
+      const d = new Date(ev.evaluatedAtMs || 0);
+      const ans = ev.answers || {}, ext = ev.extras || {}, nts = ev.notes || {};
+      let body = '<div style="font-size:12px;color:var(--ink-soft);margin:8px 0;">' + (ev.weight ? '體重 ' + teX(ev.weight) : '') + '</div>';
+      TE_VIEW.forEach(sec => {
+        body += '<div style="font-weight:700;margin:12px 0 4px;color:var(--pine);font-size:13px;">' + sec.title + '</div>';
+        sec.rows.forEach(r => {
+          const sel = (ans[r[0]] || []).join('、');
+          const ex = ext[r[0]] ? (r[2] || '說明') + ':' + ext[r[0]] : '';
+          const nt = nts[r[0]] ? '備註:' + nts[r[0]] : '';
+          const val = [sel, ex, nt].filter(Boolean).join('　') || '—';
+          body += '<div style="padding:6px 0;border-top:1px solid var(--line);font-size:12.5px;line-height:1.5;"><div style="color:var(--ink-soft);font-size:11.5px;">' + r[1] + '</div><div>' + teX(val) + '</div></div>';
+        });
+      });
+      return '<details style="background:var(--card);border-radius:14px;padding:12px 14px;margin-bottom:10px;"' + (i === 0 ? ' open' : '') + '>'
+        + '<summary style="cursor:pointer;font-weight:700;font-size:13px;">' + teFmtD(d) + (i === 0 ? '　<span style="color:var(--pine);">最新</span>' : '')
+        + '<div style="font-weight:500;font-size:11.5px;color:var(--ink-soft);margin-top:2px;">' + teX(((ans.overall || []).join('、')) || '') + (teExpiry(ev) ? '・' + teExpiry(ev) : '') + '</div></summary>' + body + '</details>';
+    }).join('');
+  }
+  document.getElementById('menuTrialEvalBtn').addEventListener('click', openTrialEvalView);
+  document.getElementById('teBackLink').addEventListener('click', () => {
+    document.getElementById('screenTrialEval').classList.remove('active');
+    document.getElementById('screenMenu').classList.add('active');
+  });
+
   document.getElementById('menuHistoryBtn').addEventListener('click', () => enterMenuView('history'));
   document.getElementById('menuDaycareBtn').addEventListener('click', () => enterDaycareView());
   document.getElementById('daycareBackLink').addEventListener('click', () => {
