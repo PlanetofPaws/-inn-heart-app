@@ -152,6 +152,12 @@
     #printArea .summary-table td{white-space:pre-line;}
   }
   .ft-hide{display:none !important;}
+  .te-chip{display:inline-block;padding:6px 11px;margin:3px 4px 3px 0;border-radius:999px;border:1px solid var(--line);background:#fff;color:#2A2A2C;font-size:12.5px;cursor:pointer;user-select:none;}
+  .te-chip.on{background:var(--pine);color:#fff;border-color:var(--pine);}
+  .te-row{padding:10px 0;border-top:1px solid var(--line);}
+  .te-row .te-q{font-size:12.5px;font-weight:700;margin-bottom:4px;}
+  .te-row input[type=text]{width:100%;margin-top:5px;font-size:12.5px;}
+  .te-sec{font-size:14px;font-weight:700;margin:18px 0 4px;color:var(--pine);}
 </style>
 </head>
 <body>
@@ -189,7 +195,7 @@
       </button>
       <div id="cameraSettingLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:8px;">設定小米 App 連結</div>
       <div id="staffManageLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:4px;">管理員後台</div>
-      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:20px;">版本 2026-11-19-1</div>
+      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:20px;">版本 2026-11-19-2</div>
     </div>
   </div>
 
@@ -387,6 +393,10 @@
         <h1 id="dcRecordName" style="margin:0;">-</h1>
         <div class="loc" id="dcRecordMember" style="margin-top:4px;"></div>
       </div>
+    </div>
+
+    <div class="field">
+      <button id="dcTrialEvalBtn" class="small-btn" style="background:var(--pine);color:#fff;width:100%;font-size:12px;padding:10px 6px;">🐾 住宿試安親評估</button>
     </div>
 
     <div class="info-card" id="dcRecordNoteCard" style="display:none;">
@@ -795,6 +805,9 @@
       </div>
     </div>
 
+    <div class="field" id="recTrialEvalWrap" style="display:none;">
+      <button id="recTrialEvalBtn" class="small-btn" style="background:var(--pine);color:#fff;width:100%;font-size:12px;padding:10px 6px;">🐾 查看安親評估</button>
+    </div>
     <div class="info-card">
       <div class="info-row" id="itemsRow">
         <div class="info-text">
@@ -1633,6 +1646,23 @@
   </div>
 </div>
 
+<div id="trialEvalModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1001;align-items:flex-start;justify-content:center;padding:14px;overflow-y:auto;">
+  <div style="background:var(--card);color:var(--ink);border-radius:20px;padding:20px 18px;max-width:560px;width:100%;margin:auto;">
+    <div style="font-size:17px;font-weight:700;">住宿試安親評估表</div>
+    <div style="font-size:11.5px;color:var(--ink-soft);margin-bottom:10px;">放心小寶貝寵物旅館 (inn)Heart</div>
+    <div id="teWho" style="font-size:13px;font-weight:700;margin-bottom:8px;"></div>
+    <div class="field"><label>評估日期時間(自動帶入,可調整)</label><input type="datetime-local" id="teDate"></div>
+    <div class="field"><label>體重</label><input type="text" id="teWeight" placeholder="例如 5.2 kg"></div>
+    <div id="teBody"></div>
+    <div class="submit-row" style="margin-top:16px;">
+      <button class="submit-btn" id="teSaveBtn">儲存評估表</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px;">
+      <button class="small-btn" id="tePrintBtn" style="flex:1;background:var(--card);color:var(--ink);border:1px solid var(--line);">🖨 列印</button>
+      <button class="small-btn" id="teCloseBtn" style="flex:1;background:var(--card);color:var(--ink);border:1px solid var(--line);">關閉</button>
+    </div>
+  </div>
+</div>
 <div id="lineCopyModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;align-items:center;justify-content:center;padding:20px;">
   <div style="background:var(--card);color:var(--ink);border-radius:20px;padding:22px 20px;max-width:380px;width:100%;max-height:88vh;overflow-y:auto;">
     <div id="lineCopyModalTitle" style="font-size:16px;font-weight:700;margin-bottom:6px;">📋 複製後貼到家長 LINE</div>
@@ -14656,6 +14686,7 @@ var qrcode = function() {
     document.getElementById('recordLoc').textContent = (room.area === 'cat' ? '貓貓區' : '狗狗區') + ' · ' + roomLabel(room);
     document.getElementById('recordName').textContent = room.name;
     document.getElementById('recordMember').textContent = '家長 ' + room.phone;
+    refreshTrialEvalButtons(room.phone, room.name);
     const avatarEl = document.getElementById('recordAvatar');
     if (room.avatarUrl){ avatarEl.src = room.avatarUrl; avatarEl.style.display = 'block'; }
     else { avatarEl.style.display = 'none'; }
@@ -19421,6 +19452,7 @@ var qrcode = function() {
     document.getElementById('dcRecordLoc').textContent = '安親照護' + (data.roomNo ? ' · ' + data.roomNo : '');
     document.getElementById('dcRecordName').textContent = data.name;
     document.getElementById('dcRecordMember').textContent = '家長 ' + data.phone + '・報到 ' + (data.checkinTime || '');
+    refreshTrialEvalButtons(data.phone, data.name, id);
     if (data.avatarUrl){ document.getElementById('dcRecordAvatar').src = data.avatarUrl; document.getElementById('dcRecordAvatar').style.display = 'block'; }
     else { document.getElementById('dcRecordAvatar').style.display = 'none'; }
     if (data.checkinNote){
@@ -19447,6 +19479,159 @@ var qrcode = function() {
     await refreshDcLog();
     showScreen('screenDaycareRecord');
   }
+
+
+  // ---------- 住宿試安親評估表 ----------
+  const TE_SECTIONS = [
+    { title:'一、個性與習慣', rows:[
+      { k:'arrive', q:'到館後的反應(可複選)', multi:true, o:['興奮開心','安靜探索','坐立難安','想躲起來','出現焦慮訊號'], extra:'如不安反應持續多久' },
+      { k:'leave', q:'家長離館後的反應(可複選)', multi:true, o:['無特別反應','頻頻對門外找人','哭','吠叫','出現焦慮訊號'], extra:'如不安反應持續多久' },
+      { k:'stairsUp', q:'館內上樓梯狀況(可複選)', multi:true, o:['有提籠','可抱','可自己走','不敢走'] },
+      { k:'stairsDown', q:'館內下樓梯狀況(可複選)', multi:true, o:['有提籠','可抱','可自己走','不敢走'] },
+      { k:'stranger', q:'對陌生人態度', o:['友善','警戒','攻擊傾向'] },
+      { k:'solo', q:'是否習慣獨立活動', o:['是','否','不確定'] },
+      { k:'restAlone', q:'是否習慣獨立隔間休息', o:['是','否','需要時間適應'] },
+      { k:'sepAnx', q:'是否對人會有分離焦慮', o:['是','否','偶爾會'] },
+      { k:'interact', q:'喜歡的互動方式', o:[], extra:'說明' },
+      { k:'barkFreq', q:'吠叫頻率', o:['幾乎不叫','偶爾叫','經常吠叫'] },
+      { k:'barkWhen', q:'吠叫情境', o:[], extra:'說明' },
+      { k:'destroy', q:'是否有破壞行為(啃咬物品等)', o:['有','無'], extra:'若有,請描述' },
+      { k:'pica', q:'是否有異食傾向', o:['有','無'], extra:'若有,請描述' },
+      { k:'stroller', q:'是否習慣乘坐推車', o:['可','不可'] }
+    ]},
+    { title:'二、營養狀況', rows:[
+      { k:'eating', q:'進食狀況', multi:true, o:['不吃','吃很快','要吃不吃'] },
+      { k:'drinking', q:'喝水狀況', multi:true, o:['會喝','幾乎不喝','需提醒喝水'] },
+      { k:'treat', q:'對零食的反應', o:['不愛','非常愛'] }
+    ]},
+    { title:'三、如廁與清潔習慣', rows:[
+      { k:'toiletWay', q:'如廁方式', multi:true, o:['外出','尿布墊上','自由排泄'] },
+      { k:'afterToilet', q:'如廁後的反應', multi:true, o:['吠叫','無所謂','玩排泄物'] },
+      { k:'marking', q:'是否有記號行為', o:['有','無'] }
+    ]},
+    { title:'四、試安親評估結果', rows:[
+      { k:'overall', q:'總體適應能力(可複選)', multi:true, o:['可住宿','可再評估','建議轉居家'], noNote:true },
+      { k:'rooms', q:'建議入住房間(可複選)', multi:true, o:['上層有陽台(面內)','上層有陽台(面外)','上層有陽台(面內/窗邊)','下層有陽台(面內)','下層有陽台(面外)','1F半開放最大區','加圍簾','改半開放'], noNote:true },
+      { k:'suggest', q:'住宿建議說明', o:[], extra:'說明', textOnly:true },
+      { k:'validity', q:'此安親評估可用效期', o:['半年','1年'], noNote:true }
+    ]}
+  ];
+  let teCtx = null; // { phone, pet, daycareId }
+  function teEsc(x){ return String(x == null ? '' : x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+  function teBuildForm(ev){
+    ev = ev || {};
+    const ans = ev.answers || {}, ext = ev.extras || {}, nts = ev.notes || {};
+    let h = '';
+    TE_SECTIONS.forEach(sec => {
+      h += '<div class="te-sec">' + sec.title + '</div>';
+      sec.rows.forEach(r => {
+        const sel = ans[r.k] || [];
+        h += '<div class="te-row" data-k="' + r.k + '" data-multi="' + (r.multi ? 1 : 0) + '"><div class="te-q">' + r.q + '</div>';
+        r.o.forEach(o => { h += '<span class="te-chip' + (sel.indexOf(o) >= 0 ? ' on' : '') + '" data-val="' + teEsc(o) + '">' + teEsc(o) + '</span>'; });
+        if (r.extra) h += '<input type="text" class="te-extra" placeholder="' + r.extra + '" value="' + teEsc(ext[r.k]) + '">';
+        if (!r.noNote && !r.textOnly) h += '<input type="text" class="te-note" placeholder="備註" value="' + teEsc(nts[r.k]) + '">';
+        h += '</div>';
+      });
+    });
+    document.getElementById('teBody').innerHTML = h;
+    document.querySelectorAll('#teBody .te-chip').forEach(c => c.addEventListener('click', () => {
+      const row = c.closest('.te-row');
+      if (row.dataset.multi !== '1' && !c.classList.contains('on')) row.querySelectorAll('.te-chip').forEach(x => x.classList.remove('on'));
+      c.classList.toggle('on');
+    }));
+  }
+  function teCollect(){
+    const answers = {}, extras = {}, notes = {};
+    document.querySelectorAll('#teBody .te-row').forEach(row => {
+      const k = row.dataset.k;
+      answers[k] = Array.from(row.querySelectorAll('.te-chip.on')).map(c => c.dataset.val);
+      const ex = row.querySelector('.te-extra'); if (ex && ex.value.trim()) extras[k] = ex.value.trim();
+      const nt = row.querySelector('.te-note'); if (nt && nt.value.trim()) notes[k] = nt.value.trim();
+    });
+    const dv = document.getElementById('teDate').value;
+    const dt = dv ? new Date(dv) : new Date();
+    return {
+      weight: document.getElementById('teWeight').value.trim(),
+      evaluatedAtMs: dt.getTime(),
+      answers, extras, notes,
+      staff: currentStaffName || ''
+    };
+  }
+  function teExpiryInfo(ev){
+    if (!ev) return '';
+    const v = (ev.answers && ev.answers.validity && ev.answers.validity[0]) || '';
+    if (!v || !ev.evaluatedAtMs) return '';
+    const exp = ev.evaluatedAtMs + (v === '1年' ? 365 : 183) * 86400000;
+    return Date.now() > exp ? '已逾效期' : '';
+  }
+  function teDateLabel(ev){
+    const d = new Date(ev.evaluatedAtMs || Date.now());
+    return (d.getMonth()+1) + '/' + d.getDate();
+  }
+  async function loadTrialEval(phone, pet){
+    const snap = await getDoc(doc(db, 'members', normalizePhone(phone)));
+    const m = snap.exists() ? snap.data() : {};
+    return (m.trialEvals && m.trialEvals[pet]) || null;
+  }
+  async function refreshTrialEvalButtons(phone, pet, daycareId){
+    try {
+      const ev = await loadTrialEval(phone, pet);
+      const label = ev ? ('🐾 安親評估表(' + teDateLabel(ev) + ' 已填' + (teExpiryInfo(ev) ? '・' + teExpiryInfo(ev) : '') + ')') : '';
+      if (daycareId){
+        document.getElementById('dcTrialEvalBtn').textContent = ev ? label : '🐾 住宿試安親評估';
+      } else {
+        const w = document.getElementById('recTrialEvalWrap');
+        w.style.display = ev ? 'block' : 'none';
+        if (ev) document.getElementById('recTrialEvalBtn').textContent = label;
+      }
+    } catch (e) { console.warn('trial eval lookup failed', e); }
+  }
+  async function openTrialEval(phone, pet, daycareId){
+    teCtx = { phone: normalizePhone(phone), pet, daycareId: daycareId || null };
+    const ev = await loadTrialEval(phone, pet);
+    teBuildForm(ev);
+    document.getElementById('teWho').textContent = pet + '・家長 ' + phone;
+    document.getElementById('teWeight').value = (ev && ev.weight) || '';
+    document.getElementById('teDate').value = toDatetimeLocalValue(new Date(ev && ev.evaluatedAtMs ? ev.evaluatedAtMs : Date.now()));
+    document.getElementById('trialEvalModal').style.display = 'flex';
+    document.getElementById('trialEvalModal').scrollTop = 0;
+  }
+  document.getElementById('teCloseBtn').addEventListener('click', () => { document.getElementById('trialEvalModal').style.display = 'none'; });
+  document.getElementById('teSaveBtn').addEventListener('click', () => guardedSubmit(document.getElementById('teSaveBtn'), '儲存', async () => {
+    if (!teCtx) return;
+    const ev = teCollect();
+    await setDoc(doc(db, 'members', teCtx.phone), { trialEvals: { [teCtx.pet]: ev }, updatedAt: serverTimestamp() }, { merge: true });
+    if (teCtx.daycareId) await updateDoc(doc(db, 'daycare', teCtx.daycareId), { trialEval: ev });
+    document.getElementById('trialEvalModal').style.display = 'none';
+    refreshTrialEvalButtons(teCtx.phone, teCtx.pet, teCtx.daycareId);
+    alert('已儲存住宿試安親評估表');
+  }));
+  document.getElementById('tePrintBtn').addEventListener('click', () => {
+    const ev = teCollect();
+    let h = '<div style="font-family:sans-serif;font-size:12px;"><h2 style="margin:0">住宿試安親評估表</h2><div>放心小寶貝寵物旅館 (inn)Heart</div>'
+      + '<p>寶貝:' + teEsc(teCtx.pet) + '　家長:' + teEsc(teCtx.phone) + '<br>評估日期:' + new Date(ev.evaluatedAtMs).toLocaleString('zh-TW') + '　體重:' + teEsc(ev.weight) + '</p>';
+    TE_SECTIONS.forEach(sec => {
+      h += '<h3 style="margin:12px 0 4px">' + sec.title + '</h3><table style="width:100%;border-collapse:collapse;">';
+      sec.rows.forEach(r => {
+        const a = (ev.answers[r.k] || []).join('、');
+        const x = ev.extras[r.k] ? ('(' + (r.extra || '') + ':' + ev.extras[r.k] + ')') : '';
+        const n = ev.notes[r.k] ? ev.notes[r.k] : '';
+        h += '<tr><td style="border:1px solid #999;padding:4px;width:32%">' + r.q + '</td><td style="border:1px solid #999;padding:4px;">' + teEsc(a) + ' ' + teEsc(x) + '</td><td style="border:1px solid #999;padding:4px;width:24%">' + teEsc(n) + '</td></tr>';
+      });
+      h += '</table>';
+    });
+    h += '</div>';
+    const pa = document.getElementById('printArea');
+    pa.innerHTML = h;
+    setTimeout(() => { window.print(); }, 100);
+  });
+  document.getElementById('dcTrialEvalBtn').addEventListener('click', () => {
+    if (!currentDaycareId) return;
+    getDoc(doc(db, 'daycare', currentDaycareId)).then(snap => { const d = snap.data(); openTrialEval(d.phone, d.name, currentDaycareId); });
+  });
+  document.getElementById('recTrialEvalBtn').addEventListener('click', () => {
+    const r = allRooms[currentRoomId]; if (r) openTrialEval(r.phone, r.name, null);
+  });
 
   document.getElementById('dcConfirmLineBoundBtn').addEventListener('click', async () => {
     const snap = await getDoc(doc(db, 'daycare', currentDaycareId));
