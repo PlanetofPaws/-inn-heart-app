@@ -195,7 +195,7 @@
       </button>
       <div id="cameraSettingLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:8px;">設定小米 App 連結</div>
       <div id="staffManageLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:4px;">管理員後台</div>
-      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:20px;">版本 2026-11-20-3</div>
+      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:20px;">版本 2026-11-20-4</div>
     </div>
   </div>
 
@@ -1646,6 +1646,19 @@
   </div>
 </div>
 
+<div id="trialEvalListModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;align-items:flex-start;justify-content:center;padding:14px;overflow-y:auto;">
+  <div style="background:var(--card);color:var(--ink);border-radius:20px;padding:20px 18px;max-width:560px;width:100%;margin:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+      <div style="font-size:17px;font-weight:700;">安親評估紀錄</div>
+      <button class="small-btn" id="teNewBtn" style="background:var(--pine);color:#fff;white-space:nowrap;">＋ 新增評估表</button>
+    </div>
+    <div id="teListWho" style="font-size:13px;font-weight:700;margin:6px 0 10px;"></div>
+    <div id="teListBody"></div>
+    <div style="display:flex;margin-top:14px;">
+      <button class="small-btn" id="teListCloseBtn" style="flex:1;background:var(--card);color:var(--ink);border:1px solid var(--line);">關閉</button>
+    </div>
+  </div>
+</div>
 <div id="trialEvalModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1001;align-items:flex-start;justify-content:center;padding:14px;overflow-y:auto;">
   <div style="background:var(--card);color:var(--ink);border-radius:20px;padding:20px 18px;max-width:560px;width:100%;margin:auto;">
     <div style="font-size:17px;font-weight:700;">住宿試安親評估表</div>
@@ -1659,8 +1672,9 @@
     </div>
     <div style="display:flex;gap:8px;margin-top:8px;">
       <button class="small-btn" id="tePrintBtn" style="flex:1;background:var(--card);color:var(--ink);border:1px solid var(--line);">🖨 列印</button>
-      <button class="small-btn" id="teCloseBtn" style="flex:1;background:var(--card);color:var(--ink);border:1px solid var(--line);">關閉</button>
+      <button class="small-btn" id="teCloseBtn" style="flex:1;background:var(--card);color:var(--ink);border:1px solid var(--line);">返回列表</button>
     </div>
+    <button class="small-btn" id="teDeleteBtn" style="display:none;width:100%;margin-top:8px;background:transparent;color:#d9534f;border:1px solid #d9534f;">刪除這份評估表</button>
   </div>
 </div>
 <div id="lineCopyModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;align-items:center;justify-content:center;padding:20px;">
@@ -19529,6 +19543,7 @@ var qrcode = function() {
         h += '<div class="te-row" data-k="' + r.k + '" data-multi="' + (r.multi ? 1 : 0) + '"><div class="te-q">' + r.q + '</div>';
         r.o.forEach(o => { h += '<span class="te-chip' + (sel.indexOf(o) >= 0 ? ' on' : '') + '" data-val="' + teEsc(o) + '">' + teEsc(o) + '</span>'; });
         if (r.extra) h += '<input type="text" class="te-extra" placeholder="' + r.extra + '" value="' + teEsc(ext[r.k]) + '">';
+        if (r.k === 'validity') h += '<div id="teExpiry" style="margin-top:8px;font-size:13px;font-weight:700;color:var(--pine);"></div>';
         if (!r.noNote && !r.textOnly) h += '<input type="text" class="te-note" placeholder="備註" value="' + teEsc(nts[r.k]) + '">';
         h += '</div>';
       });
@@ -19538,7 +19553,9 @@ var qrcode = function() {
       const row = c.closest('.te-row');
       if (row.dataset.multi !== '1' && !c.classList.contains('on')) row.querySelectorAll('.te-chip').forEach(x => x.classList.remove('on'));
       c.classList.toggle('on');
+      teUpdateExpiry();
     }));
+    teUpdateExpiry();
   }
   function teCollect(){
     const answers = {}, extras = {}, notes = {};
@@ -19557,26 +19574,44 @@ var qrcode = function() {
       staff: currentStaffName || ''
     };
   }
-  function teExpiryInfo(ev){
-    if (!ev) return '';
-    const v = (ev.answers && ev.answers.validity && ev.answers.validity[0]) || '';
-    if (!v || !ev.evaluatedAtMs) return '';
-    const exp = ev.evaluatedAtMs + (v === '1年' ? 365 : 183) * 86400000;
-    return Date.now() > exp ? '已逾效期' : '';
+  function teExpiryDate(ms, validity){
+    if (!ms || !validity) return null;
+    const d = new Date(ms);
+    d.setMonth(d.getMonth() + (validity === '1年' ? 12 : 6));
+    return d;
   }
+  function teFmtDate(d){ return d.getFullYear() + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + String(d.getDate()).padStart(2,'0'); }
+  function teExpiryText(ev){
+    const v = (ev.answers && ev.answers.validity && ev.answers.validity[0]) || '';
+    const d = teExpiryDate(ev.evaluatedAtMs, v);
+    return d ? ('效期' + v + ',到期日 ' + teFmtDate(d) + (Date.now() > d.getTime() ? '(已逾期)' : '')) : '';
+  }
+  function teUpdateExpiry(){
+    const el = document.getElementById('teExpiry'); if (!el) return;
+    const chip = document.querySelector('#teBody .te-row[data-k="validity"] .te-chip.on');
+    const dv = document.getElementById('teDate').value;
+    if (!chip || !dv){ el.textContent = '勾選效期後,會自動算出到期日'; return; }
+    const d = teExpiryDate(new Date(dv).getTime(), chip.dataset.val);
+    el.textContent = '到期日:' + teFmtDate(d) + '(評估日 ' + teFmtDate(new Date(dv)) + ' 起算' + chip.dataset.val + ')';
+  }
+  document.getElementById('teDate').addEventListener('change', teUpdateExpiry);
   function teDateLabel(ev){
     const d = new Date(ev.evaluatedAtMs || Date.now());
     return (d.getMonth()+1) + '/' + d.getDate();
   }
-  async function loadTrialEval(phone, pet){
+  async function loadTrialEvalList(phone, pet){
     const snap = await getDoc(doc(db, 'members', normalizePhone(phone)));
     const m = snap.exists() ? snap.data() : {};
-    return (m.trialEvals && m.trialEvals[pet]) || null;
+    let list = (m.trialEvalList && m.trialEvalList[pet]) ? m.trialEvalList[pet].slice() : [];
+    if (!list.length && m.trialEvals && m.trialEvals[pet]){ const o = Object.assign({}, m.trialEvals[pet]); o.id = o.id || 'te_legacy'; list = [o]; }
+    list.sort((a, b) => (b.evaluatedAtMs || 0) - (a.evaluatedAtMs || 0));
+    return list;
   }
   async function refreshTrialEvalButtons(phone, pet, daycareId){
     try {
-      const ev = await loadTrialEval(phone, pet);
-      const label = ev ? ('🐾 安親評估表(' + teDateLabel(ev) + ' 已填' + (teExpiryInfo(ev) ? '・' + teExpiryInfo(ev) : '') + ')') : '';
+      const list = await loadTrialEvalList(phone, pet);
+      const ev = list[0];
+      const label = ev ? ('🐾 安親評估表(共 ' + list.length + ' 份・最新 ' + teDateLabel(ev) + (Date.now() > ((teExpiryDate(ev.evaluatedAtMs, ev.answers && ev.answers.validity && ev.answers.validity[0]) || {getTime:()=>Infinity}).getTime()) ? '・已逾效期' : '') + ')') : '';
       if (daycareId){
         document.getElementById('dcTrialEvalBtn').textContent = ev ? label : '🐾 住宿試安親評估';
       } else {
@@ -19586,17 +19621,46 @@ var qrcode = function() {
       }
     } catch (e) { console.warn('trial eval lookup failed', e); }
   }
+  let teList = [];
   async function openTrialEval(phone, pet, daycareId){
-    teCtx = { phone: normalizePhone(phone), pet, daycareId: daycareId || null };
-    const ev = await loadTrialEval(phone, pet);
+    teCtx = { phone: normalizePhone(phone), pet, daycareId: daycareId || null, editId: null, rawPhone: phone };
+    await showTeList();
+  }
+  async function showTeList(){
+    teList = await loadTrialEvalList(teCtx.phone, teCtx.pet);
+    document.getElementById('teListWho').textContent = teCtx.pet + '・家長 ' + teCtx.rawPhone;
+    const body = document.getElementById('teListBody');
+    if (!teList.length){
+      body.innerHTML = '<div style="font-size:12.5px;color:var(--ink-soft);padding:14px 0;">還沒有評估紀錄,點右上角「＋ 新增評估表」開始填寫。</div>';
+    } else {
+      body.innerHTML = teList.map((e, i) => {
+        const d = new Date(e.evaluatedAtMs || 0);
+        const overall = ((e.answers && e.answers.overall) || []).join('、') || '未勾選評估結果';
+        return '<div class="te-list-item" data-i="' + i + '" style="border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:8px;cursor:pointer;background:#fff;color:#2A2A2C;">'
+          + '<div style="font-weight:700;font-size:13px;">' + teEsc(d.toLocaleString('zh-TW', { hour12:false })) + (i === 0 ? '　<span style="color:var(--pine);">最新</span>' : '') + '</div>'
+          + '<div style="font-size:12px;margin-top:3px;">' + teEsc(overall) + (e.weight ? '・體重 ' + teEsc(e.weight) : '') + '</div>'
+          + '<div style="font-size:11.5px;color:#666;margin-top:2px;">' + teEsc(teExpiryText(e)) + (e.staff ? '・' + teEsc(e.staff) : '') + '</div></div>';
+      }).join('');
+      body.querySelectorAll('.te-list-item').forEach(el => el.addEventListener('click', () => openTeForm(teList[Number(el.dataset.i)])));
+    }
+    document.getElementById('trialEvalModal').style.display = 'none';
+    document.getElementById('trialEvalListModal').style.display = 'flex';
+  }
+  function openTeForm(ev){
+    teCtx.editId = ev ? ev.id : null;
     teBuildForm(ev);
-    document.getElementById('teWho').textContent = pet + '・家長 ' + phone;
+    document.getElementById('teWho').textContent = teCtx.pet + '・家長 ' + teCtx.rawPhone + (ev ? '(查看／修改)' : '(新增)');
     document.getElementById('teWeight').value = (ev && ev.weight) || '';
     document.getElementById('teDate').value = toDatetimeLocalValue(new Date(ev && ev.evaluatedAtMs ? ev.evaluatedAtMs : Date.now()));
-    document.getElementById('trialEvalModal').style.display = 'flex';
-    document.getElementById('trialEvalModal').scrollTop = 0;
+    document.getElementById('teDeleteBtn').style.display = ev ? 'block' : 'none';
+    teUpdateExpiry();
+    document.getElementById('trialEvalListModal').style.display = 'none';
+    const m = document.getElementById('trialEvalModal');
+    m.style.display = 'flex'; m.scrollTop = 0;
   }
-  document.getElementById('teCloseBtn').addEventListener('click', () => { document.getElementById('trialEvalModal').style.display = 'none'; });
+  document.getElementById('teNewBtn').addEventListener('click', () => openTeForm(null));
+  document.getElementById('teListCloseBtn').addEventListener('click', () => { document.getElementById('trialEvalListModal').style.display = 'none'; });
+  document.getElementById('teCloseBtn').addEventListener('click', () => showTeList());
   function teValidate(){
     const missing = [];
     document.querySelectorAll('#teBody .te-row').forEach(r => { r.style.background = ''; });
@@ -19624,15 +19688,36 @@ var qrcode = function() {
     }
     return true;
   }
+  async function teWriteList(list){
+    list.sort((a, b) => (b.evaluatedAtMs || 0) - (a.evaluatedAtMs || 0));
+    await setDoc(doc(db, 'members', teCtx.phone), { trialEvalList: { [teCtx.pet]: list }, updatedAt: serverTimestamp() }, { merge: true });
+    return list;
+  }
   document.getElementById('teSaveBtn').addEventListener('click', () => { if (!teValidate()) return; teDoSave(); });
   const teDoSave = () => guardedSubmit(document.getElementById('teSaveBtn'), '儲存', async () => {
     if (!teCtx) return;
     const ev = teCollect();
-    await setDoc(doc(db, 'members', teCtx.phone), { trialEvals: { [teCtx.pet]: ev }, updatedAt: serverTimestamp() }, { merge: true });
+    ev.id = teCtx.editId || ('te_' + Date.now());
+    const list = (await loadTrialEvalList(teCtx.phone, teCtx.pet)).filter(x => x.id !== ev.id);
+    list.push(ev);
+    await teWriteList(list);
     if (teCtx.daycareId) await updateDoc(doc(db, 'daycare', teCtx.daycareId), { trialEval: ev });
-    document.getElementById('trialEvalModal').style.display = 'none';
     refreshTrialEvalButtons(teCtx.phone, teCtx.pet, teCtx.daycareId);
     alert('已儲存住宿試安親評估表');
+    await showTeList();
+  });
+  document.getElementById('teDeleteBtn').addEventListener('click', () => {
+    if (!teCtx || !teCtx.editId) return;
+    if (!confirm('確定要刪除這份評估表嗎?刪除後無法復原。')) return;
+    guardedSubmit(document.getElementById('teDeleteBtn'), '刪除', async () => {
+      const list = (await loadTrialEvalList(teCtx.phone, teCtx.pet)).filter(x => x.id !== teCtx.editId);
+      await teWriteList(list);
+      if (!list.length){
+        await setDoc(doc(db, 'members', teCtx.phone), { trialEvals: { [teCtx.pet]: deleteField() } }, { merge: true }).catch(() => {});
+      }
+      refreshTrialEvalButtons(teCtx.phone, teCtx.pet, teCtx.daycareId);
+      await showTeList();
+    });
   });
   document.getElementById('tePrintBtn').addEventListener('click', () => {
     const ev = teCollect();
@@ -19648,6 +19733,7 @@ var qrcode = function() {
       sec.rows.forEach(r => {
         const sel = ev.answers[r.k] || [];
         let opts = r.o.map(o => (sel.indexOf(o) >= 0 ? '☑ ' : '□ ') + teEsc(o)).join('　');
+        if (r.k === 'validity'){ const xd = teExpiryDate(ev.evaluatedAtMs, sel[0]); if (xd) opts += '　<b>到期日:' + teFmtDate(xd) + '</b>'; }
         if (ev.extras[r.k]) opts += (opts ? '　' : '') + '<u>' + teEsc(r.extra || '') + ':' + teEsc(ev.extras[r.k]) + '</u>';
         const n = ev.notes[r.k] ? teEsc(ev.notes[r.k]) : '';
         const wide = r.noNote || r.textOnly;
