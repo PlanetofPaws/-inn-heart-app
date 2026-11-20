@@ -101,7 +101,7 @@
       <div style="text-align:center;margin-top:40px;">
         <a href="https://planetofpaws.github.io/-inn-heart-app/staff.html" style="font-size:9.5px;color:var(--ink-soft);opacity:0.4;text-decoration:underline;">員工後台</a>
       </div>
-      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:8px;">版本 2026-11-20-1</div>
+      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:8px;">版本 2026-11-21-1</div>
       <div id="liffDebugLine" style="text-align:center;font-size:9px;color:var(--ink-soft);opacity:0.6;margin-top:4px;"></div>
     </div>
   </div>
@@ -111,6 +111,7 @@
     <div style="padding:20px 22px 0;display:flex;flex-direction:column;gap:12px;">
       <button class="login-btn" id="menuCurrentBtn" style="margin-top:0;">照護紀錄</button>
       <button class="login-btn" id="menuDaycareBtn" style="margin-top:0;background:var(--pine);">安親照護紀錄</button>
+      <button class="login-btn" id="menuInhomeBtn" style="margin-top:0;background:#6C8EBF;">到府照護紀錄</button>
       <button class="login-btn" id="menuTrialEvalBtn" style="margin-top:0;background:#6C8EBF;display:none;">寶貝安親評估表</button>
       <button class="login-btn" id="menuHistoryBtn" style="margin-top:0;background:var(--ochre);">過往住宿與安親紀錄</button>
       <div id="menuLogoutLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:6px;">綁定的電話錯了?請聯繫店家協助更改</div>
@@ -137,6 +138,21 @@
 
     <div class="timeline" id="daycareTimeline"></div>
     <p class="footer-note" style="margin-top:14px;">📷 照片會保留 5 天,之後自動清除,文字紀錄則會永久保存。</p>
+  </div>
+
+  <div class="screen" id="screenInhome">
+    <div class="topbar"><span id="ihBackLink" style="text-decoration:underline;cursor:pointer;">← 返回選單</span><span id="phoneEcho6"></span></div>
+    <div class="pet-tabs" id="ihPetTabs" style="flex-wrap:wrap;"></div>
+    <div class="hero">
+      <div class="avatar" id="ihAvatar"></div>
+      <div class="hero-text">
+        <p class="loc" id="ihLoc"></p>
+        <h1 id="ihName"></h1>
+      </div>
+    </div>
+    <div style="height:14px;"></div>
+    <div class="timeline" id="ihTimeline"></div>
+    <p class="footer-note" style="margin-top:14px;">📷 照片會在服務結束後保留 5 天,之後自動清除,文字紀錄則會永久保存。</p>
   </div>
 
   <div class="screen" id="screenTrialEval">
@@ -321,7 +337,13 @@
       });
     } catch (err) { /* daycare lookup is best-effort; ignore failures here */ }
 
-    return myStays.length > 0 || hasAnyDaycare;
+    let hasAnyInhome = false;
+    try {
+      const ihSnap = await getDocs(collection(db, 'inhome'));
+      ihSnap.forEach(d => { if (normalizePhone(d.data().phone) === np) hasAnyInhome = true; });
+    } catch (err) { /* best-effort */ }
+
+    return myStays.length > 0 || hasAnyDaycare || hasAnyInhome;
   }
 
   function finalizeEntry(phone){
@@ -329,6 +351,7 @@
     document.getElementById('phoneEcho2').textContent = '家長 ' + phone;
     document.getElementById('phoneEcho3').textContent = '家長 ' + phone;
     document.getElementById('phoneEcho5').textContent = '家長 ' + phone;
+    document.getElementById('phoneEcho6').textContent = '家長 ' + phone;
     document.getElementById('menuTrialEvalBtn').style.display = Object.keys(myTrialEvals).length ? 'block' : 'none';
     document.getElementById('screenLogin').classList.remove('active');
     document.getElementById('screenMenu').classList.add('active');
@@ -339,7 +362,7 @@
     else if (mode === 'history') enterMenuView('history');
     else if (mode === 'daycare') enterDaycareView();
     else if (mode === 'inhome'){
-      alert('到府照護紀錄即將上線,敬請期待!');
+      enterInhomeView();
     }
   }
 
@@ -726,6 +749,56 @@
   document.getElementById('menuTrialEvalBtn').addEventListener('click', openTrialEvalView);
   document.getElementById('teBackLink').addEventListener('click', () => {
     document.getElementById('screenTrialEval').classList.remove('active');
+    document.getElementById('screenMenu').classList.add('active');
+  });
+
+  // ---------- 到府照護紀錄(時間軸) ----------
+  let ihItems = [], ihIdx = 0;
+  function ihX(x){ return String(x == null ? '' : x).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+  async function enterInhomeView(){
+    const phone = normalizePhone(document.getElementById('phoneEcho2').textContent.replace('家長 ', ''));
+    try {
+      const snap = await getDocs(collection(db, 'inhome'));
+      ihItems = [];
+      snap.forEach(d => { const data = d.data(); if (normalizePhone(data.phone) === phone) ihItems.push({ id: d.id, ...data }); });
+    } catch (err) { alert('讀取失敗:' + err.message); return; }
+    if (!ihItems.length){ alert('目前沒有到府照護紀錄'); return; }
+    ihItems.sort((a, b) => ((a.status === 'done') - (b.status === 'done')) || ((b.createdAtMs || 0) - (a.createdAtMs || 0)));
+    ihIdx = 0;
+    document.querySelectorAll('.screen').forEach(sc => sc.classList.remove('active'));
+    document.getElementById('screenInhome').classList.add('active');
+    renderInhome();
+  }
+  function renderInhome(){
+    const tabs = document.getElementById('ihPetTabs');
+    tabs.innerHTML = ihItems.length <= 1 ? '' : ihItems.map((it, i) => {
+      const dup = ihItems.filter(x => x.name === it.name).length > 1;
+      const d = new Date(it.createdAtMs || 0);
+      return '<div class="pet-tab ' + (i === ihIdx ? 'active' : '') + '" data-i="' + i + '">' + ihX(it.name) + (dup ? '(' + (d.getMonth()+1) + '/' + d.getDate() + ')' : '') + '</div>';
+    }).join('');
+    tabs.querySelectorAll('.pet-tab').forEach(t => t.addEventListener('click', () => { ihIdx = parseInt(t.dataset.i); renderInhome(); }));
+    const it = ihItems[ihIdx];
+    document.getElementById('ihName').textContent = it.name;
+    document.getElementById('ihLoc').textContent = '到府照護・' + (it.status === 'done' ? '服務已結束' : '服務中');
+    const av = document.getElementById('ihAvatar');
+    if (it.avatarUrl){ av.style.background = 'none'; av.innerHTML = '<img src="' + it.avatarUrl + '" style="width:100%;height:100%;object-fit:cover;border-radius:20px;">'; }
+    else { av.style.background = 'radial-gradient(circle at 30% 30%,#E8DCC8,transparent 60%),linear-gradient(155deg,#D8CBAE,#B9A47D)'; av.innerHTML = ''; }
+    const entries = (it.entries || []).slice().sort((a, b) => (b.createdAtMs || 0) - (a.createdAtMs || 0));
+    const tl = document.getElementById('ihTimeline');
+    if (!entries.length){ tl.innerHTML = '<div class="status-msg">目前還沒有到府紀錄</div>'; return; }
+    let lastDate = '', h = '';
+    entries.forEach(e => {
+      if (e.dateStr !== lastDate){ lastDate = e.dateStr; h += '<div style="font-size:12px;font-weight:700;margin:4px 0 12px 60px;color:var(--ink-soft);">' + ihX(e.dateStr) + '</div>'; }
+      h += '<div class="entry ' + (e.warn ? 'warn' : '') + '"><div class="time">' + ihX(e.time) + '</div><div class="body">'
+        + '<p class="cat">到府服務' + (e.slotLabel ? '・' + ihX(e.slotLabel) : '') + '</p><p>' + ihX(e.content) + '</p>'
+        + ((e.photoUrls && e.photoUrls.length) ? e.photoUrls.map(u => '<img src="' + u + '" style="width:100%;max-height:220px;object-fit:cover;border-radius:10px;margin-top:8px;">').join('') : '')
+        + '</div></div>';
+    });
+    tl.innerHTML = h;
+  }
+  document.getElementById('menuInhomeBtn').addEventListener('click', enterInhomeView);
+  document.getElementById('ihBackLink').addEventListener('click', () => {
+    document.getElementById('screenInhome').classList.remove('active');
     document.getElementById('screenMenu').classList.add('active');
   });
 
