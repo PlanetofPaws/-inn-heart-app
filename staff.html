@@ -195,7 +195,7 @@
       </button>
       <div id="cameraSettingLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:8px;">設定小米 App 連結</div>
       <div id="staffManageLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:4px;">管理員後台</div>
-      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:20px;">版本 2026-11-20-4</div>
+      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:20px;">版本 2026-11-20-5</div>
     </div>
   </div>
 
@@ -1674,6 +1674,7 @@
       <button class="small-btn" id="tePrintBtn" style="flex:1;background:var(--card);color:var(--ink);border:1px solid var(--line);">🖨 列印</button>
       <button class="small-btn" id="teCloseBtn" style="flex:1;background:var(--card);color:var(--ink);border:1px solid var(--line);">返回列表</button>
     </div>
+    <button class="small-btn" id="teUnlockBtn" style="display:none;width:100%;margin-top:8px;background:var(--card);color:var(--ink);border:1px solid var(--line);">🔓 解除鎖定,修改這份評估表</button>
     <button class="small-btn" id="teDeleteBtn" style="display:none;width:100%;margin-top:8px;background:transparent;color:#d9534f;border:1px solid #d9534f;">刪除這份評估表</button>
   </div>
 </div>
@@ -19530,6 +19531,14 @@ var qrcode = function() {
       { k:'validity', q:'此安親評估可用效期', o:['半年','1年'], noNote:true }
     ]}
   ];
+  let teLocked = false;
+  function teSetLocked(on){
+    teLocked = on;
+    document.querySelectorAll('#trialEvalModal input, #trialEvalModal textarea').forEach(i => { i.disabled = on; });
+    document.querySelectorAll('#teBody .te-chip').forEach(c => { c.style.opacity = on && !c.classList.contains('on') ? '0.45' : '1'; c.style.cursor = on ? 'default' : 'pointer'; });
+    document.getElementById('teSaveBtn').parentElement.style.display = on ? 'none' : 'block';
+    document.getElementById('teUnlockBtn').style.display = on ? 'block' : 'none';
+  }
   let teCtx = null; // { phone, pet, daycareId }
   function teEsc(x){ return String(x == null ? '' : x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
   function teBuildForm(ev){
@@ -19550,6 +19559,7 @@ var qrcode = function() {
     });
     document.getElementById('teBody').innerHTML = h;
     document.querySelectorAll('#teBody .te-chip').forEach(c => c.addEventListener('click', () => {
+      if (teLocked) return;
       const row = c.closest('.te-row');
       if (row.dataset.multi !== '1' && !c.classList.contains('on')) row.querySelectorAll('.te-chip').forEach(x => x.classList.remove('on'));
       c.classList.toggle('on');
@@ -19654,10 +19664,14 @@ var qrcode = function() {
     document.getElementById('teDate').value = toDatetimeLocalValue(new Date(ev && ev.evaluatedAtMs ? ev.evaluatedAtMs : Date.now()));
     document.getElementById('teDeleteBtn').style.display = ev ? 'block' : 'none';
     teUpdateExpiry();
+    teSetLocked(!!ev);
     document.getElementById('trialEvalListModal').style.display = 'none';
     const m = document.getElementById('trialEvalModal');
     m.style.display = 'flex'; m.scrollTop = 0;
   }
+  document.getElementById('teUnlockBtn').addEventListener('click', () => {
+    if (confirm('這份評估表已經存檔,確定要修改嗎?')) teSetLocked(false);
+  });
   document.getElementById('teNewBtn').addEventListener('click', () => openTeForm(null));
   document.getElementById('teListCloseBtn').addEventListener('click', () => { document.getElementById('trialEvalListModal').style.display = 'none'; });
   document.getElementById('teCloseBtn').addEventListener('click', () => showTeList());
