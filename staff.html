@@ -195,7 +195,7 @@
       </button>
       <div id="cameraSettingLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:8px;">設定小米 App 連結</div>
       <div id="staffManageLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:4px;">管理員後台</div>
-      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:20px;">版本 2026-11-19-2</div>
+      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:20px;">版本 2026-11-20-1</div>
     </div>
   </div>
 
@@ -19608,21 +19608,35 @@ var qrcode = function() {
   }));
   document.getElementById('tePrintBtn').addEventListener('click', () => {
     const ev = teCollect();
-    let h = '<div style="font-family:sans-serif;font-size:12px;"><h2 style="margin:0">住宿試安親評估表</h2><div>放心小寶貝寵物旅館 (inn)Heart</div>'
-      + '<p>寶貝:' + teEsc(teCtx.pet) + '　家長:' + teEsc(teCtx.phone) + '<br>評估日期:' + new Date(ev.evaluatedAtMs).toLocaleString('zh-TW') + '　體重:' + teEsc(ev.weight) + '</p>';
+    const td = 'border:1px solid #666;padding:2.2px 6px;vertical-align:middle;';
+    let h = '<div class="te-print" style="font-family:\'Noto Sans TC\',sans-serif;color:#111;font-size:11px;line-height:1.35;width:100%;">'
+      + '<div style="display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid #111;padding-bottom:3px;margin-bottom:5px;">'
+      + '<div style="font-size:17px;font-weight:700;">住宿試安親評估表</div><div style="font-size:11px;">放心小寶貝寵物旅館 (inn)Heart</div></div>'
+      + '<div style="display:flex;gap:18px;font-size:12px;margin-bottom:4px;"><span>寶貝:<b>' + teEsc(teCtx.pet) + '</b></span><span>家長:' + teEsc(teCtx.phone) + '</span>'
+      + '<span>評估日期:' + new Date(ev.evaluatedAtMs).toLocaleString('zh-TW', { hour12:false }) + '</span><span>體重:' + teEsc(ev.weight) + '</span></div>';
     TE_SECTIONS.forEach(sec => {
-      h += '<h3 style="margin:12px 0 4px">' + sec.title + '</h3><table style="width:100%;border-collapse:collapse;">';
+      h += '<div style="font-size:12.5px;font-weight:700;margin:5px 0 2px;">' + sec.title + '</div>'
+        + '<table style="width:100%;border-collapse:collapse;table-layout:fixed;">';
       sec.rows.forEach(r => {
-        const a = (ev.answers[r.k] || []).join('、');
-        const x = ev.extras[r.k] ? ('(' + (r.extra || '') + ':' + ev.extras[r.k] + ')') : '';
-        const n = ev.notes[r.k] ? ev.notes[r.k] : '';
-        h += '<tr><td style="border:1px solid #999;padding:4px;width:32%">' + r.q + '</td><td style="border:1px solid #999;padding:4px;">' + teEsc(a) + ' ' + teEsc(x) + '</td><td style="border:1px solid #999;padding:4px;width:24%">' + teEsc(n) + '</td></tr>';
+        const sel = ev.answers[r.k] || [];
+        let opts = r.o.map(o => (sel.indexOf(o) >= 0 ? '☑ ' : '□ ') + teEsc(o)).join('　');
+        if (ev.extras[r.k]) opts += (opts ? '　' : '') + '<u>' + teEsc(r.extra || '') + ':' + teEsc(ev.extras[r.k]) + '</u>';
+        const n = ev.notes[r.k] ? teEsc(ev.notes[r.k]) : '';
+        const wide = r.noNote || r.textOnly;
+        h += '<tr style="page-break-inside:avoid;"><td style="' + td + 'width:26%;font-weight:700;background:#f3f3f3;">' + r.q + '</td>'
+          + '<td style="' + td + '"' + (wide ? ' colspan="2"' : '') + '>' + opts + '</td>'
+          + (wide ? '' : '<td style="' + td + 'width:22%;font-size:10.5px;">' + (n ? '備註:' + n : '') + '</td>') + '</tr>';
       });
       h += '</table>';
     });
     h += '</div>';
-    const pa = document.getElementById('printArea');
-    pa.innerHTML = h;
+    document.getElementById('printArea').innerHTML = h;
+    const st = document.createElement('style');
+    st.id = 'tePrintPage';
+    st.textContent = '@page{size:A4 portrait;margin:8mm 9mm;}';
+    document.head.appendChild(st);
+    const cleanup = () => { const e = document.getElementById('tePrintPage'); if (e) e.remove(); window.removeEventListener('afterprint', cleanup); };
+    window.addEventListener('afterprint', cleanup);
     setTimeout(() => { window.print(); }, 100);
   });
   document.getElementById('dcTrialEvalBtn').addEventListener('click', () => {
