@@ -204,7 +204,7 @@
       </button>
       <div id="cameraSettingLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:8px;">設定小米 App 連結</div>
       <div id="staffManageLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:4px;">管理員後台</div>
-      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:20px;">版本 2026-11-21-1</div>
+      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:20px;">版本 2026-11-21-2</div>
     </div>
   </div>
 
@@ -269,7 +269,7 @@
     </div>
     <div class="glabel" style="padding:16px 22px 0;margin:0;">服務中</div>
     <div id="ihActiveList" style="padding:8px 22px 0;display:flex;flex-direction:column;gap:10px;"></div>
-    <div class="glabel" style="padding:18px 22px 0;margin:0;">已結案(最近 20 筆)</div>
+    <div class="glabel" style="padding:18px 22px 0;margin:0;">已結案(最近 20 筆;更早的請到「歷史紀錄」查詢)</div>
     <div id="ihDoneList" style="padding:8px 22px 30px;display:flex;flex-direction:column;gap:10px;"></div>
   </div>
 
@@ -17066,7 +17066,19 @@ var qrcode = function() {
         pastDaycare.push({ historyType: 'daycare', petName: data.name, avatarUrl: data.avatarUrl, checkinDate: data.checkinDate, checkedOutAt: data.checkoutAt, id: d.id, entries: data.entries || [], area: data.area, checkinTime: data.checkinTime, items: data.items || null, checkinNote: data.checkinNote || '', lastPeeCleanTime: data.lastPeeCleanTime || null, lastPoopCleanTime: data.lastPoopCleanTime || null, dcStaySummary: data.dcStaySummary || null, dcStaySummarySpecialNote: data.dcStaySummarySpecialNote || null });
       });
     } catch (err) { /* daycare history is best-effort; ignore failures here */ }
-    const allHistory = [...pastStays, ...pastDaycare];
+    let pastInhome = [];
+    try {
+      const ihSnap = await getDocs(query(collection(db, 'inhome'), where('phone', '==', phone), where('status', '==', 'done')));
+      ihSnap.forEach(d => {
+        const data = d.data();
+        const es = (data.entries || []).slice().sort((a, b) => (a.createdAtMs || 0) - (b.createdAtMs || 0));
+        pastInhome.push({ historyType: 'inhome', petName: data.name, avatarUrl: data.avatarUrl, id: d.id, entries: es, area: data.area,
+          address: data.address, homeVisit: data.homeVisit || null,
+          checkinDate: (es[0] && es[0].dateStr) || dateStrOf(new Date(data.createdAtMs || Date.now())),
+          checkedOutAt: (es.length && es[es.length - 1].dateStr) || data.endedAt || '' });
+      });
+    } catch (err) { /* inhome history is best-effort */ }
+    const allHistory = [...pastStays, ...pastDaycare, ...pastInhome];
     if (!allHistory.length){
       alert('這位家長目前沒有已完成的歷史紀錄');
       return;
@@ -17148,6 +17160,7 @@ var qrcode = function() {
       const record = pet.records[parseInt(row.dataset.idx)];
       row.addEventListener('click', () => {
         if (record.historyType === 'daycare') openMhDaycareDetail(record);
+        else if (record.historyType === 'inhome') openMhInhomeDetail(record);
         else openMhDetail(record);
       });
     });
@@ -17185,6 +17198,51 @@ var qrcode = function() {
         lastPeeCleanTime: record.lastPeeCleanTime, lastPoopCleanTime: record.lastPoopCleanTime,
         dcStaySummary: record.dcStaySummary, dcStaySummarySpecialNote: record.dcStaySummarySpecialNote
       });
+    };
+  }
+
+  function openMhInhomeDetail(record){
+    document.getElementById('mhDetailView').style.display = 'none';
+    document.getElementById('mhDaycareDetailView').style.display = 'block';
+    const entries = (record.entries || []).slice().sort((a,b) => (b.createdAtMs||0) - (a.createdAtMs||0));
+    const entriesHtml = entries.length
+      ? entries.map(e => `
+          <div class="log-entry ${e.warn ? 'warn' : ''}">
+            <div class="meta"><span>${ihEsc(e.dateStr || '')} ${ihEsc(e.time || '')}${e.slotLabel ? ' · ' + ihEsc(e.slotLabel) : ''}${e.staff ? '｜' + ihEsc(e.staff) : ''}</span></div>
+            <div>${ihEsc(e.content)}</div>
+            ${(e.photoUrls || []).map(u => '<img src="'+u+'" style="width:100%;max-height:220px;object-fit:cover;border-radius:10px;margin-top:8px;">').join('')}
+          </div>
+        `).join('')
+      : '<div class="empty-note">沒有留下紀錄</div>';
+    let visitHtml = '';
+    if (record.homeVisit && record.homeVisit.values){
+      const v = record.homeVisit.values;
+      const lines = [];
+      IH_VISIT_SCHEMA.forEach(sec => sec.f.forEach(fd => {
+        const val = Array.isArray(v[fd.k]) ? v[fd.k].join('、') : v[fd.k];
+        if (val) lines.push('<div style="font-size:12px;padding:4px 0;border-top:1px solid var(--line);"><span style="color:var(--ink-soft);">' + ihEsc(fd.q) + '</span><br>' + ihEsc(val) + '</div>');
+      }));
+      visitHtml = '<details style="margin-bottom:14px;"><summary style="cursor:pointer;font-weight:700;">📋 家訪表(' + ihFmtDate(record.homeVisit.visitedAtMs) + ')</summary>' + lines.join('') + '</details>';
+    }
+    document.getElementById('mhDaycareTimeline').innerHTML = `
+      <div class="loc">到府保母照護・${ihEsc(record.checkinDate || '')} ~ ${ihEsc(record.checkedOutAt || '')}</div>
+      <h2 style="margin:4px 0 4px;">${ihEsc(record.petName)}</h2>
+      <div class="meta" style="margin-bottom:12px;">${ihEsc(record.address || '')}</div>
+      <button class="small-btn" id="mhIhPrintBtn" style="background:var(--ochre);width:100%;margin-bottom:14px;">匯出並列印這次紀錄</button>
+      ${visitHtml}
+      ${entriesHtml}
+    `;
+    document.getElementById('mhIhPrintBtn').onclick = () => {
+      const asc = (record.entries || []).slice().sort((a,b) => (a.createdAtMs||0) - (b.createdAtMs||0));
+      let h = '<h1>到府保母照護紀錄・' + ihEsc(record.petName) + '</h1><div class="meta">' + ihEsc(record.address || '') + '・' + ihEsc(record.checkinDate || '') + ' ~ ' + ihEsc(record.checkedOutAt || '') + '</div>';
+      let last = '';
+      asc.forEach(e => {
+        if (e.dateStr !== last){ last = e.dateStr; h += '<h2>' + ihEsc(e.dateStr) + '</h2>'; }
+        h += '<div class="pentry"><span class="ptime">' + ihEsc(e.time) + '</span><span class="pcat">到府服務' + (e.slotLabel ? '・' + ihEsc(e.slotLabel) : '') + (e.staff ? '・' + ihEsc(e.staff) : '') + '</span><div class="pcontent">' + ihEsc(e.content) + '</div>'
+          + ((e.photoUrls && e.photoUrls.length) ? '<div class="pphotos">' + e.photoUrls.map(u => '<img src="' + u + '">').join('') + '</div>' : '') + '</div>';
+      });
+      document.getElementById('printArea').innerHTML = h;
+      printWhenImagesReady();
     };
   }
 
