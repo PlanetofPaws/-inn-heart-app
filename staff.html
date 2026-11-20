@@ -204,7 +204,7 @@
       </button>
       <div id="cameraSettingLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:8px;">設定小米 App 連結</div>
       <div id="staffManageLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:4px;">管理員後台</div>
-      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:20px;">版本 2026-11-21-2</div>
+      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:20px;">版本 2026-11-21-3</div>
     </div>
   </div>
 
@@ -290,7 +290,8 @@
     <div class="field"><label>家長手機</label><input type="text" id="ihPhone" placeholder="例如：0912345678"></div>
     <div class="field"><label>家長姓名</label><input type="text" id="ihMemberName" placeholder="例如：陳小姐"></div>
     <div class="field"><label>服務地址</label><input type="text" id="ihAddress" placeholder="到府服務的地址"></div>
-    <div class="field"><label>預計服務期間／時段(選填)</label><input type="text" id="ihPeriod" placeholder="例如：12/24~12/28 每天早晚各一次"></div>
+    <div class="field"><label>預計服務開始日期(選填)</label><input type="date" id="ihPeriodStart"></div>
+    <div class="field"><label>預計服務結束日期(選填)</label><input type="date" id="ihPeriodEnd"></div>
     <div class="field">
       <label>寶貝照片</label>
       <img id="ihAvatarPreview" style="display:none;width:80px;height:80px;border-radius:16px;object-fit:cover;margin-bottom:8px;">
@@ -18232,7 +18233,7 @@ var qrcode = function() {
 
 
   // ================= 到府保母照護 =================
-  const IH_SERVICES = ['餵食餵水','清理貓砂／排泄物','陪玩互動','散步','餵藥／保健品','梳毛清潔','環境整理','澆花收信件'];
+  const IH_SERVICES = ['餵食餵水','清理貓砂／排泄物','陪玩互動','散步','餵藥／保健品','梳毛清潔','環境整理'];
   const IH_VISIT_SCHEMA = [
     { title:'基本資料', f:[
       { k:'breed', t:'text', q:'品種' }, { k:'age', t:'text', q:'年齡' },
@@ -18255,7 +18256,8 @@ var qrcode = function() {
       { k:'access', t:'text', q:'進出方式(鑰匙／密碼／交接)' }, { k:'supplies', t:'text', q:'飼料、貓砂、清潔用品等物品位置' },
       { k:'hazards', t:'area', q:'危險物品／需注意的區域' } ]},
     { title:'服務需求與聯絡', f:[
-      { k:'services', t:'multi', q:'服務項目(可複選)', o:IH_SERVICES }, { k:'schedule', t:'text', q:'預計服務日期與時段' },
+      { k:'services', t:'multi', q:'服務項目(可複選)', o:IH_SERVICES }, { k:'schedStart', t:'date', q:'預計服務開始日期' }, { k:'schedEnd', t:'date', q:'預計服務結束日期' },
+      { k:'schedSlots', t:'multi', q:'預計服務時段(可複選)', o:['早上','中午','下午','傍晚','晚上'] },
       { k:'emergencyName', t:'text', q:'緊急聯絡人' }, { k:'emergencyPhone', t:'text', q:'緊急聯絡電話' },
       { k:'parentNote', t:'area', q:'家長特別交代' } ]},
     { title:'本次注意事項', f:[ { k:'thisTime', t:'area', q:'這次服務要特別注意的事項(沿用舊家訪表時必填)' } ]}
@@ -18266,10 +18268,16 @@ var qrcode = function() {
       { k:'arrive', t:'time', q:'到達時間' }, { k:'leave', t:'time', q:'離開時間' } ]},
     { title:'服務內容', f:[
       { k:'services', t:'multi', q:'完成項目(可複選)', o:IH_SERVICES },
-      { k:'dry', t:'num', q:'乾糧(g)' }, { k:'wet', t:'num', q:'濕食／鮮食(g)' }, { k:'water', t:'num', q:'飲水量(ml)' },
-      { k:'appetite', t:'chip', q:'食慾', o:['很好','正常','較差','沒吃'] },
-      { k:'peeCount', t:'num', q:'排尿次數' }, { k:'poopCount', t:'num', q:'排便次數' },
-      { k:'poopState', t:'chip', q:'便便狀況', o:['正常','偏硬','偏軟','腹瀉','沒有大便'] } ]},
+      { k:'feedMode', t:'chip', q:'餵食方式', o:['已依家長交代餵食','有秤重測量','這次不需餵食'] },
+      { k:'dry', t:'num', q:'乾糧(g,有測量才填)' }, { k:'wet', t:'num', q:'濕食／鮮食(g,有測量才填)' },
+      { k:'appetite', t:'chip', q:'食慾／剩餘狀況', o:['吃光','吃了大部分','只吃一點','沒吃'] },
+      { k:'waterMode', t:'chip', q:'飲水', o:['已更換新水','已補水','水量充足'] },
+      { k:'water', t:'num', q:'飲水量(ml,有測量才填)' },
+      { k:'peeFound', t:'chip', q:'清理時發現的尿尿量', o:['沒有發現','少量','正常','偏多'] },
+      { k:'peeCount', t:'num', q:'清出尿塊數量(選填)' },
+      { k:'poopFound', t:'chip', q:'清理時發現的便便量', o:['沒有發現','少量','正常','偏多'] },
+      { k:'poopCount', t:'num', q:'清出便便數量(坨／顆,選填)' },
+      { k:'poopState', t:'chip', q:'便便狀況(清理時觀察)', o:['正常','偏硬','偏軟','腹瀉'] } ]},
     { title:'狀態', f:[
       { k:'mood', t:'multi', q:'精神與情緒(可複選)', o:['活潑開心','穩定平靜','有點緊張','怕生躲藏','精神較差'] },
       { k:'play', t:'text', q:'互動與玩耍情形' },
@@ -18295,7 +18303,7 @@ var qrcode = function() {
         } else if (fd.t === 'area'){
           h += '<textarea rows="2" style="width:100%;font-size:12.5px;">' + ihEsc(v) + '</textarea>';
         } else {
-          h += '<input type="' + (fd.t === 'time' ? 'time' : (fd.t === 'num' ? 'number' : 'text')) + '"' + (fd.t === 'num' ? ' min="0"' : '') + ' value="' + ihEsc(v) + '">';
+          h += '<input type="' + (fd.t === 'time' ? 'time' : (fd.t === 'date' ? 'date' : (fd.t === 'num' ? 'number' : 'text'))) + '"' + (fd.t === 'num' ? ' min="0"' : '') + ' value="' + ihEsc(v) + '">';
         }
         h += '</div>';
       });
@@ -18342,7 +18350,7 @@ var qrcode = function() {
 
   // ----- create -----
   document.getElementById('ihNewBtn').addEventListener('click', () => {
-    ['ihPetName','ihPhone','ihMemberName','ihAddress','ihPeriod'].forEach(i => document.getElementById(i).value = '');
+    ['ihPetName','ihPhone','ihMemberName','ihAddress','ihPeriodStart','ihPeriodEnd'].forEach(i => document.getElementById(i).value = '');
     document.querySelectorAll('#screenInhomeNew .chip').forEach(c => c.classList.remove('active'));
     document.getElementById('ihAvatarPreview').style.display = 'none';
     document.getElementById('ihAvatarNote').textContent = '';
@@ -18384,7 +18392,7 @@ var qrcode = function() {
     }
     await setDoc(doc(db, 'members', phone), { updatedAt: serverTimestamp(), ...(memberName ? { name: memberName } : {}), ...(avatarUrl ? { petAvatars: { [name]: avatarUrl } } : {}) }, { merge: true });
     const ref0 = await addDoc(collection(db, 'inhome'), {
-      name, phone, memberName, area, address, period: document.getElementById('ihPeriod').value.trim(),
+      name, phone, memberName, area, address, period: (() => { const a = document.getElementById('ihPeriodStart').value, b = document.getElementById('ihPeriodEnd').value; const f2 = x => x ? x.slice(5).replace('-', '/') : ''; return a || b ? (f2(a) + (b && b !== a ? '~' + f2(b) : '')) : ''; })(),
       avatarUrl: avatarUrl || null, status: 'active', homeVisit: null, entries: [], createdAtMs: Date.now()
     });
     await openInhomeRecord(ref0.id);
@@ -18501,11 +18509,19 @@ var qrcode = function() {
     p.push(head);
     if (v.services && v.services.length) p.push('完成:' + v.services.join('、'));
     const food = [];
-    if (v.dry) food.push('乾糧' + v.dry + 'g'); if (v.wet) food.push('濕食／鮮食' + v.wet + 'g'); if (v.water) food.push('飲水' + v.water + 'ml');
-    if (food.length || v.appetite) p.push('進食:' + food.join('、') + (v.appetite ? (food.length ? ',' : '') + '食慾' + v.appetite : ''));
+    if (v.feedMode) food.push(v.feedMode);
+    if (v.dry) food.push('乾糧' + v.dry + 'g'); if (v.wet) food.push('濕食／鮮食' + v.wet + 'g');
+    if (v.appetite) food.push(v.appetite);
+    if (food.length) p.push('餵食:' + food.join('、'));
+    const wat = [];
+    if (v.waterMode) wat.push(v.waterMode); if (v.water) wat.push('飲水' + v.water + 'ml');
+    if (wat.length) p.push('飲水:' + wat.join('、'));
     const toi = [];
-    if (v.peeCount) toi.push('排尿' + v.peeCount + '次'); if (v.poopCount) toi.push('排便' + v.poopCount + '次'); if (v.poopState) toi.push('便便' + v.poopState);
-    if (toi.length) p.push(toi.join(','));
+    if (v.peeFound) toi.push('尿尿' + v.peeFound + (v.peeCount ? '(約' + v.peeCount + '塊)' : ''));
+    else if (v.peeCount) toi.push('清出尿塊約' + v.peeCount + '塊');
+    if (v.poopFound) toi.push('便便' + v.poopFound + (v.poopCount ? '(約' + v.poopCount + '坨)' : '') + (v.poopState ? ',' + v.poopState : ''));
+    else { if (v.poopCount) toi.push('清出便便約' + v.poopCount + '坨'); if (v.poopState) toi.push('便便' + v.poopState); }
+    if (toi.length) p.push('清理時發現:' + toi.join('、'));
     if (v.mood && v.mood.length) p.push('精神與情緒:' + v.mood.join('、'));
     if (v.play) p.push('互動:' + v.play);
     if (v.abnormal) p.push('需留意:' + v.abnormal);
