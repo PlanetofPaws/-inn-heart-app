@@ -195,7 +195,7 @@
       </button>
       <div id="cameraSettingLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:8px;">設定小米 App 連結</div>
       <div id="staffManageLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:4px;">管理員後台</div>
-      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:20px;">版本 2026-11-20-2</div>
+      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:20px;">版本 2026-11-20-3</div>
     </div>
   </div>
 
@@ -19597,7 +19597,35 @@ var qrcode = function() {
     document.getElementById('trialEvalModal').scrollTop = 0;
   }
   document.getElementById('teCloseBtn').addEventListener('click', () => { document.getElementById('trialEvalModal').style.display = 'none'; });
-  document.getElementById('teSaveBtn').addEventListener('click', () => guardedSubmit(document.getElementById('teSaveBtn'), '儲存', async () => {
+  function teValidate(){
+    const missing = [];
+    document.querySelectorAll('#teBody .te-row').forEach(r => { r.style.background = ''; });
+    document.getElementById('teWeight').style.outline = '';
+    let first = null;
+    if (!document.getElementById('teWeight').value.trim()){
+      missing.push('體重'); first = document.getElementById('teWeight');
+      document.getElementById('teWeight').style.outline = '2px solid #d9534f';
+    }
+    TE_SECTIONS.forEach(sec => sec.rows.forEach(r => {
+      const row = document.querySelector('#teBody .te-row[data-k="' + r.k + '"]');
+      let ok;
+      if (r.o.length) ok = row.querySelectorAll('.te-chip.on').length > 0;
+      else { const ex = row.querySelector('.te-extra'); ok = !!(ex && ex.value.trim()); }
+      if (!ok){
+        missing.push(r.q.replace(/\(可複選\)/, ''));
+        row.style.background = 'rgba(217,83,79,0.15)';
+        if (!first) first = row;
+      }
+    }));
+    if (missing.length){
+      alert('還有 ' + missing.length + ' 項沒有填寫:\n\n' + missing.map(m => '・' + m).join('\n') + '\n\n(未填的項目已標紅色底,請補齊後再送出)');
+      if (first && first.scrollIntoView) first.scrollIntoView({ block:'center', behavior:'smooth' });
+      return false;
+    }
+    return true;
+  }
+  document.getElementById('teSaveBtn').addEventListener('click', () => { if (!teValidate()) return; teDoSave(); });
+  const teDoSave = () => guardedSubmit(document.getElementById('teSaveBtn'), '儲存', async () => {
     if (!teCtx) return;
     const ev = teCollect();
     await setDoc(doc(db, 'members', teCtx.phone), { trialEvals: { [teCtx.pet]: ev }, updatedAt: serverTimestamp() }, { merge: true });
@@ -19605,7 +19633,7 @@ var qrcode = function() {
     document.getElementById('trialEvalModal').style.display = 'none';
     refreshTrialEvalButtons(teCtx.phone, teCtx.pet, teCtx.daycareId);
     alert('已儲存住宿試安親評估表');
-  }));
+  });
   document.getElementById('tePrintBtn').addEventListener('click', () => {
     const ev = teCollect();
     const td = 'border:1px solid #666;padding:2.2px 6px;vertical-align:middle;';
