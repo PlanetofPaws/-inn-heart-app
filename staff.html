@@ -24,6 +24,15 @@
   *{box-sizing:border-box;}
   body{margin:0;background:var(--bg);font-family:'Noto Sans TC','PingFang TC','Heiti TC','Microsoft JhengHei',sans-serif;font-weight:500;color:var(--ink);display:flex;justify-content:center;-webkit-font-smoothing:antialiased;}
   .phone{width:100%;max-width:420px;min-height:100vh;padding:0 0 50px;}
+  /* 電腦版(寬螢幕)自動展開,手機維持窄版 */
+  @media (min-width:820px){
+    .phone{max-width:880px;}
+    .room-grid{grid-template-columns:repeat(4,1fr);}
+  }
+  @media (min-width:1200px){
+    .phone{max-width:1080px;}
+    .room-grid{grid-template-columns:repeat(6,1fr);}
+  }
   .screen{display:none;}
   .screen.active{display:block;}
 
@@ -195,7 +204,7 @@
       </button>
       <div id="cameraSettingLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:8px;">設定小米 App 連結</div>
       <div id="staffManageLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:4px;">管理員後台</div>
-      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:20px;">版本 2026-11-20-5</div>
+      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:20px;">版本 2026-11-20-6</div>
     </div>
   </div>
 
