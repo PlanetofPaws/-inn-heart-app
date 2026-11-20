@@ -197,14 +197,14 @@
     <div style="padding:20px 22px 0;display:flex;flex-direction:column;gap:12px;">
       <button class="submit-btn" id="menuCareBtn">住宿照護紀錄</button>
       <button class="submit-btn" id="menuDaycareBtn" style="background:var(--pine);color:#F4F1E9;">安親照護紀錄</button>
-      <button class="submit-btn" id="menuInhomeBtn" style="background:var(--card);color:var(--ink-soft);border:1px solid var(--line);">到府照護紀錄(即將上線)</button>
+      <button class="submit-btn" id="menuInhomeBtn" style="background:#6C8EBF;color:#fff;">到府照護紀錄</button>
       <button class="submit-btn" id="menuHistoryBtn" style="background:var(--ochre);color:#2A2A2C;">歷史紀錄</button>
       <button class="submit-btn" id="menuMembersBtn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);position:relative;">
         會員資料管理<span id="pendingBindingsBadge" style="display:none;background:var(--danger);color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;margin-left:6px;">0</span>
       </button>
       <div id="cameraSettingLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:8px;">設定小米 App 連結</div>
       <div id="staffManageLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:4px;">管理員後台</div>
-      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:20px;">版本 2026-11-20-6</div>
+      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:20px;">版本 2026-11-21-1</div>
     </div>
   </div>
 
@@ -254,6 +254,97 @@
         </div>
         <div style="font-size:10.5px;color:var(--ink-soft);margin-top:8px;">改名字只是換個顯示用的名稱,不影響原本的房間資料;刪除只能刪目前沒有寶貝入住的空房。</div>
       </div>
+    </div>
+  </div>
+
+  <!-- 到府:案件列表 -->
+  <div class="screen" id="screenInhomeList">
+    <div class="back-row" id="ihListBackBtn">← 返回選單</div>
+    <div class="topbar">
+      <div class="sub">(inn)heart · 到府保母照護</div>
+      <h1>到府照護案件</h1>
+    </div>
+    <div style="padding:16px 22px 0;">
+      <button class="submit-btn" id="ihNewBtn" style="background:#6C8EBF;color:#fff;">➕ 建立寵物資訊</button>
+    </div>
+    <div class="glabel" style="padding:16px 22px 0;margin:0;">服務中</div>
+    <div id="ihActiveList" style="padding:8px 22px 0;display:flex;flex-direction:column;gap:10px;"></div>
+    <div class="glabel" style="padding:18px 22px 0;margin:0;">已結案(最近 20 筆)</div>
+    <div id="ihDoneList" style="padding:8px 22px 30px;display:flex;flex-direction:column;gap:10px;"></div>
+  </div>
+
+  <!-- 到府:建立寵物資訊 -->
+  <div class="screen" id="screenInhomeNew">
+    <div class="back-row" id="ihNewBackBtn">← 返回列表</div>
+    <div class="topbar">
+      <div class="sub">(inn)heart · 到府保母照護</div>
+      <h1>建立寵物資訊</h1>
+    </div>
+    <div class="field"><label>寶貝種類</label>
+      <div class="chip-row" data-group="ihArea">
+        <div class="chip" data-val="cat">貓貓</div>
+        <div class="chip" data-val="dog">狗狗</div>
+      </div>
+    </div>
+    <div class="field"><label>寶貝名字</label><input type="text" id="ihPetName" placeholder="例如：可可"></div>
+    <div class="field"><label>家長手機</label><input type="text" id="ihPhone" placeholder="例如：0912345678"></div>
+    <div class="field"><label>家長姓名</label><input type="text" id="ihMemberName" placeholder="例如：陳小姐"></div>
+    <div class="field"><label>服務地址</label><input type="text" id="ihAddress" placeholder="到府服務的地址"></div>
+    <div class="field"><label>預計服務期間／時段(選填)</label><input type="text" id="ihPeriod" placeholder="例如：12/24~12/28 每天早晚各一次"></div>
+    <div class="field">
+      <label>寶貝照片</label>
+      <img id="ihAvatarPreview" style="display:none;width:80px;height:80px;border-radius:16px;object-fit:cover;margin-bottom:8px;">
+      <div id="ihAvatarNote" style="font-size:10.5px;color:var(--ink-soft);margin-bottom:6px;"></div>
+      <label class="photo-btn-like" style="display:inline-block;border:1px dashed var(--line);background:var(--card);border-radius:12px;padding:10px 16px;font-size:11.5px;color:var(--ink-soft);cursor:pointer;">📷 上傳／拍攝照片<input type="file" accept="image/*" id="ihAvatarInput" style="display:none;"></label>
+    </div>
+    <div class="submit-row"><button class="submit-btn" id="ihCreateBtn" style="background:#6C8EBF;color:#fff;">建立寵物資訊</button></div>
+  </div>
+
+  <!-- 到府:案件紀錄 -->
+  <div class="screen" id="screenInhomeRecord">
+    <div class="back-row" id="ihRecBackBtn">← 返回列表</div>
+    <div class="record-head" style="display:flex;gap:14px;align-items:center;">
+      <img id="ihRecAvatar" style="display:none;width:64px;height:64px;border-radius:16px;object-fit:cover;flex-shrink:0;">
+      <div>
+        <div class="loc" id="ihRecLoc">到府保母照護</div>
+        <h1 id="ihRecName" style="margin:0;">-</h1>
+        <div class="loc" id="ihRecMember" style="margin-top:4px;"></div>
+      </div>
+    </div>
+    <div class="info-card" id="ihRecNoteCard" style="display:none;">
+      <div class="info-row alert"><div class="info-text">
+        <div class="info-label">本次注意事項</div>
+        <div class="info-value" id="ihRecNoteValue" style="white-space:pre-line;"></div>
+      </div></div>
+    </div>
+    <div class="field">
+      <button class="small-btn" id="ihVisitBtn" style="width:100%;background:var(--pine);color:#fff;font-size:13px;padding:12px 8px;">① 填寫家訪表</button>
+    </div>
+    <div class="field" id="ihAddEntryWrap">
+      <button class="small-btn" id="ihAddEntryBtn" style="width:100%;background:#6C8EBF;color:#fff;font-size:13px;padding:12px 8px;">② ＋ 新增到府紀錄</button>
+    </div>
+    <div class="glabel" style="padding:18px 22px 0;margin:0;">到府紀錄</div>
+    <div id="ihEntryList" style="padding:8px 22px 0;"></div>
+    <div class="field" id="ihFinishWrap">
+      <button class="small-btn" id="ihFinishBtn" style="width:100%;background:var(--danger);color:#fff;font-size:13px;padding:12px 8px;">服務結束(結案)</button>
+    </div>
+    <div style="font-size:10.5px;color:var(--ink-soft);padding:8px 22px 30px;">📷 照片會在服務結束後保留 5 天,之後自動清除,文字紀錄則永久保存。</div>
+  </div>
+
+  <div id="ihFormModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1001;align-items:flex-start;justify-content:center;padding:14px;overflow-y:auto;">
+    <div style="background:var(--card);color:var(--ink);border-radius:20px;padding:20px 18px;max-width:640px;width:100%;margin:auto;">
+      <div id="ihFormTitle" style="font-size:17px;font-weight:700;margin-bottom:4px;"></div>
+      <div id="ihFormSub" style="font-size:12px;color:var(--ink-soft);margin-bottom:8px;"></div>
+      <div id="ihFormReuse" style="display:none;margin-bottom:8px;"><button class="small-btn" id="ihFormReuseBtn" style="width:100%;background:var(--ochre);color:#2A2A2C;"></button></div>
+      <div id="ihFormBody"></div>
+      <div id="ihFormPhotoWrap" style="display:none;margin-top:12px;">
+        <div class="te-q" style="font-size:12.5px;font-weight:700;">照片</div>
+        <div id="ihFormPhotoOld" style="font-size:11.5px;color:var(--ink-soft);margin:4px 0;"></div>
+        <label class="photo-btn-like" style="display:inline-block;border:1px dashed var(--line);background:#fff;border-radius:12px;padding:10px 16px;font-size:12px;color:#555;cursor:pointer;">📷 選擇／拍攝照片(可多張)<input type="file" accept="image/*" multiple id="ihFormPhotoInput" style="display:none;"></label>
+        <span id="ihFormPhotoCount" style="font-size:11.5px;margin-left:8px;"></span>
+      </div>
+      <div class="submit-row" style="margin-top:16px;"><button class="submit-btn" id="ihFormSaveBtn">儲存</button></div>
+      <button class="small-btn" id="ihFormCloseBtn" style="width:100%;margin-top:8px;background:var(--card);color:var(--ink);border:1px solid var(--line);">關閉</button>
     </div>
   </div>
 
@@ -17553,6 +17644,16 @@ var qrcode = function() {
         }
         await updateDoc(d.ref, { entries: newEntries });
       }
+      // 到府: photos kept while the case is active and for 5 days after it is closed
+      const ihSnap = await getDocs(collection(db, 'inhome'));
+      for (const d of ihSnap.docs){
+        const data = d.data();
+        if (data.status !== 'done' || (data.endedAtMs || 0) >= cutoffMs) continue;
+        const entries = data.entries || [];
+        if (!entries.some(e => e.photoUrls && e.photoUrls.length)) continue;
+        for (const e of entries) if (e.photoUrls && e.photoUrls.length) await Promise.all(e.photoUrls.map(u => deleteObject(ref(storage, u)).catch(() => {})));
+        await updateDoc(d.ref, { entries: entries.map(e => { const { photoUrls, ...rest } = e; return rest; }) });
+      }
       localStorage.setItem('photoCleanupAt', String(Date.now()));
     } catch (err) { console.warn('photo cleanup skipped:', err); }
   }
@@ -18071,8 +18172,349 @@ var qrcode = function() {
   let dcExistingAvatarUrl = null;
   let dcCurrentSlot = '🍱飲食與排泄';
 
+
+  // ================= 到府保母照護 =================
+  const IH_SERVICES = ['餵食餵水','清理貓砂／排泄物','陪玩互動','散步','餵藥／保健品','梳毛清潔','環境整理','澆花收信件'];
+  const IH_VISIT_SCHEMA = [
+    { title:'基本資料', f:[
+      { k:'breed', t:'text', q:'品種' }, { k:'age', t:'text', q:'年齡' },
+      { k:'sex', t:'chip', q:'性別', o:['公','母'] }, { k:'neutered', t:'chip', q:'是否絕育', o:['已絕育','未絕育'] },
+      { k:'weight', t:'text', q:'體重' } ]},
+    { title:'健康狀況', f:[
+      { k:'health', t:'area', q:'健康狀況／慢性病史／過敏' }, { k:'meds', t:'area', q:'用藥與保健品(品項、劑量、時間)' },
+      { k:'vet', t:'text', q:'常去獸醫院／電話' } ]},
+    { title:'飲食', f:[
+      { k:'foodType', t:'text', q:'食物種類／品牌' }, { k:'feedAmount', t:'text', q:'每餐份量與次數' },
+      { k:'feedPlace', t:'text', q:'食物與水碗擺放位置' }, { k:'snack', t:'chip', q:'零食', o:['可給','限量','不可給'] } ]},
+    { title:'排泄', f:[
+      { k:'toiletType', t:'text', q:'貓砂盆／如廁方式與位置' }, { k:'toiletNote', t:'text', q:'清理與丟棄方式' } ]},
+    { title:'個性與行為', f:[
+      { k:'stranger', t:'chip', q:'對陌生人態度', o:['友善','警戒','攻擊傾向'] },
+      { k:'bite', t:'chip', q:'是否會咬／抓人', o:['不會','偶爾會','會'] },
+      { k:'escape', t:'chip', q:'門窗／陽台逃脫風險', o:['低','中','高'] },
+      { k:'fears', t:'text', q:'害怕的事物' }, { k:'behavior', t:'area', q:'其他行為與習慣' } ]},
+    { title:'家中環境與進出', f:[
+      { k:'access', t:'text', q:'進出方式(鑰匙／密碼／交接)' }, { k:'supplies', t:'text', q:'飼料、貓砂、清潔用品等物品位置' },
+      { k:'hazards', t:'area', q:'危險物品／需注意的區域' } ]},
+    { title:'服務需求與聯絡', f:[
+      { k:'services', t:'multi', q:'服務項目(可複選)', o:IH_SERVICES }, { k:'schedule', t:'text', q:'預計服務日期與時段' },
+      { k:'emergencyName', t:'text', q:'緊急聯絡人' }, { k:'emergencyPhone', t:'text', q:'緊急聯絡電話' },
+      { k:'parentNote', t:'area', q:'家長特別交代' } ]},
+    { title:'本次注意事項', f:[ { k:'thisTime', t:'area', q:'這次服務要特別注意的事項(沿用舊家訪表時必填)' } ]}
+  ];
+  const IH_ENTRY_SCHEMA = [
+    { title:'服務時間', f:[
+      { k:'slot', t:'chip', q:'服務時段', o:['早上','中午','下午','傍晚','晚上'] },
+      { k:'arrive', t:'time', q:'到達時間' }, { k:'leave', t:'time', q:'離開時間' } ]},
+    { title:'服務內容', f:[
+      { k:'services', t:'multi', q:'完成項目(可複選)', o:IH_SERVICES },
+      { k:'dry', t:'num', q:'乾糧(g)' }, { k:'wet', t:'num', q:'濕食／鮮食(g)' }, { k:'water', t:'num', q:'飲水量(ml)' },
+      { k:'appetite', t:'chip', q:'食慾', o:['很好','正常','較差','沒吃'] },
+      { k:'peeCount', t:'num', q:'排尿次數' }, { k:'poopCount', t:'num', q:'排便次數' },
+      { k:'poopState', t:'chip', q:'便便狀況', o:['正常','偏硬','偏軟','腹瀉','沒有大便'] } ]},
+    { title:'狀態', f:[
+      { k:'mood', t:'multi', q:'精神與情緒(可複選)', o:['活潑開心','穩定平靜','有點緊張','怕生躲藏','精神較差'] },
+      { k:'play', t:'text', q:'互動與玩耍情形' },
+      { k:'abnormal', t:'area', q:'異常或需留意的狀況(有填會標紅提醒)' },
+      { k:'message', t:'area', q:'想跟家長說的話' } ]}
+  ];
+  let ihCtx = { id: null, data: null, mode: null, editEntryId: null, reused: false };
+  let ihPhotoFiles = [];
+  let ihAvatarFile = null, ihAvatarUrl = null;
+  function ihEsc(x){ return String(x == null ? '' : x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+
+  function ihRenderForm(schema, vals){
+    vals = vals || {};
+    let h = '';
+    schema.forEach(sec => {
+      h += '<div class="te-sec">' + sec.title + '</div>';
+      sec.f.forEach(fd => {
+        const v = vals[fd.k];
+        h += '<div class="te-row" data-k="' + fd.k + '" data-t="' + fd.t + '"><div class="te-q">' + fd.q + '</div>';
+        if (fd.t === 'chip' || fd.t === 'multi'){
+          const sel = Array.isArray(v) ? v : (v ? [v] : []);
+          h += fd.o.map(o => '<span class="te-chip' + (sel.indexOf(o) >= 0 ? ' on' : '') + '" data-val="' + ihEsc(o) + '">' + ihEsc(o) + '</span>').join('');
+        } else if (fd.t === 'area'){
+          h += '<textarea rows="2" style="width:100%;font-size:12.5px;">' + ihEsc(v) + '</textarea>';
+        } else {
+          h += '<input type="' + (fd.t === 'time' ? 'time' : (fd.t === 'num' ? 'number' : 'text')) + '"' + (fd.t === 'num' ? ' min="0"' : '') + ' value="' + ihEsc(v) + '">';
+        }
+        h += '</div>';
+      });
+    });
+    const body = document.getElementById('ihFormBody');
+    body.innerHTML = h;
+    body.querySelectorAll('.te-chip').forEach(c => c.addEventListener('click', () => {
+      const row = c.closest('.te-row');
+      if (row.dataset.t === 'chip' && !c.classList.contains('on')) row.querySelectorAll('.te-chip').forEach(x => x.classList.remove('on'));
+      c.classList.toggle('on');
+    }));
+  }
+  function ihCollectForm(){
+    const out = {};
+    document.querySelectorAll('#ihFormBody .te-row').forEach(row => {
+      const k = row.dataset.k, t = row.dataset.t;
+      if (t === 'chip') out[k] = (row.querySelector('.te-chip.on') || {dataset:{}}).dataset.val || '';
+      else if (t === 'multi') out[k] = Array.from(row.querySelectorAll('.te-chip.on')).map(c => c.dataset.val);
+      else if (t === 'area') out[k] = row.querySelector('textarea').value.trim();
+      else out[k] = row.querySelector('input').value.trim();
+    });
+    return out;
+  }
+  function ihFmtDate(ms){ const d = new Date(ms); return (d.getMonth()+1) + '/' + d.getDate(); }
+
+  // ----- list -----
+  async function loadInhomeList(){
+    const aEl = document.getElementById('ihActiveList'), dEl = document.getElementById('ihDoneList');
+    aEl.innerHTML = '<div class="status-msg">讀取中...</div>'; dEl.innerHTML = '';
+    const snap = await getDocs(collection(db, 'inhome'));
+    const items = []; snap.forEach(d => items.push({ id: d.id, ...d.data() }));
+    const card = it => '<div class="log-entry" data-id="' + it.id + '" style="cursor:pointer;display:flex;align-items:center;gap:12px;margin:0;">'
+      + (it.avatarUrl ? '<img src="' + it.avatarUrl + '" style="width:48px;height:48px;border-radius:12px;object-fit:cover;flex-shrink:0;">' : '<div style="width:48px;height:48px;border-radius:12px;background:var(--line);flex-shrink:0;"></div>')
+      + '<div><div style="font-weight:700;">' + ihEsc(it.name) + '</div><div class="meta">' + ihEsc(it.address || '') + '</div>'
+      + '<div class="meta">' + (it.homeVisit ? '✅ 家訪表已填' : '⚠️ 尚未家訪') + '・紀錄 ' + ((it.entries || []).length) + ' 筆' + (it.period ? '・' + ihEsc(it.period) : '') + '</div></div></div>';
+    const act = items.filter(i => i.status !== 'done').sort((a, b) => (b.createdAtMs || 0) - (a.createdAtMs || 0));
+    const done = items.filter(i => i.status === 'done').sort((a, b) => (b.endedAtMs || 0) - (a.endedAtMs || 0)).slice(0, 20);
+    aEl.innerHTML = act.length ? act.map(card).join('') : '<div class="empty-note">目前沒有服務中的到府案件</div>';
+    dEl.innerHTML = done.length ? done.map(card).join('') : '<div class="empty-note">還沒有已結案的案件</div>';
+    document.querySelectorAll('#ihActiveList [data-id], #ihDoneList [data-id]').forEach(el => el.addEventListener('click', () => openInhomeRecord(el.dataset.id)));
+  }
+  document.getElementById('menuInhomeBtn').addEventListener('click', () => { showScreen('screenInhomeList'); loadInhomeList(); });
+  document.getElementById('ihListBackBtn').addEventListener('click', () => showScreen('screenMenu'));
+
+  // ----- create -----
+  document.getElementById('ihNewBtn').addEventListener('click', () => {
+    ['ihPetName','ihPhone','ihMemberName','ihAddress','ihPeriod'].forEach(i => document.getElementById(i).value = '');
+    document.querySelectorAll('#screenInhomeNew .chip').forEach(c => c.classList.remove('active'));
+    document.getElementById('ihAvatarPreview').style.display = 'none';
+    document.getElementById('ihAvatarNote').textContent = '';
+    ihAvatarFile = null; ihAvatarUrl = null;
+    showScreen('screenInhomeNew');
+  });
+  document.getElementById('ihNewBackBtn').addEventListener('click', () => showScreen('screenInhomeList'));
+  async function ihLookupAvatar(){
+    const phone = normalizePhone(document.getElementById('ihPhone').value), pet = document.getElementById('ihPetName').value.trim();
+    if (!phone || !pet || ihAvatarFile) return;
+    try {
+      const snap = await getDoc(doc(db, 'members', phone));
+      const m = snap.exists() ? snap.data() : {};
+      if (m.name && !document.getElementById('ihMemberName').value) document.getElementById('ihMemberName').value = m.name;
+      const url = m.petAvatars && m.petAvatars[pet];
+      if (url){ ihAvatarUrl = url; const p = document.getElementById('ihAvatarPreview'); p.src = url; p.style.display = 'block'; document.getElementById('ihAvatarNote').textContent = '偵測到「' + pet + '」之前上傳過的照片,預設沿用。'; }
+    } catch (e) {}
+  }
+  document.getElementById('ihPhone').addEventListener('blur', ihLookupAvatar);
+  document.getElementById('ihPetName').addEventListener('blur', ihLookupAvatar);
+  document.getElementById('ihAvatarInput').addEventListener('change', e => {
+    const file = e.target.files[0]; if (!file) return;
+    ihAvatarFile = file;
+    const rd = new FileReader(); rd.onload = ev => { const p = document.getElementById('ihAvatarPreview'); p.src = ev.target.result; p.style.display = 'block'; document.getElementById('ihAvatarNote').textContent = '將使用這張新照片。'; };
+    rd.readAsDataURL(file);
+  });
+  document.getElementById('ihCreateBtn').addEventListener('click', () => guardedSubmit(document.getElementById('ihCreateBtn'), '建立', async () => {
+    const area = chipVal('ihArea'), name = document.getElementById('ihPetName').value.trim();
+    const phone = normalizePhone(document.getElementById('ihPhone').value);
+    const memberName = document.getElementById('ihMemberName').value.trim(), address = document.getElementById('ihAddress').value.trim();
+    if (!area) throw new Error('請選擇寶貝種類(貓貓/狗狗)');
+    if (!name || !phone) throw new Error('請填寫寶貝名字跟家長手機');
+    if (!address) throw new Error('請填寫服務地址');
+    let avatarUrl = ihAvatarUrl;
+    if (ihAvatarFile){
+      const compressed = await compressImage(ihAvatarFile, 800, 0.8);
+      const r = ref(storage, 'daycareAvatars/' + Date.now() + '_' + ihAvatarFile.name);
+      await uploadBytes(r, compressed); avatarUrl = await getDownloadURL(r);
+    }
+    await setDoc(doc(db, 'members', phone), { updatedAt: serverTimestamp(), ...(memberName ? { name: memberName } : {}), ...(avatarUrl ? { petAvatars: { [name]: avatarUrl } } : {}) }, { merge: true });
+    const ref0 = await addDoc(collection(db, 'inhome'), {
+      name, phone, memberName, area, address, period: document.getElementById('ihPeriod').value.trim(),
+      avatarUrl: avatarUrl || null, status: 'active', homeVisit: null, entries: [], createdAtMs: Date.now()
+    });
+    await openInhomeRecord(ref0.id);
+  }));
+
+  // ----- record screen -----
+  async function openInhomeRecord(id){
+    const snap = await getDoc(doc(db, 'inhome', id));
+    if (!snap.exists()){ alert('找不到這筆到府案件'); return; }
+    ihCtx.id = id; ihCtx.data = snap.data();
+    renderInhomeRecord();
+    showScreen('screenInhomeRecord');
+  }
+  function renderInhomeRecord(){
+    const d = ihCtx.data, done = d.status === 'done';
+    document.getElementById('ihRecLoc').textContent = '到府保母照護' + (done ? '・已結案' : '');
+    document.getElementById('ihRecName').textContent = d.name;
+    document.getElementById('ihRecMember').textContent = '家長 ' + d.phone + (d.address ? '・' + d.address : '');
+    const av = document.getElementById('ihRecAvatar');
+    if (d.avatarUrl){ av.src = d.avatarUrl; av.style.display = 'block'; } else av.style.display = 'none';
+    const note = d.homeVisit && d.homeVisit.values && d.homeVisit.values.thisTime;
+    document.getElementById('ihRecNoteValue').textContent = note || '';
+    document.getElementById('ihRecNoteCard').style.display = note ? 'block' : 'none';
+    const vb = document.getElementById('ihVisitBtn');
+    if (d.homeVisit){
+      vb.textContent = '📋 家訪表(' + ihFmtDate(d.homeVisit.visitedAtMs) + ' 已填)・點擊查看／修改';
+      vb.style.background = 'var(--card)'; vb.style.color = 'var(--ink)'; vb.style.border = '1px solid var(--line)'; vb.style.fontSize = '11.5px'; vb.style.padding = '9px 8px';
+    } else {
+      vb.textContent = '① 填寫家訪表';
+      vb.style.background = 'var(--pine)'; vb.style.color = '#fff'; vb.style.border = 'none'; vb.style.fontSize = '13px'; vb.style.padding = '12px 8px';
+    }
+    document.getElementById('ihAddEntryWrap').style.display = done ? 'none' : 'block';
+    document.getElementById('ihFinishWrap').style.display = done ? 'none' : 'block';
+    const entries = (d.entries || []).slice().sort((a, b) => (b.createdAtMs || 0) - (a.createdAtMs || 0));
+    const el = document.getElementById('ihEntryList');
+    if (!entries.length){ el.innerHTML = '<div class="empty-note">還沒有到府紀錄</div>'; return; }
+    el.innerHTML = entries.map(e => '<div class="log-entry"' + (e.warn ? ' style="border-color:var(--danger);"' : '') + '>'
+      + '<div class="meta">' + ihEsc(e.dateStr || '') + ' ' + ihEsc(e.time || '') + (e.slotLabel ? '・' + ihEsc(e.slotLabel) : '') + (e.staff ? '｜' + ihEsc(e.staff) : '') + '</div>'
+      + '<div style="margin-top:4px;font-size:12.5px;line-height:1.6;">' + ihEsc(e.content) + '</div>'
+      + ((e.photoUrls && e.photoUrls.length) ? '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">' + e.photoUrls.map(u => '<img src="' + u + '" style="width:96px;height:96px;object-fit:cover;border-radius:8px;">').join('') + '</div>' : '')
+      + (done ? '' : '<div style="margin-top:8px;font-size:11px;"><span data-edit="' + e.id + '" style="text-decoration:underline;cursor:pointer;margin-right:14px;">編輯</span><span data-del="' + e.id + '" style="text-decoration:underline;cursor:pointer;color:var(--danger);">刪除</span></div>')
+      + '</div>').join('');
+    el.querySelectorAll('[data-edit]').forEach(x => x.addEventListener('click', () => openIhEntryForm(x.dataset.edit)));
+    el.querySelectorAll('[data-del]').forEach(x => x.addEventListener('click', () => deleteIhEntry(x.dataset.del)));
+  }
+  document.getElementById('ihRecBackBtn').addEventListener('click', () => { showScreen('screenInhomeList'); loadInhomeList(); });
+
+  // ----- 家訪表 -----
+  async function ihOpenVisitForm(){
+    const d = ihCtx.data;
+    ihCtx.mode = 'visit'; ihCtx.reused = false;
+    document.getElementById('ihFormTitle').textContent = '家訪表';
+    document.getElementById('ihFormSub').textContent = d.name + '・' + d.address;
+    document.getElementById('ihFormPhotoWrap').style.display = 'none';
+    ihRenderForm(IH_VISIT_SCHEMA, d.homeVisit ? d.homeVisit.values : {});
+    const reuseWrap = document.getElementById('ihFormReuse');
+    reuseWrap.style.display = 'none';
+    if (!d.homeVisit){
+      try {
+        const snap = await getDoc(doc(db, 'members', normalizePhone(d.phone)));
+        const prof = snap.exists() && snap.data().inhomeProfiles && snap.data().inhomeProfiles[d.name];
+        if (prof){
+          reuseWrap.style.display = 'block';
+          const b = document.getElementById('ihFormReuseBtn');
+          b.textContent = '📋 沿用上次家訪表(' + ihFmtDate(prof.visitedAtMs) + ')';
+          b.onclick = () => {
+            const v = Object.assign({}, prof.values, { thisTime: '' });
+            ihRenderForm(IH_VISIT_SCHEMA, v); ihCtx.reused = true;
+            reuseWrap.style.display = 'none';
+            alert('已帶入上次的家訪表內容,請務必在最下方填寫「本次注意事項」。');
+          };
+        }
+      } catch (e) {}
+    }
+    document.getElementById('ihFormModal').style.display = 'flex';
+    document.getElementById('ihFormModal').scrollTop = 0;
+  }
+  document.getElementById('ihVisitBtn').addEventListener('click', ihOpenVisitForm);
+
+  // ----- 到府紀錄 -----
+  function openIhEntryForm(entryId){
+    const d = ihCtx.data;
+    if (!entryId && !d.homeVisit && !confirm('還沒有填家訪表,仍要新增到府紀錄嗎?')) return;
+    const old = entryId ? (d.entries || []).find(e => e.id === entryId) : null;
+    ihCtx.mode = 'entry'; ihCtx.editEntryId = entryId || null;
+    ihPhotoFiles = [];
+    document.getElementById('ihFormTitle').textContent = old ? '編輯到府紀錄' : '新增到府紀錄';
+    document.getElementById('ihFormSub').textContent = d.name;
+    document.getElementById('ihFormReuse').style.display = 'none';
+    ihRenderForm(IH_ENTRY_SCHEMA, old ? old.form : {});
+    // time field at the top
+    const when = document.createElement('div');
+    when.className = 'te-row'; when.innerHTML = '<div class="te-q">紀錄日期時間(自動帶入,可調整)</div><input type="datetime-local" id="ihEntryWhen">';
+    document.getElementById('ihFormBody').prepend(when);
+    document.getElementById('ihEntryWhen').value = toDatetimeLocalValue(new Date(old ? old.createdAtMs : Date.now()));
+    document.getElementById('ihFormPhotoWrap').style.display = 'block';
+    document.getElementById('ihFormPhotoOld').textContent = (old && old.photoUrls && old.photoUrls.length) ? '已有 ' + old.photoUrls.length + ' 張照片(保留,可再加新照片)' : '';
+    document.getElementById('ihFormPhotoCount').textContent = '';
+    document.getElementById('ihFormModal').style.display = 'flex';
+    document.getElementById('ihFormModal').scrollTop = 0;
+  }
+  document.getElementById('ihAddEntryBtn').addEventListener('click', () => openIhEntryForm(null));
+  document.getElementById('ihFormPhotoInput').addEventListener('change', e => {
+    ihPhotoFiles = ihPhotoFiles.concat(Array.from(e.target.files));
+    e.target.value = '';
+    document.getElementById('ihFormPhotoCount').textContent = '✅ 已選 ' + ihPhotoFiles.length + ' 張';
+  });
+  document.getElementById('ihFormCloseBtn').addEventListener('click', () => { document.getElementById('ihFormModal').style.display = 'none'; });
+
+  function ihBuildEntryText(v){
+    const p = [];
+    let head = (v.slot || '') + '到府服務';
+    if (v.arrive || v.leave) head += '(' + (v.arrive ? '到達' + v.arrive : '') + (v.arrive && v.leave ? '、' : '') + (v.leave ? '離開' + v.leave : '') + ')';
+    p.push(head);
+    if (v.services && v.services.length) p.push('完成:' + v.services.join('、'));
+    const food = [];
+    if (v.dry) food.push('乾糧' + v.dry + 'g'); if (v.wet) food.push('濕食／鮮食' + v.wet + 'g'); if (v.water) food.push('飲水' + v.water + 'ml');
+    if (food.length || v.appetite) p.push('進食:' + food.join('、') + (v.appetite ? (food.length ? ',' : '') + '食慾' + v.appetite : ''));
+    const toi = [];
+    if (v.peeCount) toi.push('排尿' + v.peeCount + '次'); if (v.poopCount) toi.push('排便' + v.poopCount + '次'); if (v.poopState) toi.push('便便' + v.poopState);
+    if (toi.length) p.push(toi.join(','));
+    if (v.mood && v.mood.length) p.push('精神與情緒:' + v.mood.join('、'));
+    if (v.play) p.push('互動:' + v.play);
+    if (v.abnormal) p.push('需留意:' + v.abnormal);
+    if (v.message) p.push(v.message);
+    return p.join('。');
+  }
+  async function ihSaveEntry(){
+    const d = ihCtx.data, v = ihCollectForm();
+    const whenVal = document.getElementById('ihEntryWhen').value;
+    const dt = whenVal ? new Date(whenVal) : new Date();
+    const content = ihBuildEntryText(v);
+    if (content === '到府服務' && !ihPhotoFiles.length) throw new Error('請至少填寫一項內容或新增照片');
+    const entries = (d.entries || []).slice();
+    const old = ihCtx.editEntryId ? entries.find(e => e.id === ihCtx.editEntryId) : null;
+    const urls = (old && old.photoUrls ? old.photoUrls.slice() : []);
+    const eid = old ? old.id : ('ihe_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8));
+    for (const file of ihPhotoFiles){
+      const compressed = await compressImage(file, 1000, 0.75);
+      const r = ref(storage, 'daycareEntryPhotos/inhome_' + ihCtx.id + '/' + Date.now() + '_' + file.name);
+      await uploadBytes(r, compressed); urls.push(await getDownloadURL(r));
+    }
+    const entry = {
+      id: eid, slot: '到府服務', slotLabel: v.slot || '', content, warn: !!v.abnormal, form: v,
+      time: String(dt.getHours()).padStart(2, '0') + ':' + String(dt.getMinutes()).padStart(2, '0'),
+      dateStr: dateStrOf(dt), createdAtMs: dt.getTime(),
+      staff: old ? old.staff : (currentStaffName || '未填寫')
+    };
+    if (urls.length) entry.photoUrls = urls;
+    const next = old ? entries.map(e => e.id === eid ? entry : e) : entries.concat([entry]);
+    await updateDoc(doc(db, 'inhome', ihCtx.id), { entries: next });
+    ihCtx.data.entries = next;
+  }
+  async function ihSaveVisit(){
+    const v = ihCollectForm();
+    if ((ihCtx.reused || (ihCtx.data.homeVisit && false)) && !v.thisTime) throw new Error('沿用舊家訪表時,「本次注意事項」必須填寫(沒有特別事項請寫「無」)');
+    const hv = { values: v, visitedAtMs: ihCtx.data.homeVisit ? ihCtx.data.homeVisit.visitedAtMs : Date.now(), staff: currentStaffName || '', reused: !!ihCtx.reused };
+    await updateDoc(doc(db, 'inhome', ihCtx.id), { homeVisit: hv });
+    ihCtx.data.homeVisit = hv;
+    const profVals = Object.assign({}, v); delete profVals.thisTime;
+    await setDoc(doc(db, 'members', normalizePhone(ihCtx.data.phone)), { inhomeProfiles: { [ihCtx.data.name]: { values: profVals, visitedAtMs: hv.visitedAtMs } } }, { merge: true });
+  }
+  document.getElementById('ihFormSaveBtn').addEventListener('click', () => guardedSubmit(document.getElementById('ihFormSaveBtn'), '儲存', async () => {
+    if (ihCtx.mode === 'visit') await ihSaveVisit(); else await ihSaveEntry();
+    document.getElementById('ihFormModal').style.display = 'none';
+    renderInhomeRecord();
+  }));
+  async function deleteIhEntry(eid){
+    if (!confirm('確定要刪除這筆到府紀錄嗎?')) return;
+    const entries = ihCtx.data.entries || [];
+    const old = entries.find(e => e.id === eid);
+    if (old && old.photoUrls) await Promise.all(old.photoUrls.map(u => deleteObject(ref(storage, u)).catch(() => {})));
+    const next = entries.filter(e => e.id !== eid);
+    await updateDoc(doc(db, 'inhome', ihCtx.id), { entries: next });
+    ihCtx.data.entries = next;
+    renderInhomeRecord();
+  }
+  document.getElementById('ihFinishBtn').addEventListener('click', () => {
+    if (!confirm('確定要結束這次到府服務並結案嗎?\n結案後就不能再新增或修改紀錄,照片會保留 5 天。')) return;
+    guardedSubmit(document.getElementById('ihFinishBtn'), '結案', async () => {
+      const upd = { status: 'done', endedAtMs: Date.now(), endedAt: new Date().toLocaleString('zh-TW') };
+      await updateDoc(doc(db, 'inhome', ihCtx.id), upd);
+      Object.assign(ihCtx.data, upd);
+      showScreen('screenInhomeList'); await loadInhomeList();
+    });
+  });
+
   document.getElementById('menuDaycareBtn').addEventListener('click', () => { showScreen('screenDaycareList'); loadDaycareList(); });
-  document.getElementById('menuInhomeBtn').addEventListener('click', () => alert('到府照護紀錄即將上線,敬請期待!'));
   document.getElementById('daycareBackBtn').addEventListener('click', () => showScreen('screenMenu'));
   document.getElementById('daycareCiBackBtn').addEventListener('click', () => showScreen('screenDaycareList'));
   document.getElementById('dcRecordBackBtn').addEventListener('click', () => { showScreen('screenDaycareList'); loadDaycareList(); });
