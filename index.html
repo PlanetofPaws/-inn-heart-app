@@ -101,7 +101,7 @@
       <div style="text-align:center;margin-top:40px;">
         <a href="https://planetofpaws.github.io/-inn-heart-app/staff.html" style="font-size:9.5px;color:var(--ink-soft);opacity:0.4;text-decoration:underline;">員工後台</a>
       </div>
-      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:8px;">版本 2026-11-21-1</div>
+      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:8px;">版本 2026-11-21-2</div>
       <div id="liffDebugLine" style="text-align:center;font-size:9px;color:var(--ink-soft);opacity:0.6;margin-top:4px;"></div>
     </div>
   </div>
@@ -250,6 +250,7 @@
 
   let myStays = [];
   let myDaycareHistory = [];
+  let myInhomeDone = [];
   let myTrialEvals = {}; // petName -> [evaluation, newest first]
   let globalMihomeUrl = null;
 
@@ -338,9 +339,10 @@
     } catch (err) { /* daycare lookup is best-effort; ignore failures here */ }
 
     let hasAnyInhome = false;
+    myInhomeDone = [];
     try {
       const ihSnap = await getDocs(collection(db, 'inhome'));
-      ihSnap.forEach(d => { if (normalizePhone(d.data().phone) === np) hasAnyInhome = true; });
+      ihSnap.forEach(d => { const dd = d.data(); if (normalizePhone(dd.phone) !== np) return; hasAnyInhome = true; if (dd.status === 'done') myInhomeDone.push({ id: d.id, ...dd }); });
     } catch (err) { /* best-effort */ }
 
     return myStays.length > 0 || hasAnyDaycare || hasAnyInhome;
@@ -553,7 +555,14 @@
       historyType: 'daycare', name: d.name, avatarUrl: d.avatarUrl,
       checkinDate: d.checkinDate, checkedOutAt: d.checkoutAt, id: d.id, entries: d.entries || []
     }));
-    const allPast = [...pastStays, ...pastDaycare];
+    const pastInhome = myInhomeDone.map(d => {
+      const es = (d.entries || []).slice().sort((a, b) => (a.createdAtMs || 0) - (b.createdAtMs || 0));
+      const dt = new Date(d.createdAtMs || Date.now());
+      const ds = dt.getFullYear() + '-' + String(dt.getMonth()+1).padStart(2,'0') + '-' + String(dt.getDate()).padStart(2,'0');
+      return { historyType: 'inhome', name: d.name, avatarUrl: d.avatarUrl, id: d.id, entries: es,
+        checkinDate: (es[0] && es[0].dateStr) || ds, checkedOutAt: (es.length && es[es.length - 1].dateStr) || ds };
+    });
+    const allPast = [...pastStays, ...pastDaycare, ...pastInhome];
     if (allPast.length === 0){
       alert('目前還沒有過往的住宿或安親紀錄');
       return;
@@ -639,7 +648,9 @@
     listEl.querySelectorAll('.history-date-row').forEach(row => {
       row.addEventListener('click', () => {
         const record = pet.records[parseInt(row.dataset.idx)];
-        if (record.historyType === 'daycare') {
+        if (record.historyType === 'inhome') {
+          openInhomeHistoryDetail(record);
+        } else if (record.historyType === 'daycare') {
           openDaycareHistoryDetail(record);
         } else {
           visibleStays = [record];
@@ -659,6 +670,27 @@
     document.getElementById('screenDaycareHistoryDetail').classList.remove('active');
     document.getElementById('screenHistoryList').classList.add('active');
   });
+
+  function openInhomeHistoryDetail(record){
+    document.getElementById('screenHistoryList').classList.remove('active');
+    document.getElementById('screenDaycareHistoryDetail').classList.add('active');
+    const entries = (record.entries || []).slice().sort((a,b) => (b.createdAtMs||0) - (a.createdAtMs||0));
+    let last = '', h = '';
+    entries.forEach(e => {
+      if (e.dateStr !== last){ last = e.dateStr; h += '<div style="font-size:12px;font-weight:700;margin:10px 0 6px;color:var(--ink-soft);">' + ihX(e.dateStr) + '</div>'; }
+      h += '<div class="log-entry ' + (e.warn ? 'warn' : '') + '"><div class="meta"><span>' + ihX(e.time) + ' · 到府服務' + (e.slotLabel ? '・' + ihX(e.slotLabel) : '') + '</span></div><div>' + ihX(e.content) + '</div>'
+        + ((e.photoUrls || []).map(u => '<img src="' + u + '" style="width:100%;max-height:220px;object-fit:cover;border-radius:10px;margin-top:8px;">').join('')) + '</div>';
+    });
+    document.getElementById('dcHistContent').innerHTML = `
+      <div class="hero">
+        ${record.avatarUrl ? '<img src="'+record.avatarUrl+'" class="avatar" style="object-fit:cover;">' : '<div class="avatar"></div>'}
+        <div class="hero-text">
+          <p class="loc">到府照護・${ihX(record.checkinDate || '')}</p>
+          <h1>${ihX(record.name)}</h1>
+        </div>
+      </div>
+      <div style="margin-top:16px;">${h || '<div class="empty-note">沒有留下紀錄</div>'}</div>`;
+  }
 
   function openDaycareHistoryDetail(record){
     document.getElementById('screenHistoryList').classList.remove('active');
