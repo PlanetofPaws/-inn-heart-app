@@ -195,7 +195,7 @@
       </button>
       <div id="cameraSettingLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:8px;">設定小米 App 連結</div>
       <div id="staffManageLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:4px;">管理員後台</div>
-      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:20px;">版本 2026-11-20-1</div>
+      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:20px;">版本 2026-11-20-2</div>
     </div>
   </div>
 
@@ -15108,7 +15108,7 @@ var qrcode = function() {
 
   document.getElementById('confirmLineBoundBtn').addEventListener('click', () => {
     const room = allRooms[currentRoomId];
-    const greeting = room.name + ' 寶貝已經綁定您的 LINE,之後只有這個 LINE 帳號才能查閱寶貝的照護紀錄,其他人的 LINE 無法查看,請放心入住!';
+    const greeting = room.name + ' 寶貝已經綁定您的 LINE,之後只有這個 LINE 帳號才能查閱寶貝的照護紀錄,其他人的 LINE 暫時無法查看,請放心入住!\n\n為了保護寶貝的資料安全,目前以第一位完成綁定的 LINE 優先。如果還有其他家人需要綁定查看,請把該位家人的 LINE 大頭貼及名字截圖傳給我們,我們會手動審核通過後再開通,避免寶貝資料外流。謝謝您的配合!';
     openLineCopyModal({ title: '📋 複製綁定確認訊息', text: greeting });
   });
 
@@ -19650,7 +19650,7 @@ var qrcode = function() {
   document.getElementById('dcConfirmLineBoundBtn').addEventListener('click', async () => {
     const snap = await getDoc(doc(db, 'daycare', currentDaycareId));
     const data = snap.exists() ? snap.data() : {};
-    const greeting = (data.name || '寶貝') + ' 寶貝已經綁定您的 LINE,之後只有這個 LINE 帳號才能查閱寶貝的照護紀錄,其他人的 LINE 無法查看,請放心入托!';
+    const greeting = (data.name || '寶貝') + ' 寶貝已經綁定您的 LINE,之後只有這個 LINE 帳號才能查閱寶貝的照護紀錄,其他人的 LINE 暫時無法查看,請放心入托!\n\n為了保護寶貝的資料安全,目前以第一位完成綁定的 LINE 優先。如果還有其他家人需要綁定查看,請把該位家人的 LINE 大頭貼及名字截圖傳給我們,我們會手動審核通過後再開通,避免寶貝資料外流。謝謝您的配合!';
     openLineCopyModal({ title: '📋 複製綁定確認訊息', text: greeting });
   });
 
