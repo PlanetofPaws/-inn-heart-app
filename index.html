@@ -101,7 +101,7 @@
       <div style="text-align:center;margin-top:40px;">
         <a href="https://planetofpaws.github.io/-inn-heart-app/staff.html" style="font-size:9.5px;color:var(--ink-soft);opacity:0.4;text-decoration:underline;">員工後台</a>
       </div>
-      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:8px;">版本 2026-11-23-5</div>
+      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:8px;">版本 2026-11-23-9</div>
       <div id="liffDebugLine" style="text-align:center;font-size:9px;color:var(--ink-soft);opacity:0.6;margin-top:4px;"></div>
     </div>
   </div>
@@ -853,7 +853,9 @@
           { k: 'c2', t: '環境轉換緊迫風險:本人理解高齡毛孩對新環境較為敏感,住宿期間可能因分離焦慮或環境轉換,出現食慾下降、軟便、失眠、吠叫,或誘發潛在慢性病與急性健康變化(如心肺功能異常、休克等)。在旅館已盡善良管理人照護義務且無故意或重大過失的前提下,本人願意共同承擔高齡自然老化與突發疾病之風險。' } ] },
         { h: '二、 低壓力照護與照護方式調整授權', items: [
           { k: 'c3', t: '照護彈性調整:為降低高齡毛孩緊迫,本人同意旅館依寶貝當下身心狀態,彈性調整放風時間、互動頻率或清潔方式;若毛孩因緊迫出現護食、防禦性低吼或拒絕配合基礎清潔(如擦拭排泄物),旅館將以毛孩安全與低壓力為最優先考量,不強行執行可能造成緊迫之動作。' } ] },
-        { h: '三、 緊急醫療處置與費用授權', items: [
+        { h: '三、 緊急醫療處置與費用授權', cpr: {
+            q: '遇危及生命之緊急狀況時,是否同意由館內領有急救證照之人員第一時間給予 CPR 急救處置(並同步緊急送醫)?(單選必填)',
+            opts: [['同意', '授權館內具急救證照人員立即進行必要之緊急救護,並同步緊急送醫'], ['不同意', '不施予 CPR 急救,僅直接送往獸醫院處置']] }, items: [
           { k: 'c4', t: '緊急送醫授權:住宿期間若 ' + p + ' 出現精神委靡、呼吸急促、持續嘔吐腹瀉或其他緊急狀況,旅館將第一時間聯繫本人(及緊急聯絡人)。若遇危及生命之緊急情況且暫時無法聯繫上本人時,本人授權旅館立即將毛孩送往指定動物醫院或配合之特約緊急醫療院所進行必要之急救與檢查,相關醫療、檢查及交通費用由本人全額負擔。' } ] }
       ],
       med: {
@@ -878,7 +880,10 @@
   function scClausesText(o, p, a){
     const c = scClauses(o, p, a);
     const m = c.med;
-    return [c.title, c.intro].concat(c.sections.map(s => s.h + '\n' + s.items.map(i => '☑ ' + i.t).join('\n'))).concat([m.h + '\n' + m.q1 + '\n' + m.q2 + '\n' + m.feedOpts.map(o => '( ) ' + o[1]).join('\n') + '\n' + m.q3 + '\n' + m.lifeOpts.map(o => '( ) ' + o[1]).join('\n') + '\n☑ ' + m.c5, '五、 補充照護備註', '☑ ' + c.agree]).join('\n\n');
+    return [c.title, c.intro].concat(c.sections.map(s => s.h + '\n' + s.items.map(i => '☑ ' + i.t).join('\n') + (s.cpr ? '\n' + s.cpr.q + '\n' + s.cpr.opts.map(o => '( ) ' + o[1]).join('\n') : ''))).concat([m.h + '\n' + m.q1 + '\n' + m.q2 + '\n' + m.feedOpts.map(o => '( ) ' + o[1]).join('\n') + '\n' + m.q3 + '\n' + m.lifeOpts.map(o => '( ) ' + o[1]).join('\n') + '\n☑ ' + m.c5, '五、 補充照護備註', '☑ ' + c.agree]).join('\n\n');
+  }
+  function scRadio(name, opts){
+    return opts.map(o => '<label style="display:flex;gap:10px;align-items:flex-start;font-size:12.5px;line-height:1.7;margin-bottom:8px;cursor:pointer;"><input type="radio" name="' + name + '" value="' + scEsc(o[0]) + '" style="width:20px;height:20px;margin-top:3px;flex-shrink:0;"><span>' + scEsc(o[1]) + '</span></label>').join('');
   }
   function scFormHtml(d){
     const c = scClauses(d.ownerName || '家長', d.petName, d.petAge);
@@ -889,14 +894,16 @@
       s.items.forEach(i => {
         h += '<label style="display:flex;gap:10px;align-items:flex-start;font-size:12.5px;line-height:1.7;margin-bottom:8px;cursor:pointer;"><input type="checkbox" class="sc-chk" data-k="' + i.k + '" style="width:20px;height:20px;margin-top:3px;flex-shrink:0;"><span>' + scEsc(i.t) + '</span></label>';
       });
+      if (s.cpr) h += '<div style="font-size:12.5px;font-weight:700;margin:12px 0 6px;">' + scEsc(s.cpr.q) + '</div>' + scRadio('scCpr', s.cpr.opts);
     });
     const m = c.med;
     const radio = (name, opts) => opts.map(o => '<label style="display:flex;gap:10px;align-items:flex-start;font-size:12.5px;line-height:1.7;margin-bottom:8px;cursor:pointer;"><input type="radio" name="' + name + '" value="' + scEsc(o[0]) + '" style="width:20px;height:20px;margin-top:3px;flex-shrink:0;"><span>' + scEsc(o[1]) + '</span></label>').join('');
     h += '<div style="font-size:13.5px;font-weight:700;margin:14px 0 6px;color:var(--pine);">' + scEsc(m.h) + '</div>'
       + '<div style="font-size:12.5px;font-weight:700;margin-bottom:2px;">' + scEsc(m.q1) + '</div><div style="font-size:11.5px;opacity:.8;margin-bottom:4px;">' + scEsc(m.q1hint) + '</div><textarea id="scMeds" rows="3" style="width:100%;font-size:12.5px;"></textarea>'
-      + '<div style="font-size:12.5px;font-weight:700;margin:12px 0 6px;">' + scEsc(m.q2) + '</div>' + radio('scFeed', m.feedOpts)
+      + '<div id="scMedOpts"><div style="font-size:12.5px;font-weight:700;margin:12px 0 6px;">' + scEsc(m.q2) + '</div>' + radio('scFeed', m.feedOpts)
       + '<div style="font-size:12.5px;font-weight:700;margin:12px 0 6px;">' + scEsc(m.q3) + '</div>' + radio('scLife', m.lifeOpts)
-      + '<label style="display:flex;gap:10px;align-items:flex-start;font-size:12.5px;line-height:1.7;margin:12px 0 8px;cursor:pointer;"><input type="checkbox" class="sc-chk" data-k="c5" style="width:20px;height:20px;margin-top:3px;flex-shrink:0;"><span>' + scEsc(m.c5) + '</span></label>'
+      + '<label style="display:flex;gap:10px;align-items:flex-start;font-size:12.5px;line-height:1.7;margin:12px 0 8px;cursor:pointer;"><input type="checkbox" class="sc-chk" data-k="c5" style="width:20px;height:20px;margin-top:3px;flex-shrink:0;"><span>' + scEsc(m.c5) + '</span></label></div>'
+      + '<div style="font-size:12px;opacity:.8;margin:2px 0 0;">若毛孩住宿期間不需要餵藥(上方填「無」),第 2、3 題與餵藥風險同意免填、免勾選。</div>'
       + '<div style="font-size:13.5px;font-weight:700;margin:14px 0 6px;color:var(--pine);">五、 補充照護備註</div>'
       + '<div style="font-size:12px;margin:0 0 4px;">特別需要注意的習慣或禁忌(如關節退化需防滑、抱起時需托住胸腹、視力不佳易受驚嚇等;若為救命藥物,請務必在此說明並提供特約醫院聯絡方式):</div><textarea id="scHabits" rows="2" style="width:100%;font-size:12.5px;"></textarea>'
       + '<label style="display:flex;gap:10px;align-items:flex-start;font-size:12.5px;line-height:1.7;margin:14px 0 8px;cursor:pointer;"><input type="checkbox" id="scAgree" style="width:20px;height:20px;margin-top:3px;flex-shrink:0;"><span>' + scEsc(c.agree) + '</span></label>'
@@ -917,25 +924,48 @@
     cv.addEventListener('pointermove', e => { if (!drawing) return; const p = pos(e); g.lineTo(p.x, p.y); g.stroke(); e.preventDefault(); });
     ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => cv.addEventListener(ev, () => { drawing = false; }));
     document.getElementById('scClearBtn').addEventListener('click', reset);
+    const meds = document.getElementById('scMeds'), opts = document.getElementById('scMedOpts');
+    if (meds && opts) meds.addEventListener('input', () => { const no = scNoMeds(meds.value); opts.style.opacity = no ? '0.35' : '1'; });
   }
+  function scNoMeds(t){ return /^\s*(無|没有|沒有|不用|不需要|無需|n\/a|none)/i.test(t || ''); }
   function scCollect(){
     const checks = {};
     let ok = true;
-    document.querySelectorAll('.sc-chk').forEach(c => { checks[c.dataset.k] = c.checked; if (!c.checked) ok = false; });
+    const noMeds = scNoMeds(document.getElementById('scMeds').value);
+    document.querySelectorAll('.sc-chk').forEach(c => { checks[c.dataset.k] = c.checked; if (!c.checked && !(c.dataset.k === 'c5' && noMeds)) ok = false; });
     if (!ok) throw new Error('請逐項勾選確認上方所有條款');
+    const cprEl = document.querySelector('input[name="scCpr"]:checked');
+    if (!cprEl) throw new Error('請選擇「是否同意由具急救證照人員給予 CPR 急救處置」');
     const meds = document.getElementById('scMeds').value.trim();
     if (!meds) throw new Error('請填寫「每日固定服用藥物／保健品明細」(沒有請填「無」)');
     const feedEl = document.querySelector('input[name="scFeed"]:checked');
-    if (!feedEl) throw new Error('請選擇「拒吃或抗拒餵藥時的處理方式」');
+    if (!noMeds && !feedEl) throw new Error('請選擇「拒吃或抗拒餵藥時的處理方式」');
     const lifeEl = document.querySelector('input[name="scLife"]:checked');
-    if (!lifeEl) throw new Error('請選擇「是否為停藥即有立即生命危險的救命藥物」');
-    if (lifeEl.value === '是' && !document.getElementById('scHabits').value.trim()) throw new Error('救命藥物請在「補充照護備註」說明,並提供特約醫院聯絡方式');
+    if (!noMeds && !lifeEl) throw new Error('請選擇「是否為停藥即有立即生命危險的救命藥物」');
+    if (!noMeds && lifeEl && lifeEl.value === '是' && !document.getElementById('scHabits').value.trim()) throw new Error('救命藥物請在「補充照護備註」說明,並提供特約醫院聯絡方式');
     if (!document.getElementById('scAgree').checked) throw new Error('請勾選「已詳細閱讀並完全理解上述所有條款」');
     const signer = document.getElementById('scSigner').value.trim();
     if (!signer) throw new Error('請填寫簽署人姓名');
     const cv = document.getElementById('scCanvas');
     if (!cv._dirty) throw new Error('請在簽名欄簽名');
-    return { checks, meds: meds, feedMethod: feedEl.value, lifeSaving: lifeEl.value, habits: document.getElementById('scHabits').value.trim(), signerName: signer, signature: cv.toDataURL('image/png') };
+    return { checks, meds: meds, cprChoice: cprEl.value, feedMethod: (!noMeds && feedEl) ? feedEl.value : '', lifeSaving: (!noMeds && lifeEl) ? lifeEl.value : '', habits: document.getElementById('scHabits').value.trim(), signerName: signer, signature: cv.toDataURL('image/png') };
+  }
+  async function scLoadPrev(phone, pet, excludeId){
+    try {
+      const snap = await getDocs(query(collection(db, 'seniorConsents'), where('phone', '==', phone), where('petName', '==', pet)));
+      let best = null;
+      snap.forEach(x => { const v = x.data(); if (x.id !== excludeId && v.status === 'signed' && (!best || (v.signedAtMs || 0) > (best.signedAtMs || 0))) best = v; });
+      return best;
+    } catch (e) { return null; }
+  }
+  function scApplyPrev(prev){
+    if (!prev) return;
+    const set = (id, v) => { const el = document.getElementById(id); if (el && v && !el.value) { el.value = v; el.dispatchEvent(new Event('input')); } };
+    set('scMeds', prev.meds); set('scHabits', prev.habits); set('scSigner', prev.signerName);
+    const note = document.createElement('div');
+    note.style.cssText = 'font-size:11.5px;color:var(--pine);margin:10px 0;';
+    note.textContent = '✔ 已帶入上次填寫的藥物、備註與簽署人姓名,請確認內容是否需要修改。勾選項目與簽名每次都需要重新確認。';
+    document.getElementById('scMeds').parentNode.insertBefore(note, document.getElementById('scMeds').previousElementSibling.previousElementSibling);
   }
   function scSignedHtml(d){
     const c = scClauses(d.ownerName || '家長', d.petName, d.petAge);
@@ -944,13 +974,14 @@
     c.sections.forEach(s => {
       h += '<div style="font-size:13.5px;font-weight:700;margin:14px 0 6px;color:var(--pine);">' + scEsc(s.h) + '</div>';
       s.items.forEach(i => { h += '<div style="font-size:12.5px;line-height:1.7;margin-bottom:8px;">☑ ' + scEsc(i.t) + '</div>'; });
+      if (s.cpr){ const co = s.cpr.opts.find(o => o[0] === d.cprChoice); h += '<div style="font-size:12.5px;line-height:1.7;margin-bottom:8px;">' + scEsc(s.cpr.q.replace('(單選必填)', '')) + '<br><b>' + scEsc(co ? co[1] : '(未填寫)') + '</b></div>'; }
     });
     const m = c.med;
     const fo = m.feedOpts.find(o => o[0] === d.feedMethod), lo = m.lifeOpts.find(o => o[0] === d.lifeSaving);
     h += '<div style="font-size:13.5px;font-weight:700;margin:14px 0 6px;color:var(--pine);">' + scEsc(m.h) + '</div>'
       + '<div style="font-size:12.5px;line-height:1.7;">每日固定服用藥物／保健品明細:' + scEsc(d.meds || '無') + '</div>'
-      + '<div style="font-size:12.5px;line-height:1.7;">拒吃或抗拒餵藥時的處理方式:' + scEsc(fo ? fo[1] : '(未填寫)') + '</div>'
-      + '<div style="font-size:12.5px;line-height:1.7;">是否為救命藥物:' + scEsc(lo ? lo[1] : '(未填寫)') + '</div>'
+      + '<div style="font-size:12.5px;line-height:1.7;">拒吃或抗拒餵藥時的處理方式:' + scEsc(fo ? fo[1] : (scNoMeds(d.meds) ? '(不需餵藥,免填)' : '(未填寫)')) + '</div>'
+      + '<div style="font-size:12.5px;line-height:1.7;">是否為救命藥物:' + scEsc(lo ? lo[1] : (scNoMeds(d.meds) ? '(不需餵藥,免填)' : '(未填寫)')) + '</div>'
       + '<div style="font-size:12.5px;line-height:1.7;margin-top:6px;">☑ ' + scEsc(m.c5) + '</div>'
       + '<div style="font-size:13.5px;font-weight:700;margin:14px 0 6px;color:var(--pine);">五、 補充照護備註</div>'
       + '<div style="font-size:12.5px;line-height:1.7;">特別需要注意的習慣或禁忌:' + scEsc(d.habits || '無') + '</div>'
@@ -983,6 +1014,7 @@
       }
       body.innerHTML = scFormHtml(data) + '<button id="scSubmitBtn" class="login-btn" style="margin-top:18px;">確認並送出簽署</button>';
       scWireCanvas();
+      scLoadPrev(data.phone, data.petName, data.id).then(scApplyPrev);
       document.getElementById('scSubmitBtn').addEventListener('click', async () => {
         const btn = document.getElementById('scSubmitBtn');
         let v;
