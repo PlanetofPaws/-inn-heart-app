@@ -204,7 +204,7 @@
       </button>
       <div id="cameraSettingLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:8px;">設定小米 App 連結</div>
       <div id="staffManageLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:4px;">管理員後台</div>
-      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:20px;">版本 2026-11-23-2</div>
+      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:20px;">版本 2026-11-23-3</div>
     </div>
   </div>
 
@@ -493,6 +493,7 @@
         <div class="loc" id="dcRecordLoc">安親照護</div>
         <h1 id="dcRecordName" style="margin:0;">-</h1>
         <div class="loc" id="dcRecordMember" style="margin-top:4px;"></div>
+        <div class="loc" id="dcRecViewedLine" style="margin-top:2px;"></div>
       </div>
     </div>
 
@@ -907,6 +908,7 @@
           <span id="notesBadge" style="font-size:10.5px;cursor:pointer;"></span>
         </div>
         <div class="loc" id="recordMember" style="margin-top:4px;text-decoration:underline;cursor:pointer;">家長 0912-345-678</div>
+        <div class="loc" id="recViewedLine" style="margin-top:2px;"></div>
       </div>
     </div>
 
@@ -14824,6 +14826,7 @@ var qrcode = function() {
     document.getElementById('recordMember').textContent = '家長 ' + room.phone;
     refreshTrialEvalButtons(room.phone, room.name);
     refreshSeniorCard(room);
+    refreshParentViewed(room.phone, 'recViewedLine');
     const avatarEl = document.getElementById('recordAvatar');
     if (room.avatarUrl){ avatarEl.src = room.avatarUrl; avatarEl.style.display = 'block'; }
     else { avatarEl.style.display = 'none'; }
@@ -18707,6 +18710,19 @@ var qrcode = function() {
     const info = m.petAgeInfo && m.petAgeInfo[pet];
     return { ownerName: m.name || '', age: info ? info.age : null };
   }
+  async function refreshParentViewed(phone, elId){
+    const el = document.getElementById(elId); if (!el) return;
+    el.textContent = '';
+    try {
+      const snap = await getDocs(query(collection(db, 'lineBindings'), where('phone', '==', normalizePhone(phone))));
+      let last = 0, bound = false;
+      snap.forEach(d => { bound = true; last = Math.max(last, d.data().lastViewedAtMs || 0); });
+      if (!bound){ el.textContent = '👀 家長尚未綁定 LINE'; return; }
+      if (!last){ el.textContent = '👀 家長尚未開啟過系統'; return; }
+      const d = new Date(last);
+      el.textContent = '👀 家長最後查看:' + (d.getMonth()+1) + '/' + d.getDate() + ' ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+    } catch (e) { /* best-effort */ }
+  }
   async function refreshSeniorCard(room){
     const wrap = document.getElementById('recSeniorWrap');
     wrap.style.display = 'none';
@@ -20201,6 +20217,7 @@ var qrcode = function() {
     document.getElementById('dcRecordName').textContent = data.name;
     document.getElementById('dcRecordMember').textContent = '家長 ' + data.phone + '・報到 ' + (data.checkinTime || '');
     refreshTrialEvalButtons(data.phone, data.name, id);
+    refreshParentViewed(data.phone, 'dcRecViewedLine');
     if (data.avatarUrl){ document.getElementById('dcRecordAvatar').src = data.avatarUrl; document.getElementById('dcRecordAvatar').style.display = 'block'; }
     else { document.getElementById('dcRecordAvatar').style.display = 'none'; }
     if (data.checkinNote){
