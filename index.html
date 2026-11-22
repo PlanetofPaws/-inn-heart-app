@@ -101,7 +101,7 @@
       <div style="text-align:center;margin-top:40px;">
         <a href="https://planetofpaws.github.io/-inn-heart-app/staff.html" style="font-size:9.5px;color:var(--ink-soft);opacity:0.4;text-decoration:underline;">員工後台</a>
       </div>
-      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:8px;">版本 2026-11-21-2</div>
+      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:8px;">版本 2026-11-23-2</div>
       <div id="liffDebugLine" style="text-align:center;font-size:9px;color:var(--ink-soft);opacity:0.6;margin-top:4px;"></div>
     </div>
   </div>
@@ -138,6 +138,10 @@
 
     <div class="timeline" id="daycareTimeline"></div>
     <p class="footer-note" style="margin-top:14px;">📷 照片會保留 5 天,之後自動清除,文字紀錄則會永久保存。</p>
+  </div>
+
+  <div class="screen" id="screenConsent">
+    <div id="scParentBody" style="padding:18px 22px 40px;"></div>
   </div>
 
   <div class="screen" id="screenInhome">
@@ -477,6 +481,7 @@
   }
 
   let liffReadyPromise = (async function tryLineAutoLogin(){
+    if (new URLSearchParams(window.location.search).get('consent')) return; // 同意書簽署頁不需要登入
     if (typeof liff === 'undefined'){ setLiffDebug('LIFF SDK 未載入(非LINE瀏覽器或離線)'); return; }
     try {
       setLiffDebug('LIFF 初始化中...');
@@ -834,6 +839,128 @@
     document.getElementById('screenMenu').classList.add('active');
   });
 
+  // ================= 高齡住宿同意書(共用) =================
+  const SC_VERSION = 'v1-2026-11';
+  function scEsc(x){ return String(x == null ? '' : x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+  function scClauses(o, p, a){
+    return {
+      title: '高齡毛孩(12歲以上)住宿風險告知暨特別照護同意書',
+      intro: '親愛的家長 ' + o + ' 您好:\n感謝您信任並將 ' + p + '(目前年齡:' + a + ' 歲)託付給我們。由於 12 歲以上屬於高齡階段,身體機能、免疫力及對環境變化的耐受度較年輕時期脆弱,為確保寶貝獲得最妥善的照顧,請您詳細閱讀並勾選確認以下事項:',
+      sections: [
+        { h: '一、 高齡生理與環境適應風險告知', items: [
+          { k: 'c1', t: '健康狀況誠實告知:本人確認已完整告知 ' + p + ' 過往病史、目前用藥、心臟/肝腎功能狀況、視聽力退化或認知障礙(失智)等情形,且無隱瞞任何已知疾病或傳染病。' },
+          { k: 'c2', t: '環境轉換緊迫風險:本人理解高齡毛孩對新環境較為敏感,住宿期間可能因分離焦慮或環境轉換,出現食慾下降、軟便、失眠、吠叫,或誘發潛在慢性病與急性健康變化(如心肺功能異常、休克等)。在旅館已盡善良管理人照護義務且無故意或重大過失的前提下,本人願意共同承擔高齡自然老化與突發疾病之風險。' } ] },
+        { h: '二、 低壓力照護與照護方式調整授權', items: [
+          { k: 'c3', t: '照護彈性調整:為降低高齡毛孩緊迫,本人同意旅館依寶貝當下身心狀態,彈性調整放風時間、互動頻率或清潔方式;若毛孩因緊迫出現護食、防禦性低吼或拒絕配合基礎清潔(如擦拭排泄物),旅館將以毛孩安全與低壓力為最優先考量,不強行執行可能造成緊迫之動作。' } ] },
+        { h: '三、 緊急醫療處置與費用授權', items: [
+          { k: 'c4', t: '緊急送醫授權:住宿期間若 ' + p + ' 出現精神委靡、呼吸急促、持續嘔吐腹瀉或其他緊急狀況,旅館將第一時間聯繫本人(及緊急聯絡人)。若遇危及生命之緊急情況且暫時無法聯繫上本人時,本人授權旅館立即將毛孩送往指定動物醫院或配合之特約緊急醫療院所進行必要之急救與檢查,相關醫療、檢查及交通費用由本人全額負擔。' } ] }
+      ],
+      agree: '本人已詳細閱讀並完全理解上述所有條款,同意以此作為一般住宿契約之補充附約。'
+    };
+  }
+  function scClausesText(o, p, a){
+    const c = scClauses(o, p, a);
+    return [c.title, c.intro].concat(c.sections.map(s => s.h + '\n' + s.items.map(i => '☑ ' + i.t).join('\n'))).concat(['四、 補充照護備註', '☑ ' + c.agree]).join('\n\n');
+  }
+  function scFormHtml(d){
+    const c = scClauses(d.ownerName || '家長', d.petName, d.petAge);
+    let h = '<div style="font-size:16px;font-weight:700;line-height:1.4;">' + scEsc(c.title) + '</div>'
+      + '<div style="font-size:12.5px;line-height:1.7;margin:10px 0;white-space:pre-line;">' + scEsc(c.intro) + '</div>';
+    c.sections.forEach(s => {
+      h += '<div style="font-size:13.5px;font-weight:700;margin:14px 0 6px;color:var(--pine);">' + scEsc(s.h) + '</div>';
+      s.items.forEach(i => {
+        h += '<label style="display:flex;gap:10px;align-items:flex-start;font-size:12.5px;line-height:1.7;margin-bottom:8px;cursor:pointer;"><input type="checkbox" class="sc-chk" data-k="' + i.k + '" style="width:20px;height:20px;margin-top:3px;flex-shrink:0;"><span>' + scEsc(i.t) + '</span></label>';
+      });
+    });
+    h += '<div style="font-size:13.5px;font-weight:700;margin:14px 0 6px;color:var(--pine);">四、 補充照護備註(選填)</div>'
+      + '<div style="font-size:12px;margin-bottom:4px;">目前每日固定服用藥物與餵食方式:</div><textarea id="scMeds" rows="2" style="width:100%;font-size:12.5px;"></textarea>'
+      + '<div style="font-size:12px;margin:8px 0 4px;">特別需要注意的習慣或禁忌(如關節退化需防滑、抱起時需托住胸腹、視力不佳易受驚嚇等):</div><textarea id="scHabits" rows="2" style="width:100%;font-size:12.5px;"></textarea>'
+      + '<label style="display:flex;gap:10px;align-items:flex-start;font-size:12.5px;line-height:1.7;margin:14px 0 8px;cursor:pointer;"><input type="checkbox" id="scAgree" style="width:20px;height:20px;margin-top:3px;flex-shrink:0;"><span>' + scEsc(c.agree) + '</span></label>'
+      + '<div style="font-size:12px;margin:10px 0 4px;">簽署人姓名(家長):</div><input type="text" id="scSigner" value="' + scEsc(d.ownerName || '') + '" style="width:100%;font-size:13px;">'
+      + '<div style="font-size:12px;margin:10px 0 4px;">電子簽名(請用手指或滑鼠在下方簽名):</div>'
+      + '<canvas id="scCanvas" width="640" height="240" style="width:100%;height:150px;background:#fff;border-radius:10px;touch-action:none;display:block;"></canvas>'
+      + '<button type="button" id="scClearBtn" style="margin-top:6px;padding:6px 14px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--ink);font-size:12px;cursor:pointer;">清除重簽</button>';
+    return h;
+  }
+  function scWireCanvas(){
+    const cv = document.getElementById('scCanvas'); if (!cv) return;
+    const g = cv.getContext('2d');
+    const reset = () => { g.fillStyle = '#fff'; g.fillRect(0, 0, cv.width, cv.height); g.lineWidth = 3; g.lineCap = 'round'; g.lineJoin = 'round'; g.strokeStyle = '#111'; cv._dirty = false; };
+    reset();
+    let drawing = false;
+    const pos = e => { const r = cv.getBoundingClientRect(); return { x: (e.clientX - r.left) * cv.width / r.width, y: (e.clientY - r.top) * cv.height / r.height }; };
+    cv.addEventListener('pointerdown', e => { drawing = true; try { cv.setPointerCapture(e.pointerId); } catch (x) {} const p = pos(e); g.beginPath(); g.moveTo(p.x, p.y); g.lineTo(p.x + 0.1, p.y + 0.1); g.stroke(); cv._dirty = true; e.preventDefault(); });
+    cv.addEventListener('pointermove', e => { if (!drawing) return; const p = pos(e); g.lineTo(p.x, p.y); g.stroke(); e.preventDefault(); });
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => cv.addEventListener(ev, () => { drawing = false; }));
+    document.getElementById('scClearBtn').addEventListener('click', reset);
+  }
+  function scCollect(){
+    const checks = {};
+    let ok = true;
+    document.querySelectorAll('.sc-chk').forEach(c => { checks[c.dataset.k] = c.checked; if (!c.checked) ok = false; });
+    if (!ok) throw new Error('請逐項勾選確認上方所有條款');
+    if (!document.getElementById('scAgree').checked) throw new Error('請勾選「已詳細閱讀並完全理解上述所有條款」');
+    const signer = document.getElementById('scSigner').value.trim();
+    if (!signer) throw new Error('請填寫簽署人姓名');
+    const cv = document.getElementById('scCanvas');
+    if (!cv._dirty) throw new Error('請在簽名欄簽名');
+    return { checks, meds: document.getElementById('scMeds').value.trim(), habits: document.getElementById('scHabits').value.trim(), signerName: signer, signature: cv.toDataURL('image/png') };
+  }
+  function scSignedHtml(d){
+    const c = scClauses(d.ownerName || '家長', d.petName, d.petAge);
+    let h = '<div style="font-size:16px;font-weight:700;line-height:1.4;">' + scEsc(c.title) + '</div>'
+      + '<div style="font-size:12.5px;line-height:1.7;margin:10px 0;white-space:pre-line;">' + scEsc(c.intro) + '</div>';
+    c.sections.forEach(s => {
+      h += '<div style="font-size:13.5px;font-weight:700;margin:14px 0 6px;color:var(--pine);">' + scEsc(s.h) + '</div>';
+      s.items.forEach(i => { h += '<div style="font-size:12.5px;line-height:1.7;margin-bottom:8px;">☑ ' + scEsc(i.t) + '</div>'; });
+    });
+    h += '<div style="font-size:13.5px;font-weight:700;margin:14px 0 6px;color:var(--pine);">四、 補充照護備註</div>'
+      + '<div style="font-size:12.5px;line-height:1.7;">每日固定服用藥物與餵食方式:' + scEsc(d.meds || '無') + '</div>'
+      + '<div style="font-size:12.5px;line-height:1.7;">特別需要注意的習慣或禁忌:' + scEsc(d.habits || '無') + '</div>'
+      + '<div style="font-size:12.5px;line-height:1.7;margin-top:8px;">☑ ' + scEsc(c.agree) + '</div>'
+      + '<div style="margin-top:12px;font-size:12px;">簽署人:' + scEsc(d.signerName) + '　簽署時間:' + scEsc(new Date(d.signedAtMs).toLocaleString('zh-TW', { hour12: false })) + (d.signedVia === 'line' ? '(LINE 連結簽署)' : '(現場簽署)') + '</div>'
+      + '<img src="' + d.signature + '" style="width:260px;max-width:100%;background:#fff;border-radius:8px;margin-top:6px;display:block;">';
+    return h;
+  }
+  // ----- 家長端:高齡同意書簽署頁 -----
+  (function initConsentPage(){
+    const id = new URLSearchParams(window.location.search).get('consent');
+    if (!id) return;
+    document.querySelectorAll('.screen').forEach(sc => sc.classList.remove('active'));
+    document.getElementById('screenConsent').classList.add('active');
+    const body = document.getElementById('scParentBody');
+    body.innerHTML = '<div class="status-msg">讀取中...</div>';
+    let data = null;
+    (async () => {
+      try {
+        const snap = await getDoc(doc(db, 'seniorConsents', id));
+        if (!snap.exists()){ body.innerHTML = '<div class="status-msg" style="color:var(--danger);">找不到這份同意書,請向旅館確認連結是否正確。</div>'; return; }
+        data = { id, ...snap.data() };
+        render();
+      } catch (e) { body.innerHTML = '<div class="status-msg" style="color:var(--danger);">讀取失敗:' + scEsc(e.message) + '</div>'; }
+    })();
+    function render(){
+      if (data.status === 'signed'){
+        body.innerHTML = '<div style="background:var(--pine-soft);color:var(--pine);border-radius:12px;padding:12px 14px;font-size:12.5px;margin-bottom:14px;">✅ 這份同意書已完成簽署,謝謝您!以下為簽署內容。</div>' + scSignedHtml(data);
+        return;
+      }
+      body.innerHTML = scFormHtml(data) + '<button id="scSubmitBtn" class="login-btn" style="margin-top:18px;">確認並送出簽署</button>';
+      scWireCanvas();
+      document.getElementById('scSubmitBtn').addEventListener('click', async () => {
+        const btn = document.getElementById('scSubmitBtn');
+        let v;
+        try { v = scCollect(); } catch (e) { alert(e.message); return; }
+        btn.disabled = true; btn.textContent = '送出中...';
+        try {
+          const upd = Object.assign({}, v, { status: 'signed', signedAtMs: Date.now(), signedVia: 'line', textVersion: SC_VERSION, clausesText: scClausesText(data.ownerName || '家長', data.petName, data.petAge) });
+          await setDoc(doc(db, 'seniorConsents', id), upd, { merge: true });
+          data = Object.assign(data, upd);
+          render();
+          window.scrollTo(0, 0);
+        } catch (e) { alert('送出失敗:' + e.message); btn.disabled = false; btn.textContent = '確認並送出簽署'; }
+      });
+    }
+  })();
   document.getElementById('menuHistoryBtn').addEventListener('click', () => enterMenuView('history'));
   document.getElementById('menuDaycareBtn').addEventListener('click', () => enterDaycareView());
   document.getElementById('daycareBackLink').addEventListener('click', () => {
