@@ -204,7 +204,7 @@
       </button>
       <div id="cameraSettingLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:8px;">設定小米 App 連結</div>
       <div id="staffManageLink" style="text-align:center;font-size:11px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:4px;">管理員後台</div>
-      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:20px;">版本 2026-11-23-9</div>
+      <div style="text-align:center;font-size:9.5px;color:var(--ink-soft);opacity:0.5;margin-top:20px;">版本 2026-11-23-10</div>
     </div>
   </div>
 
@@ -18696,12 +18696,12 @@ var qrcode = function() {
   function scWireCanvas(){
     const cv = document.getElementById('scCanvas'); if (!cv) return;
     const g = cv.getContext('2d');
-    const reset = () => { g.fillStyle = '#fff'; g.fillRect(0, 0, cv.width, cv.height); g.lineWidth = 3; g.lineCap = 'round'; g.lineJoin = 'round'; g.strokeStyle = '#111'; cv._dirty = false; };
+    const reset = () => { g.fillStyle = '#fff'; g.fillRect(0, 0, cv.width, cv.height); g.lineWidth = 3; g.lineCap = 'round'; g.lineJoin = 'round'; g.strokeStyle = '#111'; cv._dirty = false; cv._len = 0; };
     reset();
-    let drawing = false;
+    let drawing = false, lastP = null;
     const pos = e => { const r = cv.getBoundingClientRect(); return { x: (e.clientX - r.left) * cv.width / r.width, y: (e.clientY - r.top) * cv.height / r.height }; };
-    cv.addEventListener('pointerdown', e => { drawing = true; try { cv.setPointerCapture(e.pointerId); } catch (x) {} const p = pos(e); g.beginPath(); g.moveTo(p.x, p.y); g.lineTo(p.x + 0.1, p.y + 0.1); g.stroke(); cv._dirty = true; e.preventDefault(); });
-    cv.addEventListener('pointermove', e => { if (!drawing) return; const p = pos(e); g.lineTo(p.x, p.y); g.stroke(); e.preventDefault(); });
+    cv.addEventListener('pointerdown', e => { drawing = true; try { cv.setPointerCapture(e.pointerId); } catch (x) {} const p = pos(e); g.beginPath(); g.moveTo(p.x, p.y); g.lineTo(p.x + 0.1, p.y + 0.1); g.stroke(); lastP = p; e.preventDefault(); });
+    cv.addEventListener('pointermove', e => { if (!drawing) return; const p = pos(e); g.lineTo(p.x, p.y); g.stroke(); if (lastP) cv._len += Math.hypot(p.x - lastP.x, p.y - lastP.y); lastP = p; if (cv._len >= 80) cv._dirty = true; e.preventDefault(); });
     ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => cv.addEventListener(ev, () => { drawing = false; }));
     document.getElementById('scClearBtn').addEventListener('click', reset);
     const meds = document.getElementById('scMeds'), opts = document.getElementById('scMedOpts');
@@ -18727,7 +18727,7 @@ var qrcode = function() {
     const signer = document.getElementById('scSigner').value.trim();
     if (!signer) throw new Error('請填寫簽署人姓名');
     const cv = document.getElementById('scCanvas');
-    if (!cv._dirty) throw new Error('請在簽名欄簽名');
+    if (!cv._dirty) throw new Error('請在簽名欄用手指或滑鼠完整簽上姓名,沒有簽名不能送出');
     return { checks, meds: meds, cprChoice: cprEl.value, feedMethod: (!noMeds && feedEl) ? feedEl.value : '', lifeSaving: (!noMeds && lifeEl) ? lifeEl.value : '', habits: document.getElementById('scHabits').value.trim(), signerName: signer, signature: cv.toDataURL('image/png') };
   }
   async function scLoadPrev(phone, pet, excludeId){
